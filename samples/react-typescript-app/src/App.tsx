@@ -137,7 +137,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     Please open "src/config.json" file using an editor, and update
                                     the <code>clientID</code> value with the registered app clientID.
                                 </p>
-                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk/tree/master/samples/using-oidc-js-sdk/react-typescript-app">README</a> for more details.</p>
+                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/using-oidc-js-sdk/react-typescript-app">README</a> for more details.</p>
                             </div>
                         )
                         : (isAuth && authenticatedUser)
@@ -194,7 +194,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     <h3>
                                         Sample demo to showcase how to authenticate a simple client side application
                                         using <b>WSO2 Identity Server</b> with the <a
-                                        href="https://github.com/asgardeo/asgardeo-js-oidc-sdk"
+                                        href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
                                         target="_blank" rel="noreferrer">Asgardeo OIDC JS SDK</a>
                                     </h3>
                                     <button className="btn primary" onClick={ () => handleLogin() }>Login</button>

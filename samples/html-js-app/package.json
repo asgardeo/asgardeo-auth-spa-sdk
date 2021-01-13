@@ -15,7 +15,7 @@
         "Javascript",
         "Authenticate"
     ],
-    "repository": "https://github.com/asgardeo/asgardeo-js-oidc-sdk.git",
+    "repository": "https://github.com/asgardeo/asgardeo-auth-spa-sdk.git",
     "author": "WSO2",
     "license": "Apache-2.0",
     "private": false,

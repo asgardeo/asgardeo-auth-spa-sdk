@@ -122,7 +122,7 @@ const App = () => {
                     <div className="content">
                         <h2>You need to update the Client ID to proceed.</h2>
                         <p>Please open "src/config.json" file using an editor, and update the <code>clientID</code> value with the registered application's client ID.</p>
-                        <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk/tree/master/samples/react-js-app">README</a> for more details.</p>
+                        <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/react-js-app">README</a> for more details.</p>
                     </div>
                 :
                    <>
@@ -210,7 +210,7 @@ const App = () => {
                                             </div>
                                             <h3>
                                                 Sample demo to showcase how authenticate a simple client side application using <br/>
-                                                <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk" target="_blank">Asgardeo Auth JS SDK</a>
+                                                <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank">Asgardeo Auth JS SDK</a>
                                             </h3>
                                             <button className="btn primary" onClick={ handleLogin }>Login</button>
 
