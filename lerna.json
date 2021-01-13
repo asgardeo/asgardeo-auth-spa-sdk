@@ -5,7 +5,7 @@
         }
     },
     "packages": [
-        "packages/*",
+        "lib",
         "samples/*/*"
     ],
     "version": "0.1.34"
