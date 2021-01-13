@@ -148,7 +148,7 @@ export class AsgardeoSPAClient {
      * const auth = AsgardeoSPAClient.getInstance();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#getinstance
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getinstance
      *
      * @memberof AsgardeoSPAClient
      *
@@ -189,7 +189,7 @@ export class AsgardeoSPAClient {
      * });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#initialize
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#initialize
      *
      * @memberof AsgardeoSPAClient
      *
@@ -254,7 +254,7 @@ export class AsgardeoSPAClient {
      * });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#getuserinfo
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getuserinfo
      *
      * @memberof AsgardeoSPAClient
      *
@@ -277,7 +277,7 @@ export class AsgardeoSPAClient {
      *
      * **To fire a callback function after signing in, use the `on()` method.**
      * **To learn more about the `on()` method:**
-     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#on}
+     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#on}
      *
      * @param {SignInConfig} config - The sign-in config.
      * The `SignInConfig` object has these two attributes in addition to any custom key-value pairs.
@@ -293,7 +293,7 @@ export class AsgardeoSPAClient {
      * auth.signIn();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#signin
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#signin
      *
      * @memberof AsgardeoSPAClient
      *
@@ -322,7 +322,7 @@ export class AsgardeoSPAClient {
      *
      * **To fire a callback function after signing out, use the `on()` method.**
      * **To learn more about the `on()` method:**
-     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#on}
+     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#on}
      *
      * @return {Promise<boolean>} - Returns a promise that resolves with `true` if sign out is successful.
      *
@@ -331,7 +331,7 @@ export class AsgardeoSPAClient {
      * auth.signOut();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#signout
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#signout
      *
      * @memberof AsgardeoSPAClient
      *
@@ -377,7 +377,7 @@ export class AsgardeoSPAClient {
      *      });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#httprequest
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#httprequest
      *
      * @memberof AsgardeoSPAClient
      *
@@ -430,7 +430,7 @@ export class AsgardeoSPAClient {
      *      });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#httprequestall
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#httprequestall
      *
      * @memberof AsgardeoSPAClient
      *
@@ -467,7 +467,7 @@ export class AsgardeoSPAClient {
      * });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#customgrant
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#customgrant
      *
      * @memberof AsgardeoSPAClient
      *
@@ -504,7 +504,7 @@ export class AsgardeoSPAClient {
      *
      * **To fire a callback function after ending user session, use the `on()` method.**
      * **To learn more about the `on()` method:**
-     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#on}
+     * @see {@link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#on}
      *
      * @return {Promise<boolean>} - A promise that resolves with `true` if the process is successful.
      *
@@ -513,7 +513,7 @@ export class AsgardeoSPAClient {
      * auth.endUserSession();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#endusersession
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#endusersession
      *
      * @memberof AsgardeoSPAClient
      *
@@ -542,7 +542,7 @@ export class AsgardeoSPAClient {
      *  });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#getserviceendpoints
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getserviceendpoints
      *
      * @memberof AsgardeoSPAClient
      *
@@ -603,7 +603,7 @@ export class AsgardeoSPAClient {
      *     // console.error(error);
      * });
      * ```
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#getdecodedidtoken
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getdecodedidtoken
      *
      * @memberof AsgardeoSPAClient
      *
@@ -631,7 +631,7 @@ export class AsgardeoSPAClient {
      *   });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#getaccesstoken
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getaccesstoken
      *
      * @memberof AsgardeoSPAClient
      *
@@ -671,7 +671,7 @@ export class AsgardeoSPAClient {
      * });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#refreshtoken
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#refreshtoken
      *
      * @memberof AsgardeoSPAClient
      *
@@ -712,7 +712,7 @@ export class AsgardeoSPAClient {
      * });
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#on
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#on
      *
      * @memberof AsgardeoSPAClient
      *
@@ -810,7 +810,7 @@ export class AsgardeoSPAClient {
      * auth.enableHttpHandler();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#enableHttpHandler
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#enableHttpHandler
      *
      * @memberof AsgardeoSPAClient
      *
@@ -832,7 +832,7 @@ export class AsgardeoSPAClient {
      * auth.disableHttpHandler();
      * ```
      *
-     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/lib/oidc-js#disableHttpHandler
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#disableHttpHandler
      *
      * @memberof AsgardeoSPAClient
      *
