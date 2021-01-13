@@ -1,7 +1,7 @@
 {
     "name": "@asgardeo/auth-spa",
     "version": "0.1.34",
-    "description": "Authentication module for Asgardeo SPA",
+    "description": "Auth SPA SDK to be used in Single-Page Applications.",
     "keywords": [
         "Asgardeo",
         "authentication",
