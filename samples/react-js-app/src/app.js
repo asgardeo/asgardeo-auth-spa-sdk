@@ -25,7 +25,7 @@ import REACT_LOGO from "./images/react-logo.png";
 import JS_LOGO from "./images/js-logo.png";
 import FOOTER_LOGOS from "./images/footer.png";
 // Import Asgardeo Auth JS SDK
-import { Hooks, IdentityClient } from "@asgardio/oidc-js";
+import { Hooks, IdentityClient } from "@asgardeo/oidc-js";
 import * as authConfig from "./config.json";
 
 const authClient = IdentityClient.getInstance();
@@ -111,7 +111,7 @@ const App = () => {
 
             setIsLoading(false);
         }
-  
+
     }, []);
 
     return (
@@ -124,7 +124,7 @@ const App = () => {
                         <p>Please open "src/config.json" file using an editor, and update the <code>clientID</code> value with the registered application's client ID.</p>
                         <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk/tree/master/samples/react-js-app">README</a> for more details.</p>
                     </div>
-                : 
+                :
                    <>
                         <div className="header-title">
                             <h1>
@@ -140,7 +140,7 @@ const App = () => {
                                         <>
                                             <h2>Authentication response</h2>
                                             <div className="json">
-                                                <ReactJson 
+                                                <ReactJson
                                                     src={ authenticateState.authenticateResponse }
                                                     name={ null }
                                                     enableClipboard={ false }
@@ -152,7 +152,7 @@ const App = () => {
                                             </div>
 
                                             <h2 className="mb-0 mt-4">ID token</h2>
-                                            
+
                                             <div className="row">
                                                 { authenticateState.idToken &&
                                                     <div className="column">
@@ -169,7 +169,7 @@ const App = () => {
                                                 <div className="column">
                                                     <div className="json">
                                                         <h5><b>Decoded:</b> Header</h5>
-                                                        <ReactJson 
+                                                        <ReactJson
                                                             //src={ JSON.parse(atob(authenticateState.idToken)) }
                                                             src={ authenticateState.decodedIdTokenHeader }
                                                             name={ null }
@@ -180,10 +180,10 @@ const App = () => {
                                                             theme="monokai"
                                                         />
                                                     </div>
-                                                    
+
                                                     <div className="json">
                                                         <h5><b>Decoded:</b> Payload</h5>
-                                                        <ReactJson 
+                                                        <ReactJson
                                                             src={ authenticateState.decodedIdTokenPayload }
                                                             name={ null }
                                                             enableClipboard={ false }
@@ -193,12 +193,12 @@ const App = () => {
                                                             theme="monokai"
                                                         />
                                                     </div>
-                                                    
+
                                                 </div>
                                             </div>
 
                                             <button className="btn primary mt-4" onClick={ handleLogout }>Logout</button>
-                                    
+
                                         </>
                                     :
                                         <>
@@ -209,11 +209,11 @@ const App = () => {
                                                 <img src={ REACT_LOGO } className="react-logo-image logo" />
                                             </div>
                                             <h3>
-                                                Sample demo to showcase how authenticate a simple client side application using <br/> 
+                                                Sample demo to showcase how authenticate a simple client side application using <br/>
                                                 <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk" target="_blank">Asgardeo Auth JS SDK</a>
                                             </h3>
                                             <button className="btn primary" onClick={ handleLogin }>Login</button>
-                                        
+
                                         </>
                                     }
                                 </>

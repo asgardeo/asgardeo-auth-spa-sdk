@@ -26,7 +26,7 @@ auth.initialize({
 Copy the `java-webapp` directory to a tomcat server to run it.
 
 **This SDK is supposed to be used only in Single-Page Applications. This sample shows how this SDK can be used in a Single-Page Application served by a Java Webapp. To authenticate Multi-Page
-Java Webapp Applications, it is recommended to use the [Asgardio Java OIDC SDK](https://github.com/asgardio/asgardio-java-oidc-sdk).**
+Java Webapp Applications, it is recommended to use the [Asgardio Java OIDC SDK](https://github.com/asgardeo/asgardeo-java-oidc-sdk).**
 
 **However, if you still decide to use the Asgardio JavaScript OIDC SDK, then make sure you**
 - **set the `storage` type to anything other than `webWorker`**

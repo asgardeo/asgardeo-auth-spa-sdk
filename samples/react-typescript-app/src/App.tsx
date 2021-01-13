@@ -22,7 +22,7 @@ import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardio/oidc-js";
+import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardeo/oidc-js";
 
 /**
  * SDK Client instance.
@@ -137,7 +137,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     Please open "src/config.json" file using an editor, and update
                                     the <code>clientID</code> value with the registered app clientID.
                                 </p>
-                                <p>Visit repo <a href="https://github.com/asgardeo/asgardio-js-oidc-sdk/tree/master/samples/using-oidc-js-sdk/react-typescript-app">README</a> for more details.</p>
+                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-js-oidc-sdk/tree/master/samples/using-oidc-js-sdk/react-typescript-app">README</a> for more details.</p>
                             </div>
                         )
                         : (isAuth && authenticatedUser)
@@ -194,7 +194,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     <h3>
                                         Sample demo to showcase how to authenticate a simple client side application
                                         using <b>WSO2 Identity Server</b> with the <a
-                                        href="https://github.com/asgardeo/asgardio-js-oidc-sdk"
+                                        href="https://github.com/asgardeo/asgardeo-js-oidc-sdk"
                                         target="_blank" rel="noreferrer">Asgardio OIDC JS SDK</a>
                                     </h3>
                                     <button className="btn primary" onClick={ () => handleLogin() }>Login</button>

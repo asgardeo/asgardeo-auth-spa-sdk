@@ -1,5 +1,5 @@
 {
-    "name": "@asgardio/oidc-html-javascript-sample",
+    "name": "@asgardeo/oidc-html-javascript-sample",
     "version": "0.1.34",
     "description": "HTML Javascript Authentication Sample using Asgardio OIDC JS SDK",
     "main": "index.js",
@@ -15,7 +15,7 @@
         "Javascript",
         "Authenticate"
     ],
-    "repository": "https://github.com/asgardio/asgardio-js-oidc-sdk.git",
+    "repository": "https://github.com/asgardeo/asgardeo-js-oidc-sdk.git",
     "author": "WSO2",
     "license": "Apache-2.0",
     "private": false,
