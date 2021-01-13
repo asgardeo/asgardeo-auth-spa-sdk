@@ -47,6 +47,6 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
       run: |
-        cp README.md packages/lib
-        cd packages/lib
+        cp README.md lib
+        cd lib
         npm publish --access public
