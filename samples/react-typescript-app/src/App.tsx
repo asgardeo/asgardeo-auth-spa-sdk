@@ -195,7 +195,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                         Sample demo to showcase how to authenticate a simple client side application
                                         using <b>WSO2 Identity Server</b> with the <a
                                         href="https://github.com/asgardeo/asgardeo-js-oidc-sdk"
-                                        target="_blank" rel="noreferrer">Asgardio OIDC JS SDK</a>
+                                        target="_blank" rel="noreferrer">Asgardeo OIDC JS SDK</a>
                                     </h3>
                                     <button className="btn primary" onClick={ () => handleLogin() }>Login</button>
                                 </div>

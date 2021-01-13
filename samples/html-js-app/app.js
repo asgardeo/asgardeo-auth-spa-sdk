@@ -19,7 +19,7 @@
 /**
  * SDK Client instance.
  */
-var auth = AsgardioAuth.IdentityClient.getInstance();
+var auth = AsgardeoAuth.IdentityClient.getInstance();
 
 // Initialize the SDK.
 initialize();

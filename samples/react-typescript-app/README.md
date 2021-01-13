@@ -1,4 +1,4 @@
-# React Typescript Sample Application using Asgardio OIDC JS SDK
+# React Typescript Sample Application using Asgardeo OIDC JS SDK
 
 ## Getting Started
 
@@ -6,7 +6,7 @@
 
 Follow the instructions in the [Try Out the Sample Apps](../../../packages/oidc-js/README.md#try-out-the-sample-apps) section to register an application.
 
-Make sure to add `http://localhost:3000` as a Redirect URL and also add it under allowed origins. 
+Make sure to add `http://localhost:3000` as a Redirect URL and also add it under allowed origins.
 
 ### Configuring the Sample
 
