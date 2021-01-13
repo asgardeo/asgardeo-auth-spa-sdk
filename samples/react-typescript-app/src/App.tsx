@@ -22,7 +22,7 @@ import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardeo/oidc-js";
+import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardeo/auth-spa";
 
 /**
  * SDK Client instance.

@@ -25,7 +25,7 @@ import REACT_LOGO from "./images/react-logo.png";
 import JS_LOGO from "./images/js-logo.png";
 import FOOTER_LOGOS from "./images/footer.png";
 // Import Asgardeo Auth JS SDK
-import { Hooks, IdentityClient } from "@asgardeo/oidc-js";
+import { Hooks, IdentityClient } from "@asgardeo/auth-spa";
 import * as authConfig from "./config.json";
 
 const authClient = IdentityClient.getInstance();
