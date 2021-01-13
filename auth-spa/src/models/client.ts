@@ -25,8 +25,8 @@ import {
     OIDCProviderMetaData,
     SignInConfig
 } from "@asgardeo/auth-js";
+import { HttpError, HttpRequestConfig, HttpResponse, MainThreadClientConfig, WebWorkerClientConfig } from ".";
 import { HttpClientInstance } from "../http-client";
-import { HttpError, HttpRequestConfig, HttpResponse, MainThreadClientConfig, WebWorkerClientConfig } from "../models";
 
 export interface MainThreadClientInterface {
     setHttpRequestStartCallback(callback: () => void): void;
