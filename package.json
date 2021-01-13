@@ -1,5 +1,5 @@
 {
-    "name": "asgardeo-js-oidc-sdk",
+    "name": "asgardeo-auth-spa-sdk",
     "description": "Asgardeo Authentication SDK and Sample Apps",
     "main": "index.js",
     "scripts": {
