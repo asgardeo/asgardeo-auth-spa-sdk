@@ -47,5 +47,6 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
       run: |
-        cd packages/oidc-js
+        cp README.md packages/lib
+        cd packages/lib
         npm publish --access public
