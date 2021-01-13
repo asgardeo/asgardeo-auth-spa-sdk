@@ -1,6 +1,6 @@
 {
     "name": "asgardeo-auth-spa-sdk",
-    "description": "Asgardeo Authentication SDK and Sample Apps",
+    "description": "Asgardeo Auth SPA SDK and Sample Apps",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
