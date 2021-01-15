@@ -25,7 +25,7 @@
         "start": "webpack-dev-server --mode development --inline --hot --open"
     },
     "dependencies": {
-        "@asgardeo/auth-spa": "^0.1.36",
+        "@asgardeo/auth-spa": "^0.1.0",
         "react": "^16.13.1",
         "react-dom": "^16.13.1"
     },
