@@ -1,6 +1,6 @@
 {
     "name": "@asgardeo/oidc-html-javascript-sample",
-    "version": "0.1.34",
+    "version": "0.1.0",
     "description": "HTML Javascript Authentication Sample using Asgardeo OIDC JS SDK",
     "main": "index.js",
     "keywords": [
