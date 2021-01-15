@@ -1,0 +1,12 @@
+{
+    "command": {
+        "version": {
+            "message": "[Asgardeo Release] [GitHub Actions] [Release %s] Bump version"
+        }
+    },
+    "packages": [
+        "lib",
+        "samples/*/*"
+    ],
+    "version": "0.1.34"
+}
