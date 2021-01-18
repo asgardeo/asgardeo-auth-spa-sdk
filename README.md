@@ -40,7 +40,7 @@
 -   [Using the `form_post` Response Mode](#using-the-form_post-response-mode)
 -   [Storage](#storage)
 -   [Models](#Models)
-    -   [AuthClientConfig\<Config>](#AuthClientConfig<Config>)
+    -   [AuthClientConfig\<Config>](#AuthClientConfigConfig)
     -   [BasicUserInfo](#BasicUserInfo)
     -   [SignInConfig](#SignInConfig)
     -   [OIDCEndpoints](#OIDCEndpoints)
@@ -255,7 +255,7 @@ initialize(config?: `AuthClientConfig<Config>`): void;
 #### Arguments
 
 1. config: `AuthClientConfig<Config>`
-   This contains the configurations required to implement authentication such as the client ID, server origin, etc. Refer to the [`AuthClientConfig<Config>`](#AuthClientConfig<Config>) section to learn about the available attributes.
+   This contains the configurations required to implement authentication such as the client ID, server origin, etc. Refer to the [`AuthClientConfig<Config>`](#AuthClientConfigConfig) section to learn about the available attributes.
 
 #### Description
 
