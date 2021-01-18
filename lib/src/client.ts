@@ -51,6 +51,7 @@ const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     enablePKCE: true,
     responseMode: null,
     scope: [OIDC_SCOPE],
+    sessionRefreshInterval: 300,
     validateIDToken: true
 };
 
