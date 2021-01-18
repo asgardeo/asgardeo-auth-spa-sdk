@@ -183,9 +183,8 @@ export class AsgardeoSPAClient {
      * ```
      * auth.initialize({
      *     signInRedirectURL: "http://localhost:3000/sign-in",
-     *     clientHost: "http://localhost:3000",
      *     clientID: "client ID",
-     *     serverOrigin: "http://localhost:9443"
+     *     serverOrigin: "https://localhost:9443"
      * });
      * ```
      *
@@ -853,9 +852,8 @@ export class AsgardeoSPAClient {
      * ```
      * const config = {
      *     signInRedirectURL: "http://localhost:3000/sign-in",
-     *     clientHost: "http://localhost:3000",
      *     clientID: "client ID",
-     *     serverOrigin: "http://localhost:9443"
+     *     serverOrigin: "https://localhost:9443"
      * }
      * const auth.updateConfig(config);
      * ```
