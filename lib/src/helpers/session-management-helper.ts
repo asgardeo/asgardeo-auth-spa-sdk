@@ -26,12 +26,14 @@ export const SessionManagementHelper = (() => {
     let _interval: number;
     let _redirectURL: string;
     let _authorizationEndpoint: string;
+    let _sessionRefreshInterval: number;
 
     const initialize = (
         clientID: string,
         checkSessionEndpoint: string,
         sessionState: string,
         interval: number,
+        sessionRefreshInterval: number,
         redirectURL: string,
         authorizationEndpoint: string
     ): void => {
@@ -41,9 +43,16 @@ export const SessionManagementHelper = (() => {
         _interval = interval;
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
+        _sessionRefreshInterval = sessionRefreshInterval;
 
         if (_interval > -1) {
             initiateCheckSession();
+        }
+
+        if (_sessionRefreshInterval > -1) {
+            setTimeout(() => {
+                sendPromptNoneRequest();
+            }, _sessionRefreshInterval * 1000);
         }
     };
 
@@ -112,26 +121,32 @@ export const SessionManagementHelper = (() => {
                 // [RP] session state has not changed
             } else {
                 // [RP] session state has changed. Sending prompt=none request...
-                const promptNoneIFrame: HTMLIFrameElement = rpIFrame.contentDocument.getElementById(
-                    PROMPT_NONE_IFRAME
-                ) as HTMLIFrameElement;
-                promptNoneIFrame.src =
-                    _authorizationEndpoint +
-                    "?response_type=code" +
-                    "&client_id=" +
-                    _clientID +
-                    "&scope=openid" +
-                    "&redirect_uri=" +
-                    _redirectURL +
-                    "&state=" +
-                    STATE +
-                    "&prompt=none" +
-                    "&code_challenge_method=S256&code_challenge=" +
-                    getRandomPKCEChallenge();
+                sendPromptNoneRequest();
             }
         }
 
         rpIFrame.contentWindow.addEventListener("message", receiveMessage, false);
+    };
+
+    const sendPromptNoneRequest = () => {
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame.contentDocument.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+        promptNoneIFrame.src =
+            _authorizationEndpoint +
+            "?response_type=code" +
+            "&client_id=" +
+            _clientID +
+            "&scope=openid" +
+            "&redirect_uri=" +
+            _redirectURL +
+            "&state=" +
+            STATE +
+            "&prompt=none" +
+            "&code_challenge_method=S256&code_challenge=" +
+            getRandomPKCEChallenge();
     };
 
     const receivePromptNoneResponse = async (
