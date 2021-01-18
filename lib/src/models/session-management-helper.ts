@@ -22,6 +22,7 @@ export interface SessionManagementHelperInterface {
         checkSessionEndpoint: string,
         sessionState: string,
         interval: number,
+        sessionRefreshInterval: number,
         redirectURL: string,
         authorizationEndpoint: string
     ): void;
