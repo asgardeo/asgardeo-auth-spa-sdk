@@ -6,7 +6,7 @@
     },
     "packages": [
         "lib",
-        "samples/*/*"
+        "samples/*"
     ],
     "version": "0.1.0"
 }
