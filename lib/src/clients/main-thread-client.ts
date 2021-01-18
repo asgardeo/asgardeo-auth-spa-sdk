@@ -143,6 +143,7 @@ export const MainThreadClient = async (
             oidcEndpoints.checkSessionIframe,
             (await _authenticationClient.getBasicUserInfo()).sessionState,
             config.checkSessionInterval,
+            config.sessionRefreshInterval,
             config.signInRedirectURL,
             oidcEndpoints.authorizationEndpoint
         );
