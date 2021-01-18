@@ -22,13 +22,13 @@ import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardeo/auth-spa";
+import { AsgardeoSPAClient, AuthClientConfig,  Hooks, BasicUserInfo, Config } from "@asgardeo/auth-spa";
 
 /**
  * SDK Client instance.
  * @type {IdentityClient}
  */
-const auth: IdentityClient = IdentityClient.getInstance();
+const auth: AsgardeoSPAClient = AsgardeoSPAClient.getInstance();
 
 /**
  * Main App component.
@@ -37,7 +37,7 @@ const auth: IdentityClient = IdentityClient.getInstance();
  */
 export const App: FunctionComponent<{}> = (): ReactElement => {
 
-    const [ authenticatedUser, setAuthenticatedUser ] = useState<UserInfo>(undefined);
+    const [ authenticatedUser, setAuthenticatedUser ] = useState<BasicUserInfo>(undefined);
     const [ isAuth, setIsAuth ] = useState<boolean>(false);
 
     /**
@@ -45,7 +45,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
      */
     useEffect(() => {
 
-        const config: ConfigInterface | WebWorkerConfigInterface = authConfig as (ConfigInterface | WebWorkerConfigInterface);
+        const config: AuthClientConfig<Config> = authConfig as AuthClientConfig<Config>;
 
         // Initialize the client with the config object.
         auth.initialize(config)
@@ -56,7 +56,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                 // Handle the error occurred while initializing the SDK client.
             });
 
-        auth.on(Hooks.SignIn, (response: UserInfo) => {
+        auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
             setIsAuth(true);
             setAuthenticatedUser(response);
             sessionStorage.setItem("isInitLogin", "true");
