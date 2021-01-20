@@ -68,7 +68,7 @@ npm install --save @asgardeo/auth-spa
 Or simply load the SDK by importing the script into the header of your HTML file.
 
 ```html
-<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.26/dist/asgardeo-spa.production.min.js.js"></script>
+<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.0/dist/asgardeo-spa.production.min.js"></script>
 
 <script>
     var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
@@ -187,7 +187,7 @@ The SDK supports all major browsers and provides polyfills to support incompatib
 To embed a polyfilled script in an HTML page:
 
 ```html
-<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.26/dist/polyfilled/asgardeo-spa.production.min.js.js"></script>
+<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.0/dist/asgardeo-spa.production.min.js"></script>
 ```
 
 You can also import a polyfilled module into your modular app. Asgardeo provides two different modules each supporting UMD and ESM.
