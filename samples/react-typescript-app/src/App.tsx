@@ -22,11 +22,11 @@ import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { AsgardeoSPAClient, AuthClientConfig,  Hooks, BasicUserInfo, Config } from "@asgardeo/auth-spa";
+import { AsgardeoSPAClient, AuthClientConfig, Hooks, BasicUserInfo, Config } from "@asgardeo/auth-spa";
 
 /**
  * SDK Client instance.
- * @type {IdentityClient}
+ * @type {AsgardeoSPAClient}
  */
 const auth: AsgardeoSPAClient = AsgardeoSPAClient.getInstance();
 
@@ -44,9 +44,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
      * Initialize the SDK & register Sign in and Sign out hooks.
      */
     useEffect(() => {
-
         const config: AuthClientConfig<Config> = authConfig as AuthClientConfig<Config>;
-
         // Initialize the client with the config object.
         auth.initialize(config)
             .then((response: boolean) => {
@@ -59,13 +57,17 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
         auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
             setIsAuth(true);
             setAuthenticatedUser(response);
-            sessionStorage.setItem("isInitLogin", "true");
         });
 
         auth.on(Hooks.SignOut, () => {
             setIsAuth(false);
             sessionStorage.setItem("isInitLogin", "false");
         });
+
+        if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
+            auth.signIn();
+        }
+
     }, []);
 
     /**
@@ -73,24 +75,17 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
      * if it is recall sing-in method to continue the sign-in flow
      */
     useEffect(() => {
+        if (sessionStorage.getItem("username")) {
 
-        if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
+            setAuthenticatedUser({
+                ...authenticatedUser,
+                displayName: sessionStorage.getItem("display_name"),
+                email: JSON.parse(sessionStorage.getItem("email")) ?
+                    JSON.parse(sessionStorage.getItem("email"))[ 0 ] : "",
+                username: sessionStorage.getItem("username")
+            });
 
-            auth.signIn();
-        } else {
-
-            if (sessionStorage.getItem("username")) {
-
-                setAuthenticatedUser({
-                    ...authenticatedUser,
-                    displayName: sessionStorage.getItem("display_name"),
-                    email: JSON.parse(sessionStorage.getItem("email")) ?
-                        JSON.parse(sessionStorage.getItem("email"))[ 0 ] : "",
-                    username: sessionStorage.getItem("username")
-                });
-
-                setIsAuth(true);
-            }
+            setIsAuth(true);
         }
     }, [ authenticatedUser ]);
 
