@@ -249,7 +249,7 @@ const auth2 = AsgardeoSPAClient.getInstance("primary");
 ### initialize
 
 ```TypeScript
-initialize(config?: `AuthClientConfig<Config>`): void;
+initialize(config?: `AuthClientConfig<Config>`): Promise<void>;
 ```
 
 #### Arguments
@@ -626,7 +626,7 @@ auth.refreshToken().then((response)=>{
 ### on
 
 ```typescript
-on(hook: string, callback: () => void, id?: string): void
+on(hook: string, callback: () => void, id?: string): Promise<void>
 ```
 
 #### Arguments
@@ -818,7 +818,7 @@ This table shows the extended attributes provided by the `Config` interface.
 | [`storage`](#storage) | Optional | `"sessionStorage"`, `"webWorker"`, `"localStorage"` | `"sessionStorage"` | The storage medium where the session information such as the access token should be stored.| |
 | `resourceServerURLs` |Required if the `storage` is set to `webWorker` | `string[]` | `[]` | The URLs of the API endpoints. This is needed only if the storage method is set to `webWorker`. When API calls are made through the [`httpRequest`](#httprequest) or the [`httpRequestAll`](#httprequestall) method, only the calls to the endpoints specified in the `baseURL` attribute will be allowed. Everything else will be denied. | |
 |`requestTimeout` | Optional | `number`| 60000 (seconds) | Specifies in seconds how long a request to the web worker should wait before being timed out. |
-|`sessionRefreshInterval`|Optional|`number`|300 (seconds)|Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.|
+|`sessionRefreshInterval`|Optional|`number`| 300 (seconds)|Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.|
 |`checkSessionInterval` |Optional|`number`|3 (seconds)| Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout. |
 
 #### The AuthClientConfig Interface
