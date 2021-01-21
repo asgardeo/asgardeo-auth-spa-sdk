@@ -153,7 +153,6 @@ export const SessionManagementHelper = (() => {
         signOut: () => Promise<string>,
         setSessionState: (sessionState: string) => Promise<void>
     ): Promise<boolean> => {
-        if (_interval > -1) {
             const state = new URL(window.location.href).searchParams.get("state");
             if (state !== null && state === STATE) {
                 // Prompt none response.
@@ -172,7 +171,6 @@ export const SessionManagementHelper = (() => {
                     return true;
                 }
             }
-        }
 
         return false;
     };
