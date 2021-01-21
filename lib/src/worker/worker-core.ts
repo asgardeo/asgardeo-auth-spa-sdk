@@ -64,29 +64,25 @@ export const WebWorkerCore = async (
         };
     };
 
-    _httpClient.init(
+    await _httpClient.init(
         true,
-        attachToken,
-        _onHttpRequestStart,
-        _onHttpRequestSuccess,
-        _onHttpRequestError,
-        _onHttpRequestFinish
+        attachToken
     );
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _onHttpRequestStart = callback;
+        _httpClient.setHttpRequestStartCallback(callback);
     };
 
     const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _onHttpRequestSuccess = callback;
+        _httpClient.setHttpRequestSuccessCallback(callback);
     };
 
-    const setHttpRequestFinish = (callback: () => void): void => {
-        _onHttpRequestFinish = callback;
+    const setHttpRequestFinishCallback = (callback: () => void): void => {
+        _httpClient.setHttpRequestFinishCallback(callback);
     };
 
-    const setHttpRequestError = (callback: (error: HttpError) => void): void => {
-        _onHttpRequestError = callback;
+    const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
+        _httpClient.setHttpRequestErrorCallback(callback);
     };
 
     const httpRequest = async (config: HttpRequestConfig): Promise<HttpResponse> => {
@@ -364,8 +360,8 @@ export const WebWorkerCore = async (
         requestAccessToken,
         requestCustomGrant,
         revokeAccessToken,
-        setHttpRequestError,
-        setHttpRequestFinish,
+        setHttpRequestErrorCallback,
+        setHttpRequestFinishCallback,
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
         setSessionState,
