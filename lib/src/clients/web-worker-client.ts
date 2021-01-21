@@ -291,6 +291,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             oidcEndpoints.checkSessionIframe,
             sessionState,
             config.checkSessionInterval,
+            config.sessionRefreshInterval,
             config.signInRedirectURL,
             oidcEndpoints.authorizationEndpoint
         );

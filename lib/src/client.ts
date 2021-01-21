@@ -31,7 +31,6 @@ import { Hooks, Storage } from "./constants";
 import { AsgardeoSPAException } from "./exception";
 import { HttpClientInstance } from "./http-client";
 import {
-    HttpError,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
@@ -51,6 +50,7 @@ const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     enablePKCE: true,
     responseMode: null,
     scope: [OIDC_SCOPE],
+    sessionRefreshInterval: 300,
     validateIDToken: true
 };
 
@@ -73,10 +73,6 @@ export class AsgardeoSPAClient {
     private _onEndUserSession: (response: any) => void;
     private _onInitialize: (response: boolean) => void;
     private _onCustomGrant: Map<string, (response: any) => void> = new Map();
-    private _onHttpRequestStart: () => void;
-    private _onHttpRequestSuccess: (response: HttpResponse) => void;
-    private _onHttpRequestFinish: () => void;
-    private _onHttpRequestError: (error: HttpError) => void;
     private _instanceID: string;
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -200,12 +196,13 @@ export class AsgardeoSPAClient {
         this._startedInitialize = true;
 
         if (!(this._storage === Storage.WebWorker)) {
-            this._initialized = true;
             if (!this._client) {
                 const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
                 const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
                 this._client = await MainThreadClient({ ...defaultConfig, ...mainThreadClientConfig });
             }
+
+            this._initialized = true;
 
             if (this._onInitialize) {
                 this._onInitialize(true);
@@ -717,8 +714,8 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public on(hook: Hooks.CustomGrant, callback: (response?: any) => void, id: string): void;
-    public on(
+    public async on(hook: Hooks.CustomGrant, callback: (response?: any) => void, id: string): Promise<void>;
+    public async on(
         hook:
             | Hooks.RevokeAccessToken
             | Hooks.HttpRequestError
@@ -729,8 +726,9 @@ export class AsgardeoSPAClient {
             | Hooks.SignIn
             | Hooks.SignOut,
         callback: (response?: any) => void
-    ): void;
-    public on(hook: Hooks, callback: (response?: any) => void, id?: string): void {
+    ): Promise<void>;
+    public async on(hook: Hooks, callback: (response?: any) => void, id?: string): Promise<void> {
+        await this._isInitialized();
         if (callback && typeof callback === "function") {
             switch (hook) {
                 case Hooks.SignIn:
@@ -749,32 +747,16 @@ export class AsgardeoSPAClient {
                     this._onInitialize = callback;
                     break;
                 case Hooks.HttpRequestError:
-                    if (this._storage === Storage.WebWorker) {
-                        this._client.setHttpRequestErrorCallback(callback);
-                    }
-
-                    this._onHttpRequestError = callback;
+                    this._client.setHttpRequestErrorCallback(callback);
                     break;
                 case Hooks.HttpRequestFinish:
-                    if (this._storage === Storage.WebWorker) {
-                        this._client.setHttpRequestFinishCallback(callback);
-                    }
-
-                    this._onHttpRequestFinish = callback;
+                    this._client.setHttpRequestFinishCallback(callback);
                     break;
                 case Hooks.HttpRequestStart:
-                    if (this._storage === Storage.WebWorker) {
-                        this._client.setHttpRequestStartCallback(callback);
-                    }
-
-                    this._onHttpRequestStart = callback;
+                    this._client.setHttpRequestStartCallback(callback);
                     break;
                 case Hooks.HttpRequestSuccess:
-                    if (this._storage === Storage.WebWorker) {
-                        this._client.setHttpRequestSuccessCallback(callback);
-                    }
-
-                    this._onHttpRequestSuccess = callback;
+                    this._client.setHttpRequestSuccessCallback(callback);
                     break;
                 case Hooks.CustomGrant:
                     this._onCustomGrant.set(id, callback);

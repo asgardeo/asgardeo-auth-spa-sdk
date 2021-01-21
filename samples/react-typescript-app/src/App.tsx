@@ -22,13 +22,13 @@ import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { IdentityClient, ConfigInterface, WebWorkerConfigInterface, Hooks, UserInfo } from "@asgardeo/auth-spa";
+import { AsgardeoSPAClient, AuthClientConfig, Hooks, BasicUserInfo, Config } from "@asgardeo/auth-spa";
 
 /**
  * SDK Client instance.
- * @type {IdentityClient}
+ * @type {AsgardeoSPAClient}
  */
-const auth: IdentityClient = IdentityClient.getInstance();
+const auth: AsgardeoSPAClient = AsgardeoSPAClient.getInstance();
 
 /**
  * Main App component.
@@ -37,16 +37,14 @@ const auth: IdentityClient = IdentityClient.getInstance();
  */
 export const App: FunctionComponent<{}> = (): ReactElement => {
 
-    const [ authenticatedUser, setAuthenticatedUser ] = useState<UserInfo>(undefined);
+    const [ authenticatedUser, setAuthenticatedUser ] = useState<BasicUserInfo>(undefined);
     const [ isAuth, setIsAuth ] = useState<boolean>(false);
 
     /**
      * Initialize the SDK & register Sign in and Sign out hooks.
      */
     useEffect(() => {
-
-        const config: ConfigInterface | WebWorkerConfigInterface = authConfig as (ConfigInterface | WebWorkerConfigInterface);
-
+        const config: AuthClientConfig<Config> = authConfig as AuthClientConfig<Config>;
         // Initialize the client with the config object.
         auth.initialize(config)
             .then((response: boolean) => {
@@ -56,16 +54,20 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                 // Handle the error occurred while initializing the SDK client.
             });
 
-        auth.on(Hooks.SignIn, (response: UserInfo) => {
+        auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
             setIsAuth(true);
             setAuthenticatedUser(response);
-            sessionStorage.setItem("isInitLogin", "true");
         });
 
         auth.on(Hooks.SignOut, () => {
             setIsAuth(false);
             sessionStorage.setItem("isInitLogin", "false");
         });
+
+        if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
+            auth.signIn();
+        }
+
     }, []);
 
     /**
@@ -73,24 +75,17 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
      * if it is recall sing-in method to continue the sign-in flow
      */
     useEffect(() => {
+        if (sessionStorage.getItem("username")) {
 
-        if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
+            setAuthenticatedUser({
+                ...authenticatedUser,
+                displayName: sessionStorage.getItem("display_name"),
+                email: JSON.parse(sessionStorage.getItem("email")) ?
+                    JSON.parse(sessionStorage.getItem("email"))[ 0 ] : "",
+                username: sessionStorage.getItem("username")
+            });
 
-            auth.signIn();
-        } else {
-
-            if (sessionStorage.getItem("username")) {
-
-                setAuthenticatedUser({
-                    ...authenticatedUser,
-                    displayName: sessionStorage.getItem("display_name"),
-                    email: JSON.parse(sessionStorage.getItem("email")) ?
-                        JSON.parse(sessionStorage.getItem("email"))[ 0 ] : "",
-                    username: sessionStorage.getItem("username")
-                });
-
-                setIsAuth(true);
-            }
+            setIsAuth(true);
         }
     }, [ authenticatedUser ]);
 

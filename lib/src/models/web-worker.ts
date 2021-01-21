@@ -38,8 +38,8 @@ export class WebWorkerClass<T> extends Worker {
 export interface WebWorkerCoreInterface {
     setHttpRequestStartCallback(callback: () => void): void;
     setHttpRequestSuccessCallback(callback: (response: HttpResponse) => void): void;
-    setHttpRequestFinish(callback: () => void): void;
-    setHttpRequestError(callback: (error: HttpError) => void): void;
+    setHttpRequestFinishCallback(callback: () => void): void;
+    setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
     httpRequestAll(configs: HttpRequestConfig[]): Promise<HttpResponse[]>;
     enableHttpHandler(): void;

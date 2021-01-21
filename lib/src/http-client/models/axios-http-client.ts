@@ -28,17 +28,14 @@ import {
  * Http Http Client model
  */
 export interface HttpClientInstance extends HttpInstance {
-    init?(
-        isHandlerEnabled: boolean,
-        attachToken: (request: HttpRequestConfig) => Promise<void>,
-        requestStartCallback: (request: HttpRequestConfig) => void,
-        requestSuccessCallback: (response: HttpResponse) => void,
-        requestErrorCallback: (error: HttpError) => void,
-        requestFinishCallback: () => void
-    ): Promise<void>;
+    init?(isHandlerEnabled: boolean, attachToken: (request: HttpRequestConfig) => Promise<void>): Promise<void>;
     disableHandler?: () => void;
     disableHandlerWithTimeout?: (timeout: number) => void;
     enableHandler?: () => void;
     all?<T>(values: (T | Promise<T>)[]): Promise<T[]>;
     spread?<T, R>(callback: (...args: T[]) => R): (array: T[]) => R;
+    setHttpRequestStartCallback?: (callback: () => void) => void;
+    setHttpRequestSuccessCallback?: (callback: (response: HttpResponse) => void) => void;
+    setHttpRequestErrorCallback?: (callback: (error: HttpError) => void) => void;
+    setHttpRequestFinishCallback?: (callback: () => void) => void;
 }

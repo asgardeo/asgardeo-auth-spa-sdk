@@ -68,6 +68,10 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
      */
     private constructor() {
         this.init = this.init.bind(this);
+        this.setHttpRequestErrorCallback = this.setHttpRequestErrorCallback.bind(this);
+        this.setHttpRequestFinishCallback = this.setHttpRequestFinishCallback.bind(this);
+        this.setHttpRequestStartCallback = this.setHttpRequestStartCallback.bind(this);
+        this.setHttpRequestSuccessCallback = this.setHttpRequestSuccessCallback.bind(this);
     }
 
     /**
@@ -110,7 +114,10 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
         this.axiosInstance.enableHandler = this.clientInstance.enableHandler;
         this.axiosInstance.disableHandler = this.clientInstance.disableHandler;
         this.axiosInstance.disableHandlerWithTimeout = this.clientInstance.disableHandlerWithTimeout;
-
+        this.axiosInstance.setHttpRequestStartCallback = this.clientInstance.setHttpRequestStartCallback;
+        this.axiosInstance.setHttpRequestSuccessCallback = this.clientInstance.setHttpRequestSuccessCallback;
+        this.axiosInstance.setHttpRequestErrorCallback = this.clientInstance.setHttpRequestErrorCallback;
+        this.axiosInstance.setHttpRequestFinishCallback = this.clientInstance.setHttpRequestFinishCallback;
         return this.axiosInstance;
     }
 
@@ -185,36 +192,22 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
      */
     public async init(
         isHandlerEnabled = true,
-        attachToken: (request: HttpRequestConfig) => Promise<void>,
-        requestStartCallback: (request: HttpRequestConfig) => void,
-        requestSuccessCallback: (response: HttpResponse) => void,
-        requestErrorCallback: (error: HttpError) => void,
-        requestFinishCallback: () => void
+        attachToken: (request: HttpRequestConfig) => Promise<void>
     ): Promise<void> {
         HttpClient.isHandlerEnabled = isHandlerEnabled;
 
-        if (this.requestStartCallback
-            && this.attachToken
-            && this.requestSuccessCallback
-            && this.requestErrorCallback
-            && this.requestFinishCallback) {
+        if (
+            this.requestStartCallback &&
+            this.attachToken &&
+            this.requestSuccessCallback &&
+            this.requestErrorCallback &&
+            this.requestFinishCallback
+        ) {
             return;
         }
 
         if (!this.attachToken) {
             this.attachToken = attachToken;
-        }
-        if (!this.requestStartCallback) {
-            this.requestStartCallback = requestStartCallback;
-        }
-        if (!this.requestSuccessCallback) {
-            this.requestSuccessCallback = requestSuccessCallback;
-        }
-        if (!this.requestErrorCallback) {
-            this.requestErrorCallback = requestErrorCallback;
-        }
-        if (!this.requestFinishCallback) {
-            this.requestFinishCallback = requestFinishCallback;
         }
     }
 
@@ -242,6 +235,20 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
 
         setTimeout(() => {
             HttpClient.isHandlerEnabled = true;
-        }, (timeout));
+        }, timeout);
+    }
+
+    public setHttpRequestStartCallback(callback: () => void): void {
+        this.requestStartCallback = callback;
+    }
+
+    public setHttpRequestSuccessCallback(callback:(response: HttpResponse)=>void) : void{
+        this.requestSuccessCallback = callback;
+    }
+    public setHttpRequestErrorCallback(callback:(error: HttpError)=>void) : void {
+        this.requestErrorCallback = callback;
+    }
+    public setHttpRequestFinishCallback(callback:()=>void) : void {
+        this.requestFinishCallback = callback;
     }
 }

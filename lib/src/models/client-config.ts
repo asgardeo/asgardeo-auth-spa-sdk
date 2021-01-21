@@ -21,6 +21,7 @@ import { Storage } from "../constants";
 
 export interface SPAConfig {
     checkSessionInterval?: number;
+    sessionRefreshInterval?: number;
 }
 
 /**

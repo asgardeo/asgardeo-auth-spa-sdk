@@ -17,6 +17,8 @@
  *
  */
 
+import { HttpError, HttpResponse } from "../../models";
+
 /**
  * Http client interface with static functions.
  */
@@ -28,17 +30,18 @@ export interface HttpClientStatic<S> {
  * Http client interface.
  */
 export interface HttpClientInterface<T, U, V> {
-    init(isHandlerEnabled: boolean,
-         attachToken: () => Promise<void>,
-         requestStartCallback: () => void,
-         requestSuccessCallback: (response: U) => void,
-         requestErrorCallback: (error: V) => void,
-         requestFinishCallback: () => void
-    ): Promise<void>
+    init(
+        isHandlerEnabled: boolean,
+        attachToken: () => Promise<void>
+    ): Promise<void>;
     disableHandler: () => void;
     disableHandlerWithTimeout: (timeout: number) => void;
     enableHandler: () => void;
     errorHandler(error: V): V;
     requestHandler(request: T): Promise<T>;
     successHandler(response: U): U;
+    setHttpRequestStartCallback?:(callback: () => void) => void;
+    setHttpRequestSuccessCallback?: (callback: (response: HttpResponse) => void) => void;
+    setHttpRequestErrorCallback?: (callback: (error: HttpError) => void) => void;
+    setHttpRequestFinishCallback?: (callback: () => void) => void;
 }
