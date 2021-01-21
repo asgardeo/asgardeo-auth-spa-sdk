@@ -68,10 +68,6 @@ export const MainThreadClient = async (
     const _dataLayer = _authenticationClient.getDataLayer();
     const _sessionManagementHelper = SessionManagementHelper();
 
-    let _onHttpRequestStart: () => void;
-    let _onHttpRequestSuccess: (response: HttpResponse) => void;
-    let _onHttpRequestFinish: () => void;
-    let _onHttpRequestError: (error: HttpError) => void;
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
@@ -81,29 +77,25 @@ export const MainThreadClient = async (
         };
     };
 
-    _httpClient.init(
+    await _httpClient.init(
         true,
-        attachToken,
-        _onHttpRequestStart,
-        _onHttpRequestSuccess,
-        _onHttpRequestError,
-        _onHttpRequestFinish
+        attachToken
     );
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _onHttpRequestStart = callback;
+        _httpClient.setHttpRequestStartCallback(callback);
     };
 
     const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _onHttpRequestSuccess = callback;
+        _httpClient.setHttpRequestSuccessCallback(callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _onHttpRequestFinish = callback;
+        _httpClient.setHttpRequestFinishCallback(callback);
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _onHttpRequestError = callback;
+        _httpClient.setHttpRequestErrorCallback(callback);
     };
 
     const httpRequest = (config: HttpRequestConfig): Promise<HttpResponse> => {
@@ -174,7 +166,6 @@ export const MainThreadClient = async (
                 username: ""
             });
         }
-
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
