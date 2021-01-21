@@ -81,8 +81,8 @@ ctx.onmessage = async ({ data, ports }) => {
             try {
                 const config: AuthClientConfig<WebWorkerClientConfig> = { ...data.data };
                 webWorker = await WebWorkerCore(config);
-                webWorker.setHttpRequestError(onRequestErrorCallback);
-                webWorker.setHttpRequestFinish(onRequestFinishCallback);
+                webWorker.setHttpRequestErrorCallback(onRequestErrorCallback);
+                webWorker.setHttpRequestFinishCallback(onRequestFinishCallback);
                 webWorker.setHttpRequestStartCallback(onRequestStartCallback);
                 webWorker.setHttpRequestSuccessCallback(onRequestSuccessCallback);
                 port.postMessage(MessageUtils.generateSuccessMessage());
