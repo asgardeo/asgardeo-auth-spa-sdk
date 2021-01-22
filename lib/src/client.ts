@@ -22,7 +22,6 @@ import {
     CustomGrantConfig,
     DecodedIDTokenPayload,
     OIDCEndpoints,
-    OIDC_SCOPE,
     SignInConfig
 } from "@asgardeo/auth-js";
 import { Config, WebWorkerClientConfig } from ".";
@@ -44,14 +43,7 @@ import { SPAUtils } from "./utils";
  */
 const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     checkSessionInterval: 3,
-    clientHost: origin,
-    clientSecret: null,
-    clockTolerance: 60,
-    enablePKCE: true,
-    responseMode: null,
-    scope: [OIDC_SCOPE],
-    sessionRefreshInterval: 300,
-    validateIDToken: true
+    sessionRefreshInterval: 300
 };
 
 const PRIMARY_INSTANCE = "primaryInstance";
