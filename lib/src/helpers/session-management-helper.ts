@@ -67,6 +67,8 @@ export const SessionManagementHelper = (() => {
             sessionState: string,
             interval: number
         ): void {
+            const OP_IFRAME = "opIFrame";
+
             function checkSession(): void {
                 if (Boolean(clientID) && Boolean(sessionState)) {
                     const message = `${clientID} ${sessionState}`;
