@@ -306,6 +306,10 @@ export const MainThreadClient = async (
         return _authenticationClient.getDecodedIDToken();
     };
 
+    const getIDToken = async (): Promise<string> => {
+        return _authenticationClient.getIDToken();
+    }
+
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
         return _authenticationClient.getOIDCServiceEndpoints();
     };
@@ -330,6 +334,7 @@ export const MainThreadClient = async (
         getBasicUserInfo,
         getDecodedIDToken,
         getHttpClient,
+        getIDToken,
         getOIDCServiceEndpoints,
         httpRequest,
         httpRequestAll,
