@@ -29,6 +29,7 @@
     -   [revokeAccessToken](#revokeAccessToken)
     -   [getOIDCServiceEndpoints](#getOIDCServiceEndpoints)
     -   [getDecodedIDToken](#getdecodedidtoken)
+    -   [getIDToken](#getIDToken)
     -   [getAccessToken](#getaccesstoken)
     -   [refreshAccessToken](#refreshAccessToken)
     -   [on](#on)
@@ -164,21 +165,21 @@ npm run build
 
 #### 1. HTML JavaScript Sample
 
-The *Callback URL* of this app is `http://localhost:3000`.
+The _Callback URL_ of this app is `http://localhost:3000`.
 
-You can try out the HTML JavaScript Sample App from the [samples/html-js-app](../../samples/using-oidc-js-sdk/html-js-app). The instructions to run the app can  be found [here](/samples/vanilla-js-app/README.md)
+You can try out the HTML JavaScript Sample App from the [samples/html-js-app](../../samples/using-oidc-js-sdk/html-js-app). The instructions to run the app can be found [here](/samples/vanilla-js-app/README.md)
 
 #### 2. React Typescript Sample
 
-The *Callback URL* of this app is `http://localhost:3000`.
+The _Callback URL_ of this app is `http://localhost:3000`.
 
-You can try out the React Sample App from the [samples/react-typescript-app](../../samples/using-oidc-js-sdk/react-typescript-app). The instructions to run the app can  be found [here](/samples/react-js-app/README.md)
+You can try out the React Sample App from the [samples/react-typescript-app](../../samples/using-oidc-js-sdk/react-typescript-app). The instructions to run the app can be found [here](/samples/react-js-app/README.md)
 
 #### 2. Java Webapp Sample
 
-The *Callback URL* of this app is the URL of this app on the server. For instance, if your Tomcat server is running on `http://localhost:8080`, then the callback URL will be `http://localhost:8080/java-webapp`.
+The _Callback URL_ of this app is the URL of this app on the server. For instance, if your Tomcat server is running on `http://localhost:8080`, then the callback URL will be `http://localhost:8080/java-webapp`.
 
-You can try out the Java Webapp Sample App from the [samples/java-webapp](../../samples/using-oidc-js-sdk/java-webapp). The instructions to run the app can  be found [here](/samples/java-webapp/README.md)
+You can try out the Java Webapp Sample App from the [samples/java-webapp](../../samples/using-oidc-js-sdk/java-webapp). The instructions to run the app can be found [here](/samples/java-webapp/README.md)
 
 ## Browser Compatibility
 
@@ -448,7 +449,7 @@ requestCustomGrant(config: CustomGranConfig): Promise<HttpResponse | BasicUserIn
 #### Arguments
 
 1. config: [`CustomGrantConfig`](#CustomGrantConfig)
-    A config object to configure the custom-grant request. To learn more about the different attributes that can be used with config object, see the [`CustomGrantConfig`](#CustomGrantConfig) section.
+   A config object to configure the custom-grant request. To learn more about the different attributes that can be used with config object, see the [`CustomGrantConfig`](#CustomGrantConfig) section.
 
 #### Returns
 
@@ -565,6 +566,29 @@ auth.getDecodedIDToken().then((idToken) => {
 
 ---
 
+### getIDToken
+
+```TypeScript
+getIDToken(): Promise<string>
+```
+
+#### Returns
+
+idToken: `Promise<string>`
+The id token.
+
+#### Description
+
+This method returns the id token.
+
+#### Example
+
+```TypeScript
+const idToken = await auth.getIDToken();
+```
+
+---
+
 ### getAccessToken
 
 ```typescript
@@ -636,7 +660,7 @@ on(hook: string, callback: () => void, id?: string): Promise<void>
 2. callback: `() => void`
    The callback function that should be fired.
 3. id?: `string`
-    An id for the method. This is required only when the hook type is `custom-grant`.
+   An id for the method. This is required only when the hook type is `custom-grant`.
 
 #### Description
 
@@ -653,7 +677,7 @@ If you are using TypeScript, you may want to use the `Hooks` enum that consists 
 | `"http-request-finish"`  | `httpRequest()` (Called after an http request is sent and response is received.) |
 | `"http-request-error"`   | `httpRequest()` (Called when an http request returns an error)                   |
 | `"http-request-success"` | `httpRequest()` (Called when an http requests returns a response successfully)   |
-| `"revoke-access-token"`     | `revokeAccessToken()`                                                               | A boolean value indicating if the process was successful or not                         |
+| `"revoke-access-token"`  | `revokeAccessToken()`                                                            | A boolean value indicating if the process was successful or not                         |
 | `"custom-grant"`         | `customGrant()`                                                                  | Returns the response from the custom grant request.                                     |
 
 **When the user signs out, the user is taken to the identity server's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
@@ -822,23 +846,24 @@ This table shows the extended attributes provided by the `Config` interface.
 |`checkSessionInterval` |Optional|`number`|3 (seconds)| Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout. |
 
 #### The AuthClientConfig Interface
-|Attribute| Required/Optional| Type | Default Value| Description|
-|--|--|--|--|--|
-|`signInRedirectURL` |Required|`string`|""|The URL to redirect to after the user authorizes the client app. eg: `https//localhost:3000/sign-in`|
-|`signOutRedirectURL` |Optional|`string`| The `signInRedirectURL` URL will be used if this value is not provided. |The URL to redirect to after the user |signs out. eg: `http://localhost:3000/dashboard`|
-|`clientHost`|Optional| `string`|The origin of the client app obtained using `window.origin`|The hostname of the client app. eg: `https://localhost:3000`|
-|`clientID`|Required| `string`|""|The client ID of the OIDC application hosted in the Asgardeo.|
-|`clientSecret`|Optional| `string`|""|The client secret of the OIDC application|
-|`enablePKCE`|Optional| `boolean`|`true`| Specifies if a PKCE should be sent with the request for the authorization code.|
-|`prompt`|Optional| `string`|""|Specifies the prompt type of an OIDC request|
-|`responseMode`|Optional| `ResponseMode`|`"query"`|Specifies the response mode. The value can either be `query` or `form_post`|
-|`scope`|Optional| `string[]`|`["openid"]`|Specifies the requested scopes.|
-|`serverOrigin`|Required| `string`|""|The origin of the Identity Provider. eg: `https://www.asgardeo.io`|
-|`endpoints`|Optional| `OIDCEndpoints`|[OIDC Endpoints Default Values](#oidc-endpoints)|The OIDC endpoint URLs. The SDK will try to obtain the endpoint URLS |using the `.well-known` endpoint. If this fails, the SDK will use these endpoint URLs. If this attribute is not set, then the default endpoint URLs will be |used. However, if the `overrideWellEndpointConfig` is set to `true`, then this will override the endpoints obtained from the `.well-known` endpoint. |
-|`overrideWellEndpointConfig`|Optional| `boolean` | `false` | If this option is set to `true`, then the `endpoints` object will override endpoints obtained |from the `.well-known` endpoint. If this is set to `false`, then this will be used as a fallback if the request to the `.well-known` endpoint fails.|
-|`wellKnownEndpoint`|Optional| `string`|`"/oauth2/token/.well-known/openid-configuration"`| The URL of the `.well-known` endpoint.|
-|`validateIDToken`|Optional| `boolean`|`true`|Allows you to enable/disable JWT ID token validation after obtaining the ID token.|
-|`clockTolerance`|Optional| `number`|`60`|Allows you to configure the leeway when validating the id_token.|
+
+| Attribute                    | Required/Optional | Type            | Default Value                                                           | Description                                                                                          |
+| ---------------------------- | ----------------- | --------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signInRedirectURL`          | Required          | `string`        | ""                                                                      | The URL to redirect to after the user authorizes the client app. eg: `https//localhost:3000/sign-in` |
+| `signOutRedirectURL`         | Optional          | `string`        | The `signInRedirectURL` URL will be used if this value is not provided. | The URL to redirect to after the user                                                                | signs out. eg: `http://localhost:3000/dashboard`                                                                                                            |
+| `clientHost`                 | Optional          | `string`        | The origin of the client app obtained using `window.origin`             | The hostname of the client app. eg: `https://localhost:3000`                                         |
+| `clientID`                   | Required          | `string`        | ""                                                                      | The client ID of the OIDC application hosted in the Asgardeo.                                        |
+| `clientSecret`               | Optional          | `string`        | ""                                                                      | The client secret of the OIDC application                                                            |
+| `enablePKCE`                 | Optional          | `boolean`       | `true`                                                                  | Specifies if a PKCE should be sent with the request for the authorization code.                      |
+| `prompt`                     | Optional          | `string`        | ""                                                                      | Specifies the prompt type of an OIDC request                                                         |
+| `responseMode`               | Optional          | `ResponseMode`  | `"query"`                                                               | Specifies the response mode. The value can either be `query` or `form_post`                          |
+| `scope`                      | Optional          | `string[]`      | `["openid"]`                                                            | Specifies the requested scopes.                                                                      |
+| `serverOrigin`               | Required          | `string`        | ""                                                                      | The origin of the Identity Provider. eg: `https://www.asgardeo.io`                                   |
+| `endpoints`                  | Optional          | `OIDCEndpoints` | [OIDC Endpoints Default Values](#oidc-endpoints)                        | The OIDC endpoint URLs. The SDK will try to obtain the endpoint URLS                                 | using the `.well-known` endpoint. If this fails, the SDK will use these endpoint URLs. If this attribute is not set, then the default endpoint URLs will be | used. However, if the `overrideWellEndpointConfig` is set to `true`, then this will override the endpoints obtained from the `.well-known` endpoint. |
+| `overrideWellEndpointConfig` | Optional          | `boolean`       | `false`                                                                 | If this option is set to `true`, then the `endpoints` object will override endpoints obtained        | from the `.well-known` endpoint. If this is set to `false`, then this will be used as a fallback if the request to the `.well-known` endpoint fails.        |
+| `wellKnownEndpoint`          | Optional          | `string`        | `"/oauth2/token/.well-known/openid-configuration"`                      | The URL of the `.well-known` endpoint.                                                               |
+| `validateIDToken`            | Optional          | `boolean`       | `true`                                                                  | Allows you to enable/disable JWT ID token validation after obtaining the ID token.                   |
+| `clockTolerance`             | Optional          | `number`        | `60`                                                                    | Allows you to configure the leeway when validating the id_token.                                     |
 
 ### BasicUserInfo
 
@@ -853,11 +878,12 @@ This table shows the extended attributes provided by the `Config` interface.
 
 ### SignInConfig
 
-| Method        | Required/Optional | Type                  | Default Value | Description                                                                                                                                                            |
-| ------------- | ----------------- | --------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fidp`        | Optional          | `string`              | ""            | The `fidp` parameter that can be used to redirect a user directly to an IdP's sign-in page.                                                                            |
-| `forceInit`   | Optional          | `boolean`             | `false`       | Forces obtaining the OIDC endpoints from the `.well-known` endpoint. A request to this endpoint is not sent if a request has already been sent. This forces a request. |
-| key: `string` | Optional          | `string` \| `boolean` | ""            | Any key-value pair to be appended as path parameters to the authorization URL.                                                                                         |
+| Method               | Required/Optional | Type                  | Default Value | Description                                                                                                                                                                                            |
+| -------------------- | ----------------- | --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `callOnlyOnRedirect` | Optional          | `string`              | ""            | Makes sure that this function is executed only after being redirected from the Single-Sign-On page. This will be useful to send a token request after the user authenticates themself with the server. |
+| `fidp`               | Optional          | `string`              | ""            | The `fidp` parameter that can be used to redirect a user directly to an IdP's sign-in page.                                                                                                            |
+| `forceInit`          | Optional          | `boolean`             | `false`       | Forces obtaining the OIDC endpoints from the `.well-known` endpoint. A request to this endpoint is not sent if a request has already been sent. This forces a request.                                 |
+| key: `string`        | Optional          | `string` \| `boolean` | ""            | Any key-value pair to be appended as path parameters to the authorization URL.                                                                                                                         |
 
 ### OIDCEndpoints
 
