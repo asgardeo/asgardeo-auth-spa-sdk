@@ -43,16 +43,16 @@
     <div id="logged-in-view" style="display:none;">
         <div class="header-title">
             <h1>
-                Javascript Based Authentication Sample <br> (OIDC - Authorization Code Grant)
+                Javascript-based Authentication Sample <br> (OIDC - Authorization Code Grant)
             </h1>
         </div>
         <div class="content">
-            <h3>Below are the basic details retrieve from the server on a successful login.</h3>
+            <h3>Below are the basic details retrieved from the server on a successful login.</h3>
             <div>
                 <ul class="details">
-                    <li><b>Name:</b> <span id="text-display-name"></span></li>
-                    <li><b>Username:</b> <span id="text-userame"></span></li>
-                    <li><b>Email:</b> <span id="text-email"></span></li>
+                    <li id="display-name-item"><b>Name:</b> <span id="text-display-name"></span></li>
+                    <li id="username-item"><b>Username:</b> <span id="text-username"></span></li>
+                    <li id="email-item"><b>Email:</b> <span id="text-email"></span></li>
                 </ul>
             </div>
             <button class="btn primary" onClick="handleLogout()">Logout</button>
@@ -62,16 +62,16 @@
     <div id="logged-out-view" style="display:none;">
         <div class="header-title">
             <h1>
-                Javascript Based Authentication Sample <br> (OIDC - Authorization Code Grant)
+                Javascript-based Authentication Sample <br> (OIDC - Authorization Code Grant)
             </h1>
         </div>
         <div class="content">
             <img src="images/home.png" class="home-image"/>
             <h3>
                 Sample demo to showcase how to authenticate a simple client side application
-                using <b>WSO2 Identity Server</b> with the <a
+                using <b>Asgardeo</b> with the <a
                     href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
-                    target="_blank" rel="noreferrer">Asgardeo OIDC JS SDK</a>
+                    target="_blank" rel="noreferrer">Asgardeo Auth SPA SDK</a>
             </h3>
             <button class="btn primary" onClick="handleLogin()">Login</button>
         </div>
@@ -81,31 +81,20 @@
 
 <img src="images/footer.png" class="footer-image"/>
 
-<!-- Add Asgardeo OIDC JS -->
+<!-- Add Asgardeo Auth SPA SDK -->
 <script type="application/javascript"
-        src="https://unpkg.com/@asgardeo/auth-spa@0.1.32/dist/asgardeo-oidc.production.min.js"></script>
+        src="https://unpkg.com/@asgardeo/auth-spa@latest/dist/asgardeo-spa.production.min.js"></script>
 
 <!-- Asgardeo SDK Init Config -->
 <script>
-    var webAppOrigin = "http://localhost:3000";
-
     const authConfig = {
-        // Web App URL
-        clientHost: webAppOrigin,
         // ClientID generated for the application
         clientID: "",
         // After login callback URL - We have use app root as this is a SPA
         // (Add it in application OIDC settings "Callback Url")
-        signInRedirectURL: webAppOrigin,
-        // After logout callback URL - We have use app root as this is a SPA
-        // (Add it in application OIDC settings "Callback Url")
-        signOutRedirectURL: webAppOrigin,
+        signInRedirectURL: origin,
         // WSO2 Identity Server URL
-        serverOrigin: "https://localhost:9443",
-        // Storage Strategy. Supported Values are `localStorage`, `sessionStorage` & `webWorker`.
-        storage: "sessionStorage",
-        // Enables/ Disables PKCE flow.
-        enablePKCE: true
+        serverOrigin: ""
     };
 </script>
 
