@@ -288,7 +288,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async signIn(
-        config?: SignInConfig & { callOnlyOnRedirect: boolean; },
+        config?: SignInConfig & { callOnlyOnRedirect: boolean },
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> {
@@ -603,6 +603,28 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         return this._client.getDecodedIDToken();
+    }
+
+    /**
+     * This method return the ID token.
+     *
+     * @return {Promise<string>} - A Promise that resolves with the ID token.
+     *
+     * @example
+     * ```
+     * const idToken = await auth.getIDToken();
+     * ```
+     *
+     * @link https://github.com/asgardeo/asgardeo-auth-js-sdk/tree/master#getIDToken
+     *
+     * @memberof AsgardeoAuthClient
+     *
+     * @preserve
+     */
+    public async getIDToken(): Promise<string> {
+        await this._validateMethod();
+
+        return this._client.getIDToken();
     }
 
     /**
