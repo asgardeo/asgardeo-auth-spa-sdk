@@ -21,7 +21,7 @@ name: Builder
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - '**/package.json'
       - '**/package-lock.json'
