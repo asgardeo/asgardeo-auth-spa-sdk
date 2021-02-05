@@ -19,10 +19,7 @@
 /**
  * SDK Client instance.
  */
-var auth = AsgardeoAuth.IdentityClient.getInstance();
-
-// Initialize the SDK.
-initialize();
+var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
 
 /**
  * Authenticated State.
@@ -38,22 +35,12 @@ var state = {
  * Initializes the SDK.
  */
 function initialize() {
-
     // Initialize the client with the config object. Check `index.html` for the config object.
-    auth.initialize(authConfig)
-        .then((response) => {
-            // Successfully initialized the SDK client.
-        })
-        .catch((error) => {
-            // Handle the error occurred while initializing the SDK client.
-        });
+    auth.initialize(authConfig);
 
     //Pass the callback function to be called after signing in using the `sign-in` hook
     auth.on("sign-in", function (response) {
         setAuthenticatedState(response);
-
-        sessionStorage.setItem("isInitLogin", "false");
-
         updateView();
     });
 }
@@ -62,11 +49,22 @@ function initialize() {
  * Updates the view after a login or logout.
  */
 function updateView() {
-
     if (state.isAuth) {
         document.getElementById("text-display-name").innerHTML = state.displayName;
-        document.getElementById("text-userame").innerHTML = state.username;
+        document.getElementById("text-username").innerHTML = state.username;
         document.getElementById("text-email").innerHTML = state.email;
+
+        if (!state.displayName) {
+            document.getElementById("display-name-item").style.display = "none";
+        }
+
+        if (!state.email) {
+            document.getElementById("email-item").style.display = "none";
+        }
+
+        if (!state.username) {
+            document.getElementById("user-name-item").style.display = "none";
+        }
 
         document.getElementById("logged-in-view").style.display = "block";
         document.getElementById("logged-out-view").style.display = "none";
@@ -80,12 +78,11 @@ function updateView() {
  * Sets the authenticated user's information & auth state.
  */
 function setAuthenticatedState(response) {
-
     state.displayName = response.displayName;
-    state.email = (response.email !== null && response.email !== "null")
-    && (response.email.length && response.email.length > 0)
-        ? response.email[0]
-        : "";
+    state.email =
+        response.email !== null && response.email !== "null" && response.email.length && response.email.length > 0
+            ? response.email[ 0 ]
+            : "";
     state.username = response.username;
     state.isAuth = true;
 }
@@ -94,64 +91,37 @@ function setAuthenticatedState(response) {
  * Handles login button click event.
  */
 function handleLogin() {
-
-    // Add a check property to the session, so we can recall sign-in method upon redirect with authorization code.
-    // authorization code grant type flow
-    sessionStorage.setItem("isInitLogin", "true");
-    auth.signIn()
-        .then(function (response) {
-            // Perform any actions you after successful sign in.
-        })
-        .catch(function (error) {
-            // Handle sign in error.
-        });
+    auth.signIn();
 }
 
 /**
  * Handles logout button click event.
  */
 function handleLogout() {
-
-    auth.signOut()
-        .then(function (response) {
-            state.isAuth = false;
-            updateView();
-        })
-        .catch(function (error) {
-            // Handle sign out error.
-        });
+    auth.signOut();
 }
+
+// Initialize the SDK.
+initialize();
+
+auth.on("sign-out", function () {
+    state.isAuth = false;
+    updateView();
+});
 
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
-    // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
-    // continue the sign-in flow
-    if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
+    auth.signIn({ callOnlyOnRedirect: true });
 
-        auth.signIn()
-            .then(function (response) {
-
-                setAuthenticatedState();
-
-                sessionStorage.setItem("isInitLogin", "false");
-
+    auth.isAuthenticated().then((response) => {
+        if (response) {
+            auth.getBasicUserInfo().then((response) => {
+                setAuthenticatedState(response);
                 updateView();
             });
-
-    } else {
-
-        if (sessionStorage.getItem("username")) {
-
-            state.displayName = sessionStorage.getItem("display_name");
-            state.email = JSON.parse(sessionStorage.getItem("email")) ?
-                JSON.parse(sessionStorage.getItem("email"))[0] : "";
-            state.username = sessionStorage.getItem("username");
-            state.isAuth = true;
-
-            updateView();
         } else {
             updateView();
         }
-    }
+    });
 }
