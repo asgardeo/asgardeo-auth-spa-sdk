@@ -17,6 +17,7 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { INITIALIZED_SIGN_IN } from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -46,6 +47,21 @@ export class SPAUtils {
 
     public static removePKCE(): void {
         sessionStorage.removeItem(PKCE_CODE_VERIFIER);
+    }
+
+    public static setInitializedSignIn(callOnlyOnRedirect: boolean): boolean {
+        const isInitialized = JSON.parse(sessionStorage.getItem(INITIALIZED_SIGN_IN));
+        if (callOnlyOnRedirect && isInitialized) {
+            sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
+
+            return true;
+        } else if (callOnlyOnRedirect) {
+            return false;
+        } else {
+            sessionStorage.setItem(INITIALIZED_SIGN_IN, "true");
+
+            return true;
+        }
     }
 
     public static isSignOutSuccessful(): boolean {
