@@ -31,7 +31,7 @@ import {
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
-import { Storage } from "../constants";
+import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -77,10 +77,7 @@ export const MainThreadClient = async (
         };
     };
 
-    await _httpClient.init(
-        true,
-        attachToken
-    );
+    await _httpClient.init(true, attachToken);
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
         _httpClient.setHttpRequestStartCallback(callback);
@@ -209,6 +206,25 @@ export const MainThreadClient = async (
                 .catch((error) => {
                     return Promise.reject(error);
                 });
+        }
+
+        const error = new URL(window.location.href).searchParams.get(ERROR);
+
+        if (error) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(ERROR);
+            url.searchParams.delete(ERROR_DESCRIPTION);
+
+            location.href = url.toString();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {

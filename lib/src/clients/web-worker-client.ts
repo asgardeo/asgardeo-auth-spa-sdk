@@ -32,6 +32,8 @@ import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
+    ERROR,
+    ERROR_DESCRIPTION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_DECODED_ID_TOKEN,
@@ -327,6 +329,25 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         );
 
         if (isLoggingOut) {
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        const error = new URL(window.location.href).searchParams.get(ERROR);
+
+        if (error) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(ERROR);
+            url.searchParams.delete(ERROR_DESCRIPTION);
+
+            location.href = url.toString();
+
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
