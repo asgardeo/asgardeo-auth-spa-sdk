@@ -53,6 +53,7 @@ export interface WebWorkerCoreInterface {
     revokeAccessToken(): Promise<boolean>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
+    getIDToken(): Promise<string>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getAccessToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;
