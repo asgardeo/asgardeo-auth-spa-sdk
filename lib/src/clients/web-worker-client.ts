@@ -37,6 +37,7 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_DECODED_ID_TOKEN,
+    GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
@@ -532,6 +533,20 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
     };
 
+    const getIDToken = (): Promise<string> => {
+        const message: Message<null> = {
+            type: GET_ID_TOKEN
+        };
+
+        return communicate<null, string>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+        })
+    }
+
     const isAuthenticated = (): Promise<boolean> => {
         const message: Message<null> = {
             type: IS_AUTHENTICATED
@@ -594,6 +609,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         enableHttpHandler,
         getBasicUserInfo,
         getDecodedIDToken,
+        getIDToken,
         getOIDCServiceEndpoints,
         httpRequest,
         httpRequestAll,
