@@ -288,11 +288,14 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async signIn(
-        config?: SignInConfig,
+        config?: SignInConfig & { callOnlyOnRedirect: boolean; },
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> {
         await this._isInitialized();
+        if (!SPAUtils.setInitializedSignIn(config?.callOnlyOnRedirect)) {
+            return;
+        }
 
         return this._client.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
             if (this._onSignInCallback) {
@@ -329,7 +332,6 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         const signOutResponse = await this._client.signOut();
-        this._onSignOutCallback && this._onSignOutCallback();
 
         return signOutResponse;
     }
