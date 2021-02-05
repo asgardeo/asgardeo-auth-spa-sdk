@@ -1,153 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
+<!--
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ -->
+
+<%
+    session.setAttribute("authCode",request.getParameter("code"));
+    session.setAttribute("sessionState", request.getParameter("session_state"));
+%>
+
+<html>
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Asgardeo OIDC SDK - Sample</title>
-        <style>
-            body {
-                min-height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background-color: #212121;
-                color: white;
-                font-family: "Courier New", Courier, monospace;
-            }
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="referrer" content="no-referrer" />
 
-            #greeting {
-                font-size: 2em;
-                margin: 1em;
-                text-align: center;
-            }
+        <title>Asgardeo - HTML Javascript Authentication Sample Using Asgardeo OIDC JS SDK</title>
 
-            .details {
-                margin: 1em;
-            }
-
-            .details div {
-                margin-bottom: 1em;
-                font-size: 1em;
-                width: 100%;
-                overflow: hidden;
-                overflow-wrap: break-word;
-            }
-
-            .menu {
-                display: flex;
-                justify-content: space-between;
-            }
-
-            .wrapper {
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                min-height: 320px;
-                width: 500px;
-                border-radius: 5px;
-                padding: 2em;
-                background-color: #1d1c21;
-            }
-
-            .menu button {
-                padding: 1em;
-                border: none;
-                color: white;
-                background-color: #3d4444;
-                cursor: pointer;
-                border-radius: 5px;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            }
-        </style>
+        <link href="app.css" rel="stylesheet" type="text/css" />
     </head>
     <body>
-        <div class="wrapper">
-            <div class="menu">
-                <button onclick="signIn()">Sign In</button>
-                <button onclick="signOut()">Sign Out</button>
-                <button onclick="getUserProfile()">Get user info</button>
+        <div class="container">
+            <div id="missing-config" style="display: none">
+                <div class="content">
+                    <h2>You need to update the Client ID to proceed.</h2>
+                    <p>
+                        Please open the "index.html" file using an text editor, and update the
+                        <code>clientID</code> value in the <code>authConfig</code> object.
+                    </p>
+                    <p>
+                        Visit repo
+                        <a
+                            href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/using-oidc-js-sdk/html-js-app"
+                            >README</a
+                        >
+                        for more details.
+                    </p>
+                </div>
             </div>
-            <div id="greeting"></div>
-            <div class="details">
-                <div id="email"></div>
-                <div id="lastName"></div>
-                <div id="roles"></div>
+
+            <div id="logged-in-view" style="display: none">
+                <div class="header-title">
+                    <h1>
+                        Javascript-based Authentication Sample <br />
+                        (OIDC - Authorization Code Grant)
+                    </h1>
+                </div>
+                <div class="content">
+                    <h3>Below are the basic details retrieved from the server on a successful login.</h3>
+                    <div>
+                        <ul class="details">
+                            <li id="display-name-item"><b>Name:</b> <span id="text-display-name"></span></li>
+                            <li id="username-item"><b>Username:</b> <span id="text-username"></span></li>
+                            <li id="email-item"><b>Email:</b> <span id="text-email"></span></li>
+                        </ul>
+                    </div>
+                    <button class="btn primary" onClick="handleLogout()">Logout</button>
+                </div>
+            </div>
+
+            <div id="logged-out-view" style="display: none">
+                <div class="header-title">
+                    <h1>
+                        Javascript-based Authentication Sample <br />
+                        (OIDC - Authorization Code Grant)
+                    </h1>
+                </div>
+                <div class="content">
+                    <img src="images/home.png" class="home-image" />
+                    <h3>
+                        Sample demo to showcase how to authenticate a simple client side application using
+                        <b>Asgardeo</b> with the
+                        <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank" rel="noreferrer"
+                            >Asgardeo Auth SPA SDK</a
+                        >
+                    </h3>
+                    <button class="btn primary" onClick="handleLogin()">Login</button>
+                </div>
             </div>
         </div>
+
+        <img src="images/footer.png" class="footer-image" />
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@0.20.0/dist/axios.min.js"></script>
+        <!-- Add Asgardeo Auth SPA SDK -->
+        <script
+            type="application/javascript"
+            src="https://unpkg.com/@asgardeo/auth-spa@latest/dist/asgardeo-spa.production.min.js"
+        ></script>
+
+        <!-- Asgardeo SDK Init Config -->
+        <script>
+            const authConfig = {
+                // ClientID generated for the application
+                clientID: "",
+                // After login callback URL - We have use app root as this is a SPA
+                // (Add it in application OIDC settings "Callback Url")
+                signInRedirectURL: origin,
+                // WSO2 Identity Server URL
+                serverOrigin: ""
+            };
+        </script>
+
+        <script type="application/javascript" src="app.js"></script>
     </body>
-    <script src="https://cdn.jsdelivr.net/npm/axios@0.20.0/dist/axios.min.js"></script>
-    <script src="node_modules/@asgardeo/auth-spa/dist/main.js"></script>
-    <script>
-        var serverOrigin = "https://localhost:9443";
-        var isAuthenticated = false;
-
-        <%
-            session.setAttribute("authCode",request.getParameter("code"));
-            session.setAttribute("sessionState", request.getParameter("session_state"));
-        %>
-
-        // Instantiate the `AsgardeoSPAClient` singleton
-        var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
-
-        axios.get("/auth.jsp").then((response)=>{
-            // Initialize the client
-            auth.initialize({
-                resourceServerURLs: [ serverOrigin ],
-                signInRedirectURL: clientHost,
-                signOutRedirectURL: clientHost,
-                clientHost: "client-host",
-                clientID: "client-id",
-                enablePKCE: true,
-                serverOrigin: serverOrigin,
-                storage: "webWorker",
-                responseMode: "form_post",
-                authorizationCode: response.data.authCode,
-                sessionState: response.data.sessionState
-            });
-
-            if(response.data.authCode){
-                auth.signIn();
-            }
-        })
-
-        //Sign in function
-        function signIn() {
-            auth.signIn();
-        }
-
-        //Sign out function
-        function signOut() {
-            auth.signOut();
-        }
-
-        //Pass the callback function to be called after signing in using the `sign-in` hook
-        auth.on("sign-in", function (response) {
-            document.getElementById("greeting").innerHTML = "Hello, " + response.displayName + "!";
-            isAuthenticated = true;
-        });
-
-        //Get user profile function
-        function getUserProfile() {
-            if (!isAuthenticated) {
-                alert("You need to sign in first!");
-                return;
-            }
-
-            auth.httpRequest({
-                url: serverOrigin + "/api/identity/user/v1.0/me",
-                method: "GET",
-                headers: {
-                    "Access-Control-Allow-Origin": clientHost,
-                    Accept: "application/json"
-                }
-            }).then((response) => {
-                document.getElementById("email").innerHTML =
-                    "<b>Email:</b> " + response.data.basic["http://wso2.org/claims/emailaddress"];
-                document.getElementById("lastName").innerHTML =
-                    "<b>Last name:</b> " + response.data.basic["http://wso2.org/claims/lastname"];
-                document.getElementById("roles").innerHTML =
-                    "<b>Role:</b> " + response.data.basic["http://wso2.org/claims/role"];
-            });
-        }
-    </script>
 </html>
