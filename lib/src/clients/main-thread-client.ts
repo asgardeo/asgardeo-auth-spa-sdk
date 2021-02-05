@@ -134,7 +134,10 @@ export const MainThreadClient = async (
             config.checkSessionInterval,
             config.sessionRefreshInterval,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint
+            oidcEndpoints.authorizationEndpoint,
+            async () => {
+                return _authenticationClient.signOut();
+            }
         );
     };
 
@@ -144,9 +147,6 @@ export const MainThreadClient = async (
         sessionState?: string
     ): Promise<BasicUserInfo> => {
         const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async () => {
-                return _authenticationClient.signOut();
-            },
             async (sessionState: string) => {
                 await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState);
                 return;

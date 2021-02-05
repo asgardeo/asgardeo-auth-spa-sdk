@@ -27,6 +27,7 @@ export const SessionManagementHelper = (() => {
     let _redirectURL: string;
     let _authorizationEndpoint: string;
     let _sessionRefreshInterval: number;
+    let _signOut: () => Promise<string>;
 
     const initialize = (
         clientID: string,
@@ -35,7 +36,8 @@ export const SessionManagementHelper = (() => {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        signOut: () => Promise<string>
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
@@ -44,6 +46,7 @@ export const SessionManagementHelper = (() => {
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
+        _signOut = signOut;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -112,7 +115,7 @@ export const SessionManagementHelper = (() => {
     const listenToResponseFromOPIFrame = (): void => {
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
-        function receiveMessage(e) {
+        async function receiveMessage(e) {
             const targetOrigin = _checkSessionEndpoint;
 
             if (!targetOrigin || targetOrigin?.indexOf(e.origin) < 0) {
@@ -121,6 +124,8 @@ export const SessionManagementHelper = (() => {
 
             if (e.data === "unchanged") {
                 // [RP] session state has not changed
+            } else if (e.data === "error") {
+                window.top.location.href = await _signOut();
             } else {
                 // [RP] session state has changed. Sending prompt=none request...
                 sendPromptNoneRequest();
@@ -152,7 +157,6 @@ export const SessionManagementHelper = (() => {
     };
 
     const receivePromptNoneResponse = async (
-        signOut: () => Promise<string>,
         setSessionState: (sessionState: string) => Promise<void>
     ): Promise<boolean> => {
             const state = new URL(window.location.href).searchParams.get("state");
@@ -167,7 +171,7 @@ export const SessionManagementHelper = (() => {
 
                     window.stop();
                 } else {
-                    window.top.location.href = await signOut();
+                    window.top.location.href = await _signOut();
                     window.stop();
 
                     return true;

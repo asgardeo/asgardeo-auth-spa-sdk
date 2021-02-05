@@ -296,7 +296,20 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval,
             config.sessionRefreshInterval,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint
+            oidcEndpoints.authorizationEndpoint,
+            async () => {
+                const message: Message<string> = {
+                    type: SIGN_OUT
+                };
+
+                try {
+                    const signOutURL = await communicate<string, string>(message);
+
+                    return signOutURL;
+                } catch {
+                    return SPAUtils.getSignOutURL();
+                }
+            }
         );
     };
 
@@ -311,19 +324,6 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         sessionState?: string
     ): Promise<BasicUserInfo> => {
         const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async () => {
-                const message: Message<string> = {
-                    type: SIGN_OUT
-                };
-
-                try {
-                    const signOutURL = await communicate<string, string>(message);
-
-                    return signOutURL;
-                } catch {
-                    return SPAUtils.getSignOutURL();
-                }
-            },
             async (sessionState: string) => {
                 return setSessionState(sessionState);
             }
