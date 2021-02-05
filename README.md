@@ -69,7 +69,7 @@ npm install --save @asgardeo/auth-spa
 Or simply load the SDK by importing the script into the header of your HTML file.
 
 ```html
-<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.0/dist/asgardeo-spa.production.min.js"></script>
+<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.1/dist/asgardeo-spa.production.min.js"></script>
 
 <script>
     var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
