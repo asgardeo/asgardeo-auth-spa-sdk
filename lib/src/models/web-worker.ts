@@ -32,7 +32,7 @@ interface WebWorkerEvent<T> extends MessageEvent {
 }
 
 export class WebWorkerClass<T> extends Worker {
-    public onmessage: (this: WebWorkerClass<T>, event: WebWorkerEvent<T>) => void;
+    public onmessage: (this: WebWorkerClass<T>, event: WebWorkerEvent<T>) => any;
 }
 
 export interface WebWorkerCoreInterface {
