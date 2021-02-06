@@ -21,19 +21,20 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
-    OIDCEndpoints,
-    SignInConfig
+    OIDCEndpoints
 } from "@asgardeo/auth-js";
-import { Config, WebWorkerClientConfig } from ".";
 import { MainThreadClient, WebWorkerClient } from "./clients";
 import { Hooks, Storage } from "./constants";
 import { AsgardeoSPAException } from "./exception";
 import { HttpClientInstance } from "./http-client";
 import {
+    Config,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
     MainThreadClientInterface,
+    SignInConfig,
+    WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "./models";
 import { SPAUtils } from "./utils";
@@ -288,7 +289,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async signIn(
-        config?: SignInConfig & { callOnlyOnRedirect: boolean },
+        config?: SignInConfig,
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> {
@@ -296,6 +297,8 @@ export class AsgardeoSPAClient {
         if (!SPAUtils.setInitializedSignIn(config?.callOnlyOnRedirect)) {
             return;
         }
+
+        delete config?.callOnlyOnRedirect;
 
         return this._client.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
             if (this._onSignInCallback) {

@@ -23,11 +23,11 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    GetAuthURLConfig,
     OIDCEndpoints,
     PKCE_CODE_VERIFIER,
     ResponseMode,
     SESSION_STATE,
-    SignInConfig,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
@@ -142,7 +142,7 @@ export const MainThreadClient = async (
     };
 
     const signIn = async (
-        signInConfig?: SignInConfig,
+        signInConfig?: GetAuthURLConfig,
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {

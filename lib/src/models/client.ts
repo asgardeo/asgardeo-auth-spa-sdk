@@ -22,10 +22,16 @@ import {
     CustomGrantConfig,
     DecodedIDTokenPayload,
     OIDCEndpoints,
-    OIDCProviderMetaData,
-    SignInConfig
+    OIDCProviderMetaData
 } from "@asgardeo/auth-js";
-import { HttpError, HttpRequestConfig, HttpResponse, MainThreadClientConfig, WebWorkerClientConfig } from ".";
+import {
+    HttpError,
+    HttpRequestConfig,
+    HttpResponse,
+    MainThreadClientConfig,
+    SignInConfig,
+    WebWorkerClientConfig
+} from ".";
 import { HttpClientInstance } from "../http-client";
 
 export interface MainThreadClientInterface {

@@ -22,11 +22,11 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    GetAuthURLConfig,
     OIDCEndpoints,
     OIDCProviderMetaData,
     ResponseMode,
-    SESSION_STATE,
-    SignInConfig
+    SESSION_STATE
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
@@ -319,7 +319,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * @returns {Promise<UserInfo>} A promise that resolves when authentication is successful.
      */
     const signIn = async (
-        params?: SignInConfig,
+        params?: GetAuthURLConfig,
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
@@ -412,12 +412,12 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 });
         }
 
-        const message: Message<SignInConfig> = {
+        const message: Message<GetAuthURLConfig> = {
             data: params,
             type: GET_AUTH_URL
         };
 
-        return communicate<SignInConfig, AuthorizationResponse>(message)
+        return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
             .then((response) => {
                 if (response.pkce) {
                     SPAUtils.setPKCE(response.pkce);
