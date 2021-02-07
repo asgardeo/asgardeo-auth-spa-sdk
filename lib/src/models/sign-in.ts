@@ -18,4 +18,4 @@
 
 import { GetAuthURLConfig } from "@asgardeo/auth-js";
 
-export type SignInConfig = GetAuthURLConfig & { callOnlyOnRedirect: boolean; };
+export type SignInConfig = GetAuthURLConfig & { callOnlyOnRedirect?: boolean; };
