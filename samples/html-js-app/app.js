@@ -19,52 +19,80 @@
 /**
  * SDK Client instance.
  */
-var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
+var authClient = AsgardeoAuth.AsgardeoSPAClient.getInstance();
+
+// Initialize the client with the config object. Check `index.html` for the config object.
+authClient.initialize(authConfig);
 
 /**
  * Authenticated State.
  */
 var state = {
     isAuth: false,
-    displayName: "",
-    email: "",
-    username: ""
+    authenticateResponse: null,
+    idToken: null
 };
 
-/**
- * Initializes the SDK.
- */
-function initialize() {
-    // Initialize the client with the config object. Check `index.html` for the config object.
-    auth.initialize(authConfig);
+//Pass the callback function to be called after sign in using the `sign-in` hook
+authClient.on("sign-in", function (response) {
+    setAuthenticatedState(response);
+});
 
-    //Pass the callback function to be called after signing in using the `sign-in` hook
-    auth.on("sign-in", function (response) {
-        setAuthenticatedState(response);
-        updateView();
+//Pass the callback function to be called after sign out using the `sign-out` hook
+authClient.on("sign-out", function (response) {
+    state.isAuth = false;
+    updateView();
+});
+
+/**
+ * Method to split ID token.
+ */
+function parseIdToken(idToken) {
+    if (!idToken) {
+        return;
+    }
+
+    if (typeof idToken !== "string") {
+        idToken = JSON.stringify(idToken);
+    }
+
+    const idTokenSplit = idToken.split(".");
+    let idTokenObject = {
+        "encoded": [],
+        "decoded": []
+    };
+
+    idTokenSplit.forEach(function(element) {
+        idTokenObject["encoded"].push(element);
     });
+
+    idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[0])));
+    idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[1])));
+
+    return idTokenObject;
 }
 
 /**
- * Updates the view after a login or logout.
+ * Updates the view after a sign-in or sign-out.
  */
 function updateView() {
     if (state.isAuth) {
-        document.getElementById("text-display-name").innerHTML = state.displayName;
-        document.getElementById("text-username").innerHTML = state.username;
-        document.getElementById("text-email").innerHTML = state.email;
 
-        if (!state.displayName) {
-            document.getElementById("display-name-item").style.display = "none";
-        }
+        var formattedAuthenticateResponse = new JSONFormatter(state.authenticateResponse, 1, { theme: "dark" });
+        var formattedDecodedIdTokenHeader = new JSONFormatter(state.idToken.decoded[0], 1, { theme: "dark" });
+        var formattedDecodedIdTokenPayload = new JSONFormatter(state.idToken.decoded[1], 1, { theme: "dark" });
 
-        if (!state.email) {
-            document.getElementById("email-item").style.display = "none";
-        }
+        document.getElementById("authentication-response").innerHTML = "";
+        document.getElementById("id-token-header").innerHTML = "";
+        document.getElementById("id-token-payload").innerHTML = "";
 
-        if (!state.username) {
-            document.getElementById("user-name-item").style.display = "none";
-        }
+        document.getElementById("authentication-response").appendChild(formattedAuthenticateResponse.render());
+        document.getElementById("id-token-header").appendChild(formattedDecodedIdTokenHeader.render());
+        document.getElementById("id-token-payload").appendChild(formattedDecodedIdTokenPayload.render());
+
+        document.getElementById("id-token-0").innerHTML = state.idToken.encoded[0];
+        document.getElementById("id-token-1").innerHTML = state.idToken.encoded[1];
+        document.getElementById("id-token-2").innerHTML = state.idToken.encoded[2];
 
         document.getElementById("logged-in-view").style.display = "block";
         document.getElementById("logged-out-view").style.display = "none";
@@ -78,50 +106,53 @@ function updateView() {
  * Sets the authenticated user's information & auth state.
  */
 function setAuthenticatedState(response) {
-    state.displayName = response.displayName;
-    state.email =
-        response.email !== null && response.email !== "null" && response.email?.length && response.email?.length > 0
-            ? response.email[ 0 ]
-            : "";
-    state.username = response.username;
-    state.isAuth = true;
+    authClient.getIDToken().then((idToken) => {
+        state.authenticateResponse = response;
+        state.idToken = parseIdToken(idToken);
+
+        sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
+
+        state.isAuth = true;
+
+        updateView();
+    });
 }
 
 /**
  * Handles login button click event.
  */
 function handleLogin() {
-    auth.signIn();
+    authClient.signIn();
 }
 
 /**
  * Handles logout button click event.
  */
 function handleLogout() {
-    auth.signOut();
+    authClient.signOut();
 }
-
-// Initialize the SDK.
-initialize();
-
-auth.on("sign-out", function () {
-    state.isAuth = false;
-    updateView();
-});
 
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
-    auth.signIn({ callOnlyOnRedirect: true });
+    // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
+    // continue the sign-in flow
+    if (JSON.parse(sessionStorage.getItem("initialized-sign-in"))) {
+        authClient.signIn({ callOnlyOnRedirect: true });
+        updateView();
+    } else {
+        authClient.isAuthenticated().then(function(isAuthenticated) {
+            if (isAuthenticated) {
+                authClient.getIDToken().then(function(idToken) {
+                    state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
+                    state.idToken = parseIdToken(idToken);
+                    state.isAuth = true;
 
-    auth.isAuthenticated().then((response) => {
-        if (response) {
-            auth.getBasicUserInfo().then((response) => {
-                setAuthenticatedState(response);
-                updateView();
-            });
-        } else {
+                    updateView();
+                });
+            }
+
             updateView();
-        }
-    });
+        });
+    }
 }

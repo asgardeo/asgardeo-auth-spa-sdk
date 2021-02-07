@@ -99,8 +99,8 @@ const App = () => {
             authClient.signIn({ callOnlyOnRedirect: true });
         }
         else {
-            authClient.isAuthenticated().then((response) => {
-                if (response) {
+            authClient.isAuthenticated().then((isAuthenticated) => {
+                if (isAuthenticated) {
                     authClient.getIDToken().then((idToken) => {
                         setAuthenticateState({
                             ...authenticateState,
