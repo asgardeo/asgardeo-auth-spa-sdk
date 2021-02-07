@@ -19,58 +19,98 @@
 /**
  * SDK Client instance.
  */
-var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
+var authClient = AsgardeoAuth.AsgardeoSPAClient.getInstance();
+
+/**
+ * Initialize the client with the config object. Check `index.html` for the config object.
+ */
+authClient.initialize(authConfig);
 
 /**
  * Authenticated State.
  */
 var state = {
     isAuth: false,
-    displayName: "",
-    email: "",
-    username: ""
+    authenticateResponse: null,
+    idToken: null
 };
 
 /**
- * Initializes the SDK.
+ * Pass the callback function to be called after sign in using the `sign-in` hook.
  */
-function initialize() {
-    // Initialize the client with the config object. Check `index.html` for the config object.
-    auth.initialize(authConfig);
+authClient.on("sign-in", function (response) {
+    setAuthenticatedState(response);
+});
 
-    //Pass the callback function to be called after signing in using the `sign-in` hook
-    auth.on("sign-in", function (response) {
-        setAuthenticatedState(response);
-        updateView();
+/**
+ * Pass the callback function to be called after sign out using the `sign-out` hook.
+ */
+authClient.on("sign-out", function (response) {
+    state.isAuth = false;
+    updateView();
+});
+
+/**
+ * Method to split ID token.
+ */
+function parseIdToken(idToken) {
+    if (!idToken) {
+        return;
+    }
+
+    if (typeof idToken !== "string") {
+        idToken = JSON.stringify(idToken);
+    }
+
+    const idTokenSplit = idToken.split(".");
+    let idTokenObject = {
+        "encoded": [],
+        "decoded": []
+    };
+
+    idTokenSplit.forEach(function(element) {
+        idTokenObject["encoded"].push(element);
     });
+
+    idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[0])));
+    idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[1])));
+
+    return idTokenObject;
 }
 
 /**
- * Updates the view after a login or logout.
+ * Updates the view after a sign-in or sign-out.
  */
 function updateView() {
+    var authenticationResponseViewBox = document.getElementById("authentication-response");
+    var idTokenHeaderViewBox = document.getElementById("id-token-header");
+    var idTokenPayloadViewBox = document.getElementById("id-token-payload");
+    var loggedInView = document.getElementById("logged-in-view");
+    var loggedOutView = document.getElementById("logged-out-view");
+
     if (state.isAuth) {
-        document.getElementById("text-display-name").innerHTML = state.displayName;
-        document.getElementById("text-username").innerHTML = state.username;
-        document.getElementById("text-email").innerHTML = state.email;
 
-        if (!state.displayName) {
-            document.getElementById("display-name-item").style.display = "none";
-        }
+        var formattedAuthenticateResponse = new JSONFormatter(state.authenticateResponse, 1, { theme: "dark" });
+        var formattedDecodedIdTokenHeader = new JSONFormatter(state.idToken.decoded[0], 1, { theme: "dark" });
+        var formattedDecodedIdTokenPayload = new JSONFormatter(state.idToken.decoded[1], 1, { theme: "dark" });
 
-        if (!state.email) {
-            document.getElementById("email-item").style.display = "none";
-        }
+        authenticationResponseViewBox.innerHTML = "";
+        idTokenHeaderViewBox.innerHTML = "";
+        idTokenPayloadViewBox.innerHTML = "";
 
-        if (!state.username) {
-            document.getElementById("user-name-item").style.display = "none";
-        }
+        authenticationResponseViewBox.appendChild(formattedAuthenticateResponse.render());
+        idTokenHeaderViewBox.appendChild(formattedDecodedIdTokenHeader.render());
+        idTokenPayloadViewBox.appendChild(formattedDecodedIdTokenPayload.render());
 
-        document.getElementById("logged-in-view").style.display = "block";
-        document.getElementById("logged-out-view").style.display = "none";
+        document.getElementById("id-token-0").innerHTML = state.idToken.encoded[0];
+        document.getElementById("id-token-1").innerHTML = state.idToken.encoded[1];
+        document.getElementById("id-token-2").innerHTML = state.idToken.encoded[2];
+
+        loggedInView.style.display = "block";
+        loggedOutView.style.display = "none";
     } else {
-        document.getElementById("logged-in-view").style.display = "none";
-        document.getElementById("logged-out-view").style.display = "block";
+        loggedInView.style.display = "none";
+        loggedOutView.style.display = "block";
     }
 }
 
@@ -78,50 +118,53 @@ function updateView() {
  * Sets the authenticated user's information & auth state.
  */
 function setAuthenticatedState(response) {
-    state.displayName = response.displayName;
-    state.email =
-        response.email !== null && response.email !== "null" && response.email?.length && response.email?.length > 0
-            ? response.email[ 0 ]
-            : "";
-    state.username = response.username;
-    state.isAuth = true;
+    authClient.getIDToken().then((idToken) => {
+        state.authenticateResponse = response;
+        state.idToken = parseIdToken(idToken);
+
+        sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
+
+        state.isAuth = true;
+
+        updateView();
+    });
 }
 
 /**
  * Handles login button click event.
  */
 function handleLogin() {
-    auth.signIn();
+    authClient.signIn();
 }
 
 /**
  * Handles logout button click event.
  */
 function handleLogout() {
-    auth.signOut();
+    authClient.signOut();
 }
-
-// Initialize the SDK.
-initialize();
-
-auth.on("sign-out", function () {
-    state.isAuth = false;
-    updateView();
-});
 
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
-    auth.signIn({ callOnlyOnRedirect: true });
+    // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
+    // continue the sign-in flow
+    if (JSON.parse(sessionStorage.getItem("initialized-sign-in"))) {
+        authClient.signIn({ callOnlyOnRedirect: true });
+        updateView();
+    } else {
+        authClient.isAuthenticated().then(function(isAuthenticated) {
+            if (isAuthenticated) {
+                authClient.getIDToken().then(function(idToken) {
+                    state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
+                    state.idToken = parseIdToken(idToken);
+                    state.isAuth = true;
 
-    auth.isAuthenticated().then((response) => {
-        if (response) {
-            auth.getBasicUserInfo().then((response) => {
-                setAuthenticatedState(response);
-                updateView();
-            });
-        } else {
+                    updateView();
+                });
+            }
+
             updateView();
-        }
-    });
+        });
+    }
 }

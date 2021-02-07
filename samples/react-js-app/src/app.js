@@ -24,40 +24,55 @@ import PRODUCT_LOGOS from "./images/asgardeo-logo.png";
 import REACT_LOGO from "./images/react-logo.png";
 import JS_LOGO from "./images/js-logo.png";
 import FOOTER_LOGOS from "./images/footer.png";
-// Import Asgardeo Auth JS SDK
+// Import Asgardeo Auth SPA JS SDK
 import { Hooks, AsgardeoSPAClient } from "@asgardeo/auth-spa";
 import * as authConfig from "./config.json";
 
 const authClient = AsgardeoSPAClient.getInstance();
 
 const App = () => {
-    const [authenticateState, setAuthenticateState] = useState({});
-    const [isAuth, setIsAuth] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+
+    const [ authenticateState, setAuthenticateState ] = useState({});
+    const [ isAuth, setIsAuth ] = useState(false);
+    const [ isLoading, setIsLoading ] = useState(true);
 
     const parseIdToken = (idToken) => {
-        return idToken.split(".");
+        if (!idToken) {
+            return;
+        }
+
+        if (typeof idToken !== "string") {
+            idToken = JSON.stringify(idToken);
+        }
+
+        const idTokenSplit = idToken.split(".");
+        let idTokenObject = {
+            "encoded": [],
+            "decoded": []
+        };
+
+        idTokenSplit.forEach((element) => {
+            idTokenObject["encoded"].push(element);
+        });
+
+        idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[0])));
+        idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[1])));
+
+        return idTokenObject;
     };
 
     authClient.on(Hooks.SignIn, (response) => {
-        authClient.getDecodedIDToken().then((idTokenPayload) => {
+        authClient.getIDToken().then((idToken) => {
+            sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
+
+            setAuthenticateState({
+                ...authenticateState,
+                authenticateResponse: response,
+                idToken: parseIdToken(idToken)
+            });
+
             setIsAuth(true);
             setIsLoading(false);
-
-            sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
-            sessionStorage.setItem("decodedIdToken", JSON.stringify(idTokenPayload));
-
-            authClient.getIDToken().then((idToken) => {
-                setAuthenticateState({
-                    ...authenticateState,
-                    authenticateResponse: response,
-                    decodedIdTokenHeader: JSON.parse(atob(parseIdToken(idToken)[0])),
-                    decodedIdTokenPayload: idTokenPayload,
-                    displayName: response.displayName,
-                    idToken: parseIdToken(idToken),
-                    username: response.username
-                });
-            });
         });
     });
 
@@ -67,8 +82,6 @@ const App = () => {
     });
 
     const handleLogin = () => {
-        // Add a check property to the session, so we can recall sign-in method upon redirect with authorization code.
-        // authorization code grant type flow
         authClient.signIn();
     };
 
@@ -77,75 +90,66 @@ const App = () => {
     };
 
     useEffect(() => {
+
         authClient.initialize(authConfig.default);
 
-        authClient.signIn({ callOnlyOnRedirect: true });
-
-        authClient.isAuthenticated().then((response) => {
-            if (response) {
-                authClient.getIDToken().then((idToken) => {
-                    setAuthenticateState({
-                        ...authenticateState,
-                        authenticateResponse: JSON.parse(sessionStorage.getItem("authenticateResponse")),
-                        decodedIdTokenHeader: JSON.parse(atob(parseIdToken(idToken)[0])),
-                        decodedIdTokenPayload: JSON.parse(sessionStorage.getItem("decodedIdToken")),
-                        displayName: sessionStorage.getItem("display_name"),
-                        email: JSON.parse(sessionStorage.getItem("email"))
-                            ? JSON.parse(sessionStorage.getItem("email"))[0]
-                            : "",
-                        idToken: parseIdToken(idToken),
-                        username: sessionStorage.getItem("username")
+        // Check if the page redirected by the sign-in method with authorization code, if it is recall sign-in method to
+        // continue the sign-in flow
+        if ( JSON.parse(sessionStorage.getItem("initialized-sign-in")) ) {
+            authClient.signIn({ callOnlyOnRedirect: true });
+        }
+        else {
+            authClient.isAuthenticated().then((isAuthenticated) => {
+                if (isAuthenticated) {
+                    authClient.getIDToken().then((idToken) => {
+                        setAuthenticateState({
+                            ...authenticateState,
+                            authenticateResponse: JSON.parse(sessionStorage.getItem("authenticateResponse")),
+                            idToken: parseIdToken(idToken)
+                        });
+    
+                        setIsAuth(true);
                     });
+                } 
+    
+                setIsLoading(false);
+            });
+        }
 
-                    setIsAuth(true);
-                });
-            }
-            setIsLoading(false);
-        });
     }, []);
 
     return (
         <>
-            <img src={PRODUCT_LOGOS} className="logo-image" />
+            <img src={ PRODUCT_LOGOS } className="logo-image" />
             <div className="container">
-                {authConfig.default.clientID === "" ? (
+                { authConfig.default.clientID === "" ?
                     <div className="content">
                         <h2>You need to update the Client ID to proceed.</h2>
-                        <p>
-                            Please open "src/config.json" file using an editor, and update the <code>clientID</code>{" "}
-                            value with the registered application's client ID.
-                        </p>
-                        <p>
-                            Visit repo{" "}
-                            <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/react-js-app">
-                                README
-                            </a>{" "}
-                            for more details.
-                        </p>
+                        <p>Please open "src/config.json" file using an editor, and update the <code>clientID</code> value with the registered application's client ID.</p>
+                        <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/react-js-app">README</a> for more details.</p>
                     </div>
-                ) : (
-                    <>
+                :
+                   <>
                         <div className="header-title">
                             <h1>
-                                JavaScript Based React SPA Authentication Sample <br /> (OIDC - Authorization Code
-                                Grant)
+                                JavaScript Based React SPA Authentication Sample <br /> (OIDC - Authorization Code Grant)
                             </h1>
                         </div>
                         <div className="content">
-                            {isLoading ? (
+                            { isLoading ?
                                 <div>Loading ...</div>
-                            ) : (
+                            :
                                 <>
-                                    {isAuth ? (
+                                    { isAuth ?
                                         <>
                                             <h2>Authentication response</h2>
                                             <div className="json">
                                                 <ReactJson
-                                                    src={authenticateState.authenticateResponse}
-                                                    name={null}
-                                                    enableClipboard={false}
-                                                    displayObjectSize={false}
-                                                    displayDataTypes={false}
+                                                    src={ authenticateState.authenticateResponse }
+                                                    name={ null }
+                                                    enableClipboard={ false }
+                                                    displayObjectSize={ false }
+                                                    displayDataTypes={ false }
                                                     iconStyle="square"
                                                     theme="monokai"
                                                 />
@@ -154,100 +158,96 @@ const App = () => {
                                             <h2 className="mb-0 mt-4">ID token</h2>
 
                                             <div className="row">
-                                                {authenticateState.idToken && (
-                                                    <div className="column">
-                                                        <h5>
-                                                            <b>Encoded</b>
-                                                        </h5>
-                                                        <div className="code">
-                                                            <code>
-                                                                <span className="id-token-0">
-                                                                    {authenticateState.idToken[0]}
-                                                                </span>
-                                                                .
-                                                                <span className="id-token-1">
-                                                                    {authenticateState.idToken[1]}
-                                                                </span>
-                                                                .
-                                                                <span className="id-token-2">
-                                                                    {authenticateState.idToken[2]}
-                                                                </span>
-                                                            </code>
+                                                { authenticateState.idToken &&
+                                                    <>
+                                                        <div className="column">
+                                                            <h5><b>Encoded</b></h5>
+                                                            <div className="code">
+                                                                <code>
+                                                                    <span className="id-token-0">{ authenticateState.idToken.encoded[0] }</span>.
+                                                                    <span className="id-token-1">{ authenticateState.idToken.encoded[1] }</span>.
+                                                                    <span className="id-token-2">{ authenticateState.idToken.encoded[2] }</span>
+                                                                </code>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                                <div className="column">
-                                                    <div className="json">
-                                                        <h5>
-                                                            <b>Decoded:</b> Header
-                                                        </h5>
-                                                        <ReactJson
-                                                            //src={ JSON.parse(atob(authenticateState.idToken)) }
-                                                            src={authenticateState.decodedIdTokenHeader}
-                                                            name={null}
-                                                            enableClipboard={false}
-                                                            displayObjectSize={false}
-                                                            displayDataTypes={false}
-                                                            iconStyle="square"
-                                                            theme="monokai"
-                                                        />
-                                                    </div>
+                                                    
+                                                        <div className="column">
+                                                            <div className="json">
+                                                                <h5><b>Decoded:</b> Header</h5>
+                                                                <ReactJson
+                                                                    src={ authenticateState.idToken.decoded[0] }
+                                                                    name={ null }
+                                                                    enableClipboard={ false }
+                                                                    displayObjectSize={ false }
+                                                                    displayDataTypes={ false }
+                                                                    iconStyle="square"
+                                                                    theme="monokai"
+                                                                />
+                                                            </div>
 
-                                                    <div className="json">
-                                                        <h5>
-                                                            <b>Decoded:</b> Payload
-                                                        </h5>
-                                                        <ReactJson
-                                                            src={authenticateState.decodedIdTokenPayload}
-                                                            name={null}
-                                                            enableClipboard={false}
-                                                            displayObjectSize={false}
-                                                            displayDataTypes={false}
-                                                            iconStyle="square"
-                                                            theme="monokai"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                            <div className="json">
+                                                                <h5><b>Decoded:</b> Payload</h5>
+                                                                <ReactJson
+                                                                    src={ authenticateState.idToken.decoded[1] }
+                                                                    name={ null }
+                                                                    enableClipboard={ false }
+                                                                    displayObjectSize={ false }
+                                                                    displayDataTypes={ false }
+                                                                    iconStyle="square"
+                                                                    theme="monokai"
+                                                                />
+                                                            </div>
+
+                                                            <div className="json">
+                                                                <h5><b>Signature:</b></h5>
+                                                                <div className="code">
+                                                                    <code>
+                                                                        HMACSHA256(
+                                                                            <br />
+                                                                            &nbsp;&nbsp;<span className="id-token-0">base64UrlEncode(
+                                                                                <span className="id-token-1">header</span>)</span> + "." + <br />
+                                                                            &nbsp;&nbsp;<span className="id-token-0">base64UrlEncode(
+                                                                                <span className="id-token-1">payload</span>)</span>,&nbsp;
+                                                                            <span className="id-token-1">your-256-bit-secret</span> <br />
+                                                                        );
+                                                                    </code>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                }
                                             </div>
 
-                                            <button className="btn primary mt-4" onClick={handleLogout}>
-                                                Logout
-                                            </button>
+                                            <button className="btn primary mt-4" onClick={ handleLogout }>Logout</button>
+
                                         </>
-                                    ) : (
+                                    :
                                         <>
+
                                             <div className="home-image">
-                                                <img src={JS_LOGO} className="js-logo-image logo" />
+                                                <img src={ JS_LOGO } className="js-logo-image logo" />
                                                 <span className="logo-plus">+</span>
-                                                <img src={REACT_LOGO} className="react-logo-image logo" />
+                                                <img src={ REACT_LOGO } className="react-logo-image logo" />
                                             </div>
                                             <h3>
-                                                Sample demo to showcase how to authenticate a simple client side
-                                                application using
-                                                <br />
-                                                <b>Asgardeo</b> with the{" "}
-                                                <a
-                                                    href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
-                                                    target="_blank"
-                                                >
-                                                    Asgardeo Auth SPA SDK
-                                                </a>
+                                                Sample demo to showcase how to authenticate a simple client side application using <br/>
+                                                <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank">Asgardeo Auth SPA JS SDK</a>
                                             </h3>
-                                            <button className="btn primary" onClick={handleLogin}>
-                                                Login
-                                            </button>
+                                            <button className="btn primary" onClick={ handleLogin }>Login</button>
+
                                         </>
-                                    )}
+                                    }
                                 </>
-                            )}
+                            }
                         </div>
                     </>
-                )}
+                }
             </div>
 
-            <img src={FOOTER_LOGOS} className="footer-image" />
+            <img src={ FOOTER_LOGOS } className="footer-image" />
         </>
     );
-};
 
-ReactDOM.render(<App />, document.getElementById("root"));
+}
+
+ReactDOM.render( (<App />), document.getElementById("root") );
