@@ -69,7 +69,7 @@ npm install --save @asgardeo/auth-spa
 Or simply load the SDK by importing the script into the header of your HTML file.
 
 ```html
-<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.2/dist/asgardeo-spa.production.min.js"></script>
+<script src="https://unpkg.com/@asgardeo/auth-spa@latest/dist/asgardeo-spa.production.min.js"></script>
 
 <script>
     var auth = AsgardeoAuth.AsgardeoSPAClient.getInstance();
@@ -188,7 +188,7 @@ The SDK supports all major browsers and provides polyfills to support incompatib
 To embed a polyfilled script in an HTML page:
 
 ```html
-<script src="https://unpkg.com/@asgardeo/auth-spa@0.1.2/dist/asgardeo-spa.production.min.js"></script>
+<script src="https://unpkg.com/@asgardeo/auth-spa@latest/dist/asgardeo-spa.production.min.js"></script>
 ```
 
 You can also import a polyfilled module into your modular app. Asgardeo provides two different modules each supporting UMD and ESM.
@@ -813,7 +813,7 @@ To address this issue, we recommend storing the authorization code in a server s
 
 ![form_post auth code flow](./assets/img/auth_code.png)
 
-You can refer to a sample implementation using JSP [here](../../samples/using-oidc-js-sdk/java-webapp).
+You can refer to a sample implementation using JSP [here](/samples/java-webapp).
 
 ## Storage
 
@@ -944,7 +944,7 @@ Session information can be attached to the body of a custom-grant request using 
 
 ### Installing Dependencies
 
-The repository is a mono repository. The SDK repository is found in the [oidc-js-sdk]() directory. You can install the dependencies by running the following command at the root.
+The repository is a mono repository. The SDK repository is found in the [lib]() directory. You can install the dependencies by running the following command at the root.
 
 ```
 npm run build
