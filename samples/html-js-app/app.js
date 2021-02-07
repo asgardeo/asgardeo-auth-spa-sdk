@@ -21,7 +21,6 @@
  */
 var authClient = AsgardeoAuth.AsgardeoSPAClient.getInstance();
 
-
 /**
  * Initialize the client with the config object. Check `index.html` for the config object.
  */
@@ -83,29 +82,35 @@ function parseIdToken(idToken) {
  * Updates the view after a sign-in or sign-out.
  */
 function updateView() {
+    var authenticationResponseViewBox = document.getElementById("authentication-response");
+    var idTokenHeaderViewBox = document.getElementById("id-token-header");
+    var idTokenPayloadViewBox = document.getElementById("id-token-payload");
+    var loggedInView = document.getElementById("logged-in-view");
+    var loggedOutView = document.getElementById("logged-out-view");
+
     if (state.isAuth) {
 
         var formattedAuthenticateResponse = new JSONFormatter(state.authenticateResponse, 1, { theme: "dark" });
         var formattedDecodedIdTokenHeader = new JSONFormatter(state.idToken.decoded[0], 1, { theme: "dark" });
         var formattedDecodedIdTokenPayload = new JSONFormatter(state.idToken.decoded[1], 1, { theme: "dark" });
 
-        document.getElementById("authentication-response").innerHTML = "";
-        document.getElementById("id-token-header").innerHTML = "";
-        document.getElementById("id-token-payload").innerHTML = "";
+        authenticationResponseViewBox.innerHTML = "";
+        idTokenHeaderViewBox.innerHTML = "";
+        idTokenPayloadViewBox.innerHTML = "";
 
-        document.getElementById("authentication-response").appendChild(formattedAuthenticateResponse.render());
-        document.getElementById("id-token-header").appendChild(formattedDecodedIdTokenHeader.render());
-        document.getElementById("id-token-payload").appendChild(formattedDecodedIdTokenPayload.render());
+        authenticationResponseViewBox.appendChild(formattedAuthenticateResponse.render());
+        idTokenHeaderViewBox.appendChild(formattedDecodedIdTokenHeader.render());
+        idTokenPayloadViewBox.appendChild(formattedDecodedIdTokenPayload.render());
 
         document.getElementById("id-token-0").innerHTML = state.idToken.encoded[0];
         document.getElementById("id-token-1").innerHTML = state.idToken.encoded[1];
         document.getElementById("id-token-2").innerHTML = state.idToken.encoded[2];
 
-        document.getElementById("logged-in-view").style.display = "block";
-        document.getElementById("logged-out-view").style.display = "none";
+        loggedInView.style.display = "block";
+        loggedOutView.style.display = "none";
     } else {
-        document.getElementById("logged-in-view").style.display = "none";
-        document.getElementById("logged-out-view").style.display = "block";
+        loggedInView.style.display = "none";
+        loggedOutView.style.display = "block";
     }
 }
 
