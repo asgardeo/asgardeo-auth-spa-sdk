@@ -1,7 +1,5 @@
 {
     "clientID": "",
-    "serverOrigin": "https://localhost:9443",
-    "signInRedirectURL": "http://localhost:3000",
-    "signOutRedirectURL": "http://localhost:3000",
-    "storage": "sessionStorage"
+    "serverOrigin": "",
+    "signInRedirectURL": "https://localhost:5000"
 }

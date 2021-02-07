@@ -112,7 +112,9 @@ auth.on("sign-out", function () {
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
-    auth.signIn({ callOnlyOnRedirect: true });
+    axios.get("/auth.jsp").then((response) => {
+        auth.signIn({ callOnlyOnRedirect: true }, response.data.authCode, response.data.sessionState);
+    }
 
     auth.isAuthenticated().then((response) => {
         if (response) {

@@ -21,19 +21,20 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
-    OIDCEndpoints,
-    SignInConfig
+    OIDCEndpoints
 } from "@asgardeo/auth-js";
-import { Config, WebWorkerClientConfig } from ".";
 import { MainThreadClient, WebWorkerClient } from "./clients";
 import { Hooks, Storage } from "./constants";
 import { AsgardeoSPAException } from "./exception";
 import { HttpClientInstance } from "./http-client";
 import {
+    Config,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
     MainThreadClientInterface,
+    SignInConfig,
+    WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "./models";
 import { SPAUtils } from "./utils";
@@ -293,6 +294,11 @@ export class AsgardeoSPAClient {
         sessionState?: string
     ): Promise<BasicUserInfo> {
         await this._isInitialized();
+        if (!SPAUtils.setInitializedSignIn(config?.callOnlyOnRedirect)) {
+            return;
+        }
+
+        delete config?.callOnlyOnRedirect;
 
         return this._client.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
             if (this._onSignInCallback) {
@@ -329,7 +335,6 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         const signOutResponse = await this._client.signOut();
-        this._onSignOutCallback && this._onSignOutCallback();
 
         return signOutResponse;
     }
@@ -601,6 +606,28 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         return this._client.getDecodedIDToken();
+    }
+
+    /**
+     * This method return the ID token.
+     *
+     * @return {Promise<string>} - A Promise that resolves with the ID token.
+     *
+     * @example
+     * ```
+     * const idToken = await auth.getIDToken();
+     * ```
+     *
+     * @link https://github.com/asgardeo/asgardeo-auth-js-sdk/tree/master#getIDToken
+     *
+     * @memberof AsgardeoAuthClient
+     *
+     * @preserve
+     */
+    public async getIDToken(): Promise<string> {
+        await this._validateMethod();
+
+        return this._client.getIDToken();
     }
 
     /**

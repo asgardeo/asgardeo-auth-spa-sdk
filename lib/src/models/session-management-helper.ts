@@ -24,10 +24,10 @@ export interface SessionManagementHelperInterface {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        signOut: () => Promise<string>
     ): void;
     receivePromptNoneResponse(
-        signOut: () => Promise<string>,
         setSessionState: (sessionState: string) => Promise<void>
     ): Promise<boolean>;
 }

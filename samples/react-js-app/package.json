@@ -27,7 +27,8 @@
     "dependencies": {
         "@asgardeo/auth-spa": "^0.1.0",
         "react": "^16.13.1",
-        "react-dom": "^16.13.1"
+        "react-dom": "^16.13.1",
+        "react-json-view": "^1.19.1"
     },
     "devDependencies": {
         "@babel/core": "^7.10.3",
@@ -37,7 +38,6 @@
         "css-loader": "^3.6.0",
         "html-loader": "^1.1.0",
         "html-webpack-plugin": "^4.3.0",
-        "react-json-view": "^1.19.1",
         "style-loader": "^1.2.1",
         "url-loader": "^4.1.0",
         "webpack": "^4.43.0",

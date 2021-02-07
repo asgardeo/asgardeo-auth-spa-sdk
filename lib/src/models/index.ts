@@ -22,3 +22,4 @@ export * from "./http-client";
 export * from "./web-worker";
 export * from "./session-management-helper";
 export * from "./client-config";
+export * from "./sign-in";

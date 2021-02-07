@@ -23,15 +23,15 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    GetAuthURLConfig,
     OIDCEndpoints,
     PKCE_CODE_VERIFIER,
     ResponseMode,
     SESSION_STATE,
-    SignInConfig,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
-import { Storage } from "../constants";
+import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -77,10 +77,7 @@ export const MainThreadClient = async (
         };
     };
 
-    await _httpClient.init(
-        true,
-        attachToken
-    );
+    await _httpClient.init(true, attachToken);
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
         _httpClient.setHttpRequestStartCallback(callback);
@@ -137,19 +134,19 @@ export const MainThreadClient = async (
             config.checkSessionInterval,
             config.sessionRefreshInterval,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint
+            oidcEndpoints.authorizationEndpoint,
+            async () => {
+                return _authenticationClient.signOut();
+            }
         );
     };
 
     const signIn = async (
-        signInConfig?: SignInConfig,
+        signInConfig?: GetAuthURLConfig,
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
         const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async () => {
-                return _authenticationClient.signOut();
-            },
             async (sessionState: string) => {
                 await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState);
                 return;
@@ -209,6 +206,25 @@ export const MainThreadClient = async (
                 .catch((error) => {
                     return Promise.reject(error);
                 });
+        }
+
+        const error = new URL(window.location.href).searchParams.get(ERROR);
+
+        if (error) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(ERROR);
+            url.searchParams.delete(ERROR_DESCRIPTION);
+
+            location.href = url.toString();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -290,6 +306,10 @@ export const MainThreadClient = async (
         return _authenticationClient.getDecodedIDToken();
     };
 
+    const getIDToken = async (): Promise<string> => {
+        return _authenticationClient.getIDToken();
+    }
+
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
         return _authenticationClient.getOIDCServiceEndpoints();
     };
@@ -314,6 +334,7 @@ export const MainThreadClient = async (
         getBasicUserInfo,
         getDecodedIDToken,
         getHttpClient,
+        getIDToken,
         getOIDCServiceEndpoints,
         httpRequest,
         httpRequestAll,

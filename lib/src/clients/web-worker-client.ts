@@ -22,19 +22,22 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    GetAuthURLConfig,
     OIDCEndpoints,
     OIDCProviderMetaData,
     ResponseMode,
-    SESSION_STATE,
-    SignInConfig
+    SESSION_STATE
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
+    ERROR,
+    ERROR_DESCRIPTION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_DECODED_ID_TOKEN,
+    GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
@@ -293,21 +296,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval,
             config.sessionRefreshInterval,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint
-        );
-    };
-
-    /**
-     * Initiates the authentication flow.
-     *
-     * @returns {Promise<UserInfo>} A promise that resolves when authentication is successful.
-     */
-    const signIn = async (
-        params?: SignInConfig,
-        authorizationCode?: string,
-        sessionState?: string
-    ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+            oidcEndpoints.authorizationEndpoint,
             async () => {
                 const message: Message<string> = {
                     type: SIGN_OUT
@@ -320,13 +309,46 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 } catch {
                     return SPAUtils.getSignOutURL();
                 }
-            },
+            }
+        );
+    };
+
+    /**
+     * Initiates the authentication flow.
+     *
+     * @returns {Promise<UserInfo>} A promise that resolves when authentication is successful.
+     */
+    const signIn = async (
+        params?: GetAuthURLConfig,
+        authorizationCode?: string,
+        sessionState?: string
+    ): Promise<BasicUserInfo> => {
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string) => {
                 return setSessionState(sessionState);
             }
         );
 
         if (isLoggingOut) {
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        const error = new URL(window.location.href).searchParams.get(ERROR);
+
+        if (error) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(ERROR);
+            url.searchParams.delete(ERROR_DESCRIPTION);
+
+            location.href = url.toString();
+
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -390,12 +412,12 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 });
         }
 
-        const message: Message<SignInConfig> = {
+        const message: Message<GetAuthURLConfig> = {
             data: params,
             type: GET_AUTH_URL
         };
 
-        return communicate<SignInConfig, AuthorizationResponse>(message)
+        return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
             .then((response) => {
                 if (response.pkce) {
                     SPAUtils.setPKCE(response.pkce);
@@ -511,6 +533,20 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
     };
 
+    const getIDToken = (): Promise<string> => {
+        const message: Message<null> = {
+            type: GET_ID_TOKEN
+        };
+
+        return communicate<null, string>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+        })
+    }
+
     const isAuthenticated = (): Promise<boolean> => {
         const message: Message<null> = {
             type: IS_AUTHENTICATED
@@ -573,6 +609,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         enableHttpHandler,
         getBasicUserInfo,
         getDecodedIDToken,
+        getIDToken,
         getOIDCServiceEndpoints,
         httpRequest,
         httpRequestAll,

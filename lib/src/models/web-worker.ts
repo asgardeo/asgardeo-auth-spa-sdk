@@ -32,7 +32,7 @@ interface WebWorkerEvent<T> extends MessageEvent {
 }
 
 export class WebWorkerClass<T> extends Worker {
-    public onmessage: (this: WebWorkerClass<T>, event: WebWorkerEvent<T>) => void;
+    public onmessage: (this: WebWorkerClass<T>, event: WebWorkerEvent<T>) => any;
 }
 
 export interface WebWorkerCoreInterface {
@@ -53,6 +53,7 @@ export interface WebWorkerCoreInterface {
     revokeAccessToken(): Promise<boolean>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
+    getIDToken(): Promise<string>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getAccessToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;

@@ -24,6 +24,7 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_DECODED_ID_TOKEN,
+    GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
@@ -89,7 +90,8 @@ export type MessageType =
     | typeof REFRESH_ACCESS_TOKEN
     | typeof SET_SESSION_STATE
     | typeof START_AUTO_REFRESH_TOKEN
-    | typeof UPDATE_CONFIG;
+    | typeof UPDATE_CONFIG
+    | typeof GET_ID_TOKEN;
 
 export interface CommunicationHelperInterface {
     communicate: <T, R>(message: Message<T>) => Promise<R>;

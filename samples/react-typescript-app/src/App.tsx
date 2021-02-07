@@ -46,13 +46,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
     useEffect(() => {
         const config: AuthClientConfig<Config> = authConfig as AuthClientConfig<Config>;
         // Initialize the client with the config object.
-        auth.initialize(config)
-            .then((response: boolean) => {
-                // Successfully initialized the SDK client.
-            })
-            .catch((error: any) => {
-                // Handle the error occurred while initializing the SDK client.
-            });
+        auth.initialize(config);
 
         auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
             setIsAuth(true);
@@ -61,12 +55,9 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
 
         auth.on(Hooks.SignOut, () => {
             setIsAuth(false);
-            sessionStorage.setItem("isInitLogin", "false");
         });
 
-        if (JSON.parse(sessionStorage.getItem("isInitLogin"))) {
-            auth.signIn();
-        }
+        auth.signIn({callOnlyOnRedirect: true});
 
     }, []);
 
@@ -75,49 +66,34 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
      * if it is recall sing-in method to continue the sign-in flow
      */
     useEffect(() => {
-        if (sessionStorage.getItem("username")) {
-
-            setAuthenticatedUser({
-                ...authenticatedUser,
-                displayName: sessionStorage.getItem("display_name"),
-                email: JSON.parse(sessionStorage.getItem("email")) ?
-                    JSON.parse(sessionStorage.getItem("email"))[ 0 ] : "",
-                username: sessionStorage.getItem("username")
-            });
-
-            setIsAuth(true);
+        if (isAuth) {
+            return;
         }
-    }, [ authenticatedUser ]);
+
+        auth.isAuthenticated().then(async (response) => {
+            if (response) {
+                const userInfo = await auth.getBasicUserInfo();
+                setAuthenticatedUser({
+                    ...userInfo
+                });
+
+                setIsAuth(true);
+            }
+        });
+    }, [ authenticatedUser, isAuth ]);
 
     /**
      * Handles login button click event.
      */
     const handleLogin = (): void => {
-
-        // Add a check property to the session, so we can recall sign-in method upon redirect with authorization code.
-        // authorization code grant type flow
-        sessionStorage.setItem("isInitLogin", "true");
-        auth.signIn()
-            .then((response) => {
-                // Perform any actions you after successful sign in.
-            })
-            .catch((error) => {
-                // Handle sign in error.
-            });
+        auth.signIn();
     };
 
     /**
      * Handles logout button click event.
      */
     const handleLogout = (): void => {
-
-        auth.signOut()
-            .then((response) => {
-                // Perform any actions you after successful sign out.
-            })
-            .catch((error) => {
-                // Handle sign out error.
-            });
+        auth.signOut();
     };
 
     return (
@@ -140,13 +116,13 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                             <>
                                 <div className="header-title">
                                     <h1>
-                                        Javascript Based React SPA Authentication Sample <br/> (OIDC - Authorization
+                                        Javascript-based React SPA Authentication Sample <br/> (OIDC - Authorization
                                         Code
                                         Grant)
                                     </h1>
                                 </div>
                                 <div className="content">
-                                    <h3>Below are the basic details retrieves from the server on a successful
+                                    <h3>Below are the basic details retrieved from the server on a successful
                                         login.</h3>
                                     <div>
                                         <ul className="details">
@@ -175,7 +151,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                             <>
                                 <div className="header-title">
                                     <h1>
-                                        Javascript Based React SPA Authentication Sample <br/> (OIDC - Authorization
+                                        Javascript-based React SPA Authentication Sample <br/> (OIDC - Authorization
                                         Code
                                         Grant)
                                     </h1>
@@ -188,9 +164,9 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     </div>
                                     <h3>
                                         Sample demo to showcase how to authenticate a simple client side application
-                                        using <b>WSO2 Identity Server</b> with the <a
+                                        using <b>Asgardeo</b> with the <a
                                         href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
-                                        target="_blank" rel="noreferrer">Asgardeo OIDC JS SDK</a>
+                                        target="_blank" rel="noreferrer">Asgardeo SPA Auth SDK</a>
                                     </h3>
                                     <button className="btn primary" onClick={ () => handleLogin() }>Login</button>
                                 </div>

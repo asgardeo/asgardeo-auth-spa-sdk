@@ -42,3 +42,4 @@ export const REFRESH_ACCESS_TOKEN = "refresh_access-token";
 export const SET_SESSION_STATE = "set_session_state";
 export const START_AUTO_REFRESH_TOKEN = "start_auto_refresh_token";
 export const UPDATE_CONFIG = "update_config";
+export const GET_ID_TOKEN = "get_id_token";

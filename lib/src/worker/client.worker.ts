@@ -24,6 +24,7 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_DECODED_ID_TOKEN,
+    GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
@@ -188,6 +189,14 @@ ctx.onmessage = async ({ data, ports }) => {
             }
 
             break;
+        case GET_ID_TOKEN:
+            try {
+                port.postMessage(MessageUtils.generateSuccessMessage(await webWorker.getIDToken()));
+            } catch (error) {
+                port.postMessage(MessageUtils.generateFailureMessage(error));
+            }
+
+            break;
         case ENABLE_HTTP_HANDLER:
             webWorker.enableHttpHandler();
             port.postMessage(MessageUtils.generateSuccessMessage());
@@ -247,13 +256,17 @@ ctx.onmessage = async ({ data, ports }) => {
 
             break;
         default:
-            port?.postMessage(MessageUtils.generateFailureMessage(new AsgardeoSPAException(
-                "CLIENT_WORKER-ONMSG-IV02",
-                "client.worker",
-                "onmessage",
-                "The message type is invalid.",
-                `The message type provided, ${data.type}, is invalid.`
-            )));
+            port?.postMessage(
+                MessageUtils.generateFailureMessage(
+                    new AsgardeoSPAException(
+                        "CLIENT_WORKER-ONMSG-IV02",
+                        "client.worker",
+                        "onmessage",
+                        "The message type is invalid.",
+                        `The message type provided, ${data.type}, is invalid.`
+                    )
+                )
+            );
     }
 };
 
