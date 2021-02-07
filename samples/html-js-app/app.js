@@ -80,7 +80,7 @@ function updateView() {
 function setAuthenticatedState(response) {
     state.displayName = response.displayName;
     state.email =
-        response.email !== null && response.email !== "null" && response.email.length && response.email.length > 0
+        response.email !== null && response.email !== "null" && response.email?.length && response.email?.length > 0
             ? response.email[ 0 ]
             : "";
     state.username = response.username;
