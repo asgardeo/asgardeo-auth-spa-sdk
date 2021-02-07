@@ -21,7 +21,10 @@
  */
 var authClient = AsgardeoAuth.AsgardeoSPAClient.getInstance();
 
-// Initialize the client with the config object. Check `index.html` for the config object.
+
+/**
+ * Initialize the client with the config object. Check `index.html` for the config object.
+ */
 authClient.initialize(authConfig);
 
 /**
@@ -33,12 +36,16 @@ var state = {
     idToken: null
 };
 
-//Pass the callback function to be called after sign in using the `sign-in` hook
+/**
+ * Pass the callback function to be called after sign in using the `sign-in` hook.
+ */
 authClient.on("sign-in", function (response) {
     setAuthenticatedState(response);
 });
 
-//Pass the callback function to be called after sign out using the `sign-out` hook
+/**
+ * Pass the callback function to be called after sign out using the `sign-out` hook.
+ */
 authClient.on("sign-out", function (response) {
     state.isAuth = false;
     updateView();
