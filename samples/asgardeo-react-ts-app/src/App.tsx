@@ -108,7 +108,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                     Please open "src/config.json" file using an editor, and update
                                     the <code>clientID</code> value with the registered app clientID.
                                 </p>
-                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/using-oidc-js-sdk/react-typescript-app">README</a> for more details.</p>
+                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/asgardeo-react-typescript-app">README</a> for more details.</p>
                             </div>
                         )
                         : (isAuth && authenticatedUser)
