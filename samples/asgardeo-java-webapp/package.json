@@ -1,5 +1,5 @@
 {
-    "name": "@asgardeo/oidc-sample-java",
+    "name": "@asgardeo/spa-java-webapp",
     "version": "0.1.2",
     "description": "A sample java web app demonstrating OIDC authentication using Asgardeo's SDK",
     "main": "index.js",
