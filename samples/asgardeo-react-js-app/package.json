@@ -1,5 +1,5 @@
 {
-    "name": "@asgardeo/react-js-app-sample",
+    "name": "@asgardeo/spa-react-js-app",
     "version": "0.1.2",
     "description": "React based sample SPA to demonstrate Asgardeo Auth Javascript SDK usage",
     "keywords": [

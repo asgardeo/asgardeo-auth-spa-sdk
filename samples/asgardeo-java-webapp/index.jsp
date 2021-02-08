@@ -43,7 +43,7 @@
                     <p>
                         Visit repo
                         <a
-                            href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/using-oidc-js-sdk/html-js-app"
+                            href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/asgardeo-java-webapp"
                             >README</a
                         >
                         for more details.
