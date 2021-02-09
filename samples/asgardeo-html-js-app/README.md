@@ -20,7 +20,7 @@ Read more about the SDK configurations [here](../../README.md#initialize) .
 const authConfig = {
     // ClientID generated for the application
     clientID: "<ADD_CLIENT_ID_HERE>",
-    // After login callback URL - We have use to the app root as this is a SPA
+    // After login callback URL - We have to use the app root as this is a SPA
     // (Add it in application OIDC settings "Callback Url")
     signInRedirectURL: origin,
     // WSO2 Identity Server URL
