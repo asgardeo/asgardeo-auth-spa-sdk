@@ -37,7 +37,7 @@
                 <div class="content">
                     <h2>You need to update the Client ID to proceed.</h2>
                     <p>
-                        Please open the "index.html" file using an text editor, and update the
+                        Please open the <b>index.html</b> file using an text editor, and update the
                         <code>clientID</code> value in the <code>authConfig</code> object.
                     </p>
                     <p>
@@ -108,7 +108,8 @@
                 // (Add it in application OIDC settings "Callback Url")
                 signInRedirectURL: origin,
                 // WSO2 Identity Server URL
-                serverOrigin: ""
+                serverOrigin: "",
+                responseMode: "form_post"
             };
         </script>
 
