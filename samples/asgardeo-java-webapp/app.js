@@ -112,7 +112,7 @@ auth.on("sign-out", function () {
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
-    axios.get("/auth.jsp").then((response) => {
+    axios.get("asgardeo-java-webapp/auth").then((response) => {
         auth.signIn({ callOnlyOnRedirect: true }, response.data.authCode, response.data.sessionState);
     });
 
