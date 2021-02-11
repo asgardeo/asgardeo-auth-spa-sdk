@@ -323,11 +323,9 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async (sessionState: string) => {
-                return setSessionState(sessionState);
-            }
-        );
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(async (sessionState: string) => {
+            return setSessionState(sessionState);
+        });
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -341,22 +339,24 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
+        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
 
         if (error) {
             const url = new URL(window.location.href);
             url.searchParams.delete(ERROR);
             url.searchParams.delete(ERROR_DESCRIPTION);
 
-            location.href = url.toString();
+            history.pushState(null, document.title, url.toString());
 
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-SI-BE",
+                    "main-thread-client",
+                    "signIn",
+                    error,
+                    errorDescription
+                )
+            );
         }
 
         if (await isAuthenticated()) {
@@ -544,8 +544,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             })
             .catch((error) => {
                 return Promise.reject(error);
-        })
-    }
+            });
+    };
 
     const isAuthenticated = (): Promise<boolean> => {
         const message: Message<null> = {

@@ -32,6 +32,7 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
+import { AsgardeoSPAException } from "../exception";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -146,12 +147,10 @@ export const MainThreadClient = async (
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async (sessionState: string) => {
-                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState);
-                return;
-            }
-        );
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(async (sessionState: string) => {
+            await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState);
+            return;
+        });
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -209,22 +208,24 @@ export const MainThreadClient = async (
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
+        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
 
         if (error) {
             const url = new URL(window.location.href);
             url.searchParams.delete(ERROR);
             url.searchParams.delete(ERROR_DESCRIPTION);
 
-            location.href = url.toString();
+            history.pushState(null, document.title, url.toString());
 
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-SI-BE",
+                    "main-thread-client",
+                    "signIn",
+                    error,
+                    errorDescription
+                )
+            );
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -308,7 +309,7 @@ export const MainThreadClient = async (
 
     const getIDToken = async (): Promise<string> => {
         return _authenticationClient.getIDToken();
-    }
+    };
 
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
         return _authenticationClient.getOIDCServiceEndpoints();
