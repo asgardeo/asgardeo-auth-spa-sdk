@@ -39,6 +39,13 @@ var state = {
  * Pass the callback function to be called after sign in using the `sign-in` hook.
  */
 authClient.on("sign-in", function (response) {
+    const username = response?.username?.split("/");
+
+    if (username.length >= 2) {
+        username.shift();
+        response.username = username.join("/");
+    }
+
     setAuthenticatedState(response);
 });
 
@@ -74,6 +81,29 @@ function parseIdToken(idToken) {
 
     idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[0])));
     idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[1])));
+
+    const sub = idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.sub?.split("/");
+
+    if (sub.length >= 2) {
+        sub.shift();
+        idTokenObject[ "decoded" ][ 1 ].sub = sub.join("/");
+    }
+
+    const groups = [];
+    idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.groups.forEach((group) => {
+        const groupArrays = group.split("/");
+
+        if (groupArrays.length >= 2) {
+            groupArrays.shift();
+            groups.push(groupArrays.join("/"));
+        } else {
+            groups.push(group);
+        }
+    });
+
+    if (idTokenObject[ "decoded" ][ 1 ]?.groups) {
+        idTokenObject[ "decoded" ][ 1 ].groups = groups;
+    }
 
     return idTokenObject;
 }
