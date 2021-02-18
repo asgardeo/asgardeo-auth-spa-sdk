@@ -114,7 +114,7 @@ if (authConfig.clientID === "") {
 } else {
     axios.get("/auth.jsp").then((response) => {
         auth.signIn({ callOnlyOnRedirect: true }, response.data.authCode, response.data.sessionState);
-    }
+    });
 
     auth.isAuthenticated().then((response) => {
         if (response) {

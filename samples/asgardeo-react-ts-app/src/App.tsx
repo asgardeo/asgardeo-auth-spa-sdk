@@ -116,9 +116,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                             <>
                                 <div className="header-title">
                                     <h1>
-                                        Javascript-based React SPA Authentication Sample <br/> (OIDC - Authorization
-                                        Code
-                                        Grant)
+                                        Javascript-based React SPA Authentication Sample
                                     </h1>
                                 </div>
                                 <div className="content">
@@ -151,9 +149,7 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                             <>
                                 <div className="header-title">
                                     <h1>
-                                        Javascript-based React SPA Authentication Sample <br/> (OIDC - Authorization
-                                        Code
-                                        Grant)
+                                        Javascript-based React SPA Authentication Sample
                                     </h1>
                                 </div>
                                 <div className="content">
@@ -163,10 +159,11 @@ export const App: FunctionComponent<{}> = (): ReactElement => {
                                         <img src={ ReactLogo } alt="react-logo" className="react-logo-image logo"/>
                                     </div>
                                     <h3>
-                                        Sample demo to showcase how to authenticate a simple client side application
-                                        using <b>Asgardeo</b> with the <a
-                                        href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
-                                        target="_blank" rel="noreferrer">Asgardeo SPA Auth SDK</a>
+                                        Sample demo to showcase authentication for a Single Page Application <br />
+                                        via the OpenID Connect Authorization Code flow, <br />
+                                        which is integrated using the { " " }
+                                        <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
+                                        target="_blank" rel="noreferrer">Asgardeo SPA Auth SDK</a>.
                                     </h3>
                                     <button className="btn primary" onClick={ () => handleLogin() }>Login</button>
                                 </div>

@@ -65,7 +65,6 @@
 <body>
 
     <div id="root">
-        <img src="images/asgardeo-logo.png" class="logo-image" />
         <div class="container">
 
             <div id="missing-config" style="display:none;">
@@ -84,7 +83,7 @@
             <div id="logged-in-view" style="display:none;">
                 <div class="header-title">
                     <h1>
-                        JavaScript Authentication Sample <br /> (OIDC - Authorization Code Grant)
+                        JavaScript Authentication Sample
                     </h1>
                 </div>
                 <div class="content">
@@ -116,7 +115,7 @@
                             </div>
 
                             <div class="json">
-                                <h5><b>Signature:</b></h5>
+                                <h5>Signature</h5>
                                 <div class="code">
                                     <code>
                                         HMACSHA256(
@@ -140,7 +139,7 @@
             <div id="logged-out-view" style="display:none;">
                 <div class="header-title">
                     <h1>
-                        JavaScript Authentication Sample <br /> (OIDC - Authorization Code Grant)
+                        JavaScript Authentication Sample
                     </h1>
                 </div>
                 <div class="content">
@@ -148,8 +147,11 @@
                         <img src="images/js-logo.png" class="js-logo-image logo" />
                     </div>
                     <h3>
-                        Sample demo to showcase how authenticate a simple client side application using <br/>
-                        <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank">Asgardeo Auth SPA SDK</a>
+                        Sample demo to showcase authentication for a Single Page Application <br />
+                        via the OpenID Connect Authorization Code flow, <br />
+                        which is integrated using the
+                        <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank">
+                            Asgardeo Auth SPA SDK</a>.
                     </h3>
                     <button class="btn primary" onClick="handleLogin()">Login</button>
                 </div>

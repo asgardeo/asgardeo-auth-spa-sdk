@@ -54,8 +54,7 @@
             <div id="logged-in-view" style="display: none">
                 <div class="header-title">
                     <h1>
-                        Javascript-based Authentication Sample <br />
-                        (OIDC - Authorization Code Grant)
+                        Javascript-based Authentication Sample
                     </h1>
                 </div>
                 <div class="content">
@@ -74,18 +73,17 @@
             <div id="logged-out-view" style="display: none">
                 <div class="header-title">
                     <h1>
-                        Javascript-based Authentication Sample <br />
-                        (OIDC - Authorization Code Grant)
+                        Javascript-based Authentication Sample
                     </h1>
                 </div>
                 <div class="content">
                     <img src="images/home.png" class="home-image" />
                     <h3>
-                        Sample demo to showcase how to authenticate a simple client side application using
-                        <b>Asgardeo</b> with the
+                        Sample demo to showcase authentication for a Single Page Application <br />
+                        via the OpenID Connect Authorization Code flow, <br />
+                        which is integrated using the
                         <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank" rel="noreferrer"
-                            >Asgardeo Auth SPA SDK</a
-                        >
+                            >Asgardeo Auth SPA SDK</a>.
                     </h3>
                     <button class="btn primary" onClick="handleLogin()">Login</button>
                 </div>
