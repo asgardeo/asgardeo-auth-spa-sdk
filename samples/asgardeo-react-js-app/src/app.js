@@ -20,7 +20,6 @@ import React, { useEffect, useState } from "react";
 import * as ReactDOM from "react-dom";
 import ReactJson from "react-json-view";
 import "./app.css";
-import PRODUCT_LOGOS from "./images/asgardeo-logo.png";
 import REACT_LOGO from "./images/react-logo.png";
 import JS_LOGO from "./images/js-logo.png";
 import FOOTER_LOGOS from "./images/footer.png";
@@ -120,7 +119,6 @@ const App = () => {
 
     return (
         <>
-            <img src={ PRODUCT_LOGOS } className="logo-image" />
             <div className="container">
                 { authConfig.default.clientID === "" ?
                     <div className="content">
@@ -132,7 +130,7 @@ const App = () => {
                    <>
                         <div className="header-title">
                             <h1>
-                                JavaScript Based React SPA Authentication Sample <br /> (OIDC - Authorization Code Grant)
+                                JavaScript Based React SPA Authentication Sample
                             </h1>
                         </div>
                         <div className="content">
@@ -199,7 +197,7 @@ const App = () => {
                                                             </div>
 
                                                             <div className="json">
-                                                                <h5><b>Signature:</b></h5>
+                                                                <h5>Signature</h5>
                                                                 <div className="code">
                                                                     <code>
                                                                         HMACSHA256(
@@ -230,8 +228,13 @@ const App = () => {
                                                 <img src={ REACT_LOGO } className="react-logo-image logo" />
                                             </div>
                                             <h3>
-                                                Sample demo to showcase how to authenticate a simple client side application using <br/>
-                                                <b>Asgardeo</b> with the <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk" target="_blank">Asgardeo Auth SPA JS SDK</a>
+                                                Sample demo to showcase authentication for a Single Page
+                                                Application <br />
+                                                via the OpenID Connect Authorization Code flow, <br />
+                                                which is integrated using the { " " }
+                                                <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
+                                                   target="_blank">
+                                                    Asgardeo Auth SPA JS SDK</a>.
                                             </h3>
                                             <button className="btn primary" onClick={ handleLogin }>Login</button>
 
