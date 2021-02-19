@@ -110,14 +110,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 clearTimeout(timer);
 
                 if (data?.success) {
-                    const responseData = JSON.parse(data?.data);
+                    const responseData = JSON.parse(data?.data ?? "");
                     if (data?.blob) {
                         responseData.data = data?.blob;
                     }
 
                     resolve(responseData);
                 } else {
-                    reject(JSON.parse(data.error));
+                    reject(JSON.parse(data.error ?? ""));
                 }
             });
         });
@@ -229,10 +229,10 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      */
     const initialize = (): Promise<boolean> => {
         httpClientHandlers = {
-            requestErrorCallback: null,
-            requestFinishCallback: null,
-            requestStartCallback: null,
-            requestSuccessCallback: null
+            requestErrorCallback: () => null,
+            requestFinishCallback: () => null,
+            requestStartCallback: () => null,
+            requestSuccessCallback: () => null
         };
 
         worker.onmessage = ({ data }) => {
@@ -268,13 +268,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
     };
 
-    const setSessionState = (sessionState: string): Promise<void> => {
-        const message: Message<string> = {
+    const setSessionState = (sessionState: string | null): Promise<void> => {
+        const message: Message<string | null> = {
             data: sessionState,
             type: SET_SESSION_STATE
         };
 
-        return communicate<string, void>(message);
+        return communicate<string | null, void>(message);
     };
 
     const startAutoRefreshToken = (): Promise<void> => {
@@ -291,12 +291,12 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         _sessionManagementHelper.initialize(
             config.clientID,
-            oidcEndpoints.checkSessionIframe,
+            oidcEndpoints.checkSessionIframe ?? "",
             sessionState,
-            config.checkSessionInterval,
-            config.sessionRefreshInterval,
+            config.checkSessionInterval ?? 3,
+            config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint,
+            oidcEndpoints.authorizationEndpoint ?? "",
             async () => {
                 const message: Message<string> = {
                     type: SIGN_OUT
@@ -323,7 +323,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(async (sessionState: string) => {
+        const isLoggingOut = await _sessionManagementHelper
+            .receivePromptNoneResponse(async (sessionState: string | null) => {
             return setSessionState(sessionState);
         });
 
@@ -354,7 +355,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                     "main-thread-client",
                     "signIn",
                     error,
-                    errorDescription
+                    errorDescription ?? ""
                 )
             );
         }
@@ -370,11 +371,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         let resolvedSessionState: string;
 
         if (config?.responseMode === ResponseMode.formPost && (authorizationCode || sessionState)) {
-            resolvedAuthorizationCode = authorizationCode;
-            resolvedSessionState = sessionState;
+            resolvedAuthorizationCode = authorizationCode ?? "";
+            resolvedSessionState = sessionState ?? "";
         } else {
-            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE);
-            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
+            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
+            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
             SPAUtils.removeAuthorizationCode();
         }
 
@@ -452,7 +453,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         type: SIGN_OUT
                     };
 
-                    return communicate<string, string>(message)
+                    return communicate<null, string>(message)
                         .then((response) => {
                             window.location.href = response;
 

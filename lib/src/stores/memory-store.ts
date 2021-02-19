@@ -29,7 +29,7 @@ export class MemoryStore implements Store {
     }
 
     public async getData(key: string): Promise<string> {
-        return this._data?.get(key);
+        return this._data?.get(key) ?? "";
     }
 
     public async removeData(key: string): Promise<void> {

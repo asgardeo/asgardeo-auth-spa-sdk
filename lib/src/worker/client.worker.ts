@@ -283,7 +283,7 @@ const onRequestFinishCallback = () => {
 };
 
 const onRequestErrorCallback = (error: HttpError) => {
-    const errorObject = { ...error };
+    const errorObject: Partial<HttpError> = { ...error };
     delete errorObject.toJSON;
     ctx.postMessage({ data: JSON.stringify(errorObject ?? ""), type: REQUEST_ERROR });
 };

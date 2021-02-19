@@ -28,6 +28,6 @@ export interface SessionManagementHelperInterface {
         signOut: () => Promise<string>
     ): void;
     receivePromptNoneResponse(
-        setSessionState: (sessionState: string) => Promise<void>
+        setSessionState: (sessionState: string | null) => Promise<void>
     ): Promise<boolean>;
 }

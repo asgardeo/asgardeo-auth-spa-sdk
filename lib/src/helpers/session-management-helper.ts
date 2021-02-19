@@ -76,8 +76,8 @@ export const SessionManagementHelper = (() => {
                 if (Boolean(clientID) && Boolean(sessionState)) {
                     const message = `${clientID} ${sessionState}`;
                     const opIframe: HTMLIFrameElement = document.getElementById(OP_IFRAME) as HTMLIFrameElement;
-                    const win: Window = opIframe.contentWindow;
-                    win.postMessage(message, checkSessionEndpoint);
+                    const win: Window | null = opIframe.contentWindow;
+                    win?.postMessage(message, checkSessionEndpoint);
                 }
             }
 
@@ -90,7 +90,7 @@ export const SessionManagementHelper = (() => {
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
         (rpIFrame.contentWindow as any).eval(startCheckSession.toString());
-        rpIFrame.contentWindow[startCheckSession.name](
+        rpIFrame?.contentWindow && rpIFrame?.contentWindow[startCheckSession.name](
             _checkSessionEndpoint,
             _clientID,
             _redirectURL,
@@ -132,13 +132,13 @@ export const SessionManagementHelper = (() => {
             }
         }
 
-        rpIFrame.contentWindow.addEventListener("message", receiveMessage, false);
+        rpIFrame?.contentWindow?.addEventListener("message", receiveMessage, false);
     };
 
     const sendPromptNoneRequest = () => {
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
-        const promptNoneIFrame: HTMLIFrameElement = rpIFrame.contentDocument.getElementById(
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
             PROMPT_NONE_IFRAME
         ) as HTMLIFrameElement;
         promptNoneIFrame.src =
@@ -157,7 +157,7 @@ export const SessionManagementHelper = (() => {
     };
 
     const receivePromptNoneResponse = async (
-        setSessionState: (sessionState: string) => Promise<void>
+        setSessionState: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
             const state = new URL(window.location.href).searchParams.get("state");
             if (state !== null && state === STATE) {
@@ -196,8 +196,8 @@ export const SessionManagementHelper = (() => {
 
         document.body.appendChild(rpIFrame);
         rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-        rpIFrame.contentDocument.body.appendChild(opIFrame);
-        rpIFrame.contentDocument.body.appendChild(promptNoneIFrame);
+        rpIFrame?.contentDocument?.body.appendChild(opIFrame);
+        rpIFrame?.contentDocument?.body.appendChild(promptNoneIFrame);
 
         return {
             initialize,
