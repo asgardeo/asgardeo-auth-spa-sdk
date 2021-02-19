@@ -90,7 +90,7 @@ function parseIdToken(idToken) {
     }
 
     const groups = [];
-    idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.groups.forEach((group) => {
+    idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.groups?.forEach((group) => {
         const groupArrays = group.split("/");
 
         if (groupArrays.length >= 2) {
