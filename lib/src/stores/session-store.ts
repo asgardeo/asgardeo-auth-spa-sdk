@@ -23,7 +23,7 @@ export class SessionStore implements Store {
     }
 
     public async getData(key: string): Promise<string> {
-        return sessionStorage.getItem(key) ?? "";
+        return sessionStorage.getItem(key) ?? "{}";
     }
 
     public async removeData(key: string): Promise<void> {
