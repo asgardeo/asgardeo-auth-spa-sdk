@@ -140,7 +140,7 @@ const App = () => {
                                 <>
                                     { isAuth ?
                                         <>
-                                            <h2>Authentication response</h2>
+                                            <h2>Authentication response derived by the Asgardeo Auth SPA JS SDK</h2>
                                             <div className="json">
                                                 <ReactJson
                                                     src={ authenticateState.authenticateResponse }
