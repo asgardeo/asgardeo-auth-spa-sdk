@@ -57,14 +57,14 @@ const PRIMARY_INSTANCE = "primaryInstance";
  */
 export class AsgardeoSPAClient {
     private static _instances: Map<string, AsgardeoSPAClient> = new Map<string, AsgardeoSPAClient>();
-    private _client: WebWorkerClientInterface | MainThreadClientInterface;
-    private _storage: Storage;
-    private _initialized: boolean;
+    private _client: WebWorkerClientInterface | MainThreadClientInterface | undefined;
+    private _storage: Storage | undefined;
+    private _initialized: boolean = false;
     private _startedInitialize: boolean = false;
-    private _onSignInCallback: (response: BasicUserInfo) => void;
-    private _onSignOutCallback: () => void;
-    private _onEndUserSession: (response: any) => void;
-    private _onInitialize: (response: boolean) => void;
+    private _onSignInCallback: (response: BasicUserInfo) => void = () => null;
+    private _onSignOutCallback: () => void = () => null;
+    private _onEndUserSession: (response: any) => void = () => null;
+    private _onInitialize: (response: boolean) => void = () => null;
     private _onCustomGrant: Map<string, (response: any) => void> = new Map();
     private _instanceID: string;
 
@@ -143,7 +143,7 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public static getInstance(id?: string): AsgardeoSPAClient {
+    public static getInstance(id?: string): AsgardeoSPAClient | undefined {
         if (id && this._instances?.get(id)) {
             return this._instances.get(id);
         } else if (!id && this._instances?.get(PRIMARY_INSTANCE)) {
@@ -249,10 +249,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async getBasicUserInfo(): Promise<BasicUserInfo> {
+    public async getBasicUserInfo(): Promise<BasicUserInfo | undefined> {
         await this._validateMethod();
 
-        return this._client.getBasicUserInfo();
+        return this._client?.getBasicUserInfo();
     }
 
     /**
@@ -292,15 +292,15 @@ export class AsgardeoSPAClient {
         config?: SignInConfig,
         authorizationCode?: string,
         sessionState?: string
-    ): Promise<BasicUserInfo> {
+    ): Promise<BasicUserInfo | undefined> {
         await this._isInitialized();
-        if (!SPAUtils.setInitializedSignIn(config?.callOnlyOnRedirect)) {
+        if (!SPAUtils.setInitializedSignIn(Boolean(config?.callOnlyOnRedirect))) {
             return;
         }
 
         delete config?.callOnlyOnRedirect;
 
-        return this._client.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
+        return this._client?.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
             if (this._onSignInCallback) {
                 if (response.allowedScopes || response.displayName || response.email || response.username) {
                     this._onSignInCallback(response);
@@ -334,7 +334,7 @@ export class AsgardeoSPAClient {
     public async signOut(): Promise<boolean> {
         await this._validateMethod();
 
-        const signOutResponse = await this._client.signOut();
+        const signOutResponse = await this._client?.signOut() ?? false;
 
         return signOutResponse;
     }
@@ -376,10 +376,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async httpRequest(config: HttpRequestConfig): Promise<HttpResponse> {
+    public async httpRequest(config: HttpRequestConfig): Promise<HttpResponse | undefined> {
         await this._validateMethod();
 
-        return this._client.httpRequest(config);
+        return this._client?.httpRequest(config);
     }
 
     /**
@@ -429,10 +429,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[]> {
+    public async httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> {
         await this._validateMethod();
 
-        return this._client.httpRequestAll(config);
+        return this._client?.httpRequestAll(config);
     }
 
     /**
@@ -466,7 +466,7 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async requestCustomGrant(config: CustomGrantConfig): Promise<HttpResponse<any> | BasicUserInfo> {
+    public async requestCustomGrant(config: CustomGrantConfig): Promise<HttpResponse<any> | BasicUserInfo | undefined> {
         if (config.signInRequired) {
             await this._validateMethod();
         } else {
@@ -485,9 +485,10 @@ export class AsgardeoSPAClient {
             );
         }
 
-        const customGrantResponse = await this._client.requestCustomGrant(config);
+        const customGrantResponse = await this._client?.requestCustomGrant(config);
 
-        this._onCustomGrant?.get(config.id) && this._onCustomGrant?.get(config.id)(this._onCustomGrant?.get(config.id));
+        const customGrantCallback = this._onCustomGrant.get(config.id);
+        customGrantCallback && customGrantCallback(this._onCustomGrant?.get(config.id));
 
         return customGrantResponse;
     }
@@ -512,10 +513,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async revokeAccessToken(): Promise<boolean> {
+    public async revokeAccessToken(): Promise<boolean | undefined> {
         await this._validateMethod();
 
-        const revokeAccessToken = await this._client.revokeAccessToken();
+        const revokeAccessToken = await this._client?.revokeAccessToken();
         this._onEndUserSession && this._onEndUserSession(revokeAccessToken);
 
         return revokeAccessToken;
@@ -541,10 +542,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async getOIDCServiceEndpoints(): Promise<OIDCEndpoints> {
+    public async getOIDCServiceEndpoints(): Promise<OIDCEndpoints | undefined> {
         await this._isInitialized();
 
-        return this._client.getOIDCServiceEndpoints();
+        return this._client?.getOIDCServiceEndpoints();
     }
 
     /**
@@ -602,10 +603,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async getDecodedIDToken(): Promise<DecodedIDTokenPayload> {
+    public async getDecodedIDToken(): Promise<DecodedIDTokenPayload | undefined> {
         await this._validateMethod();
 
-        return this._client.getDecodedIDToken();
+        return this._client?.getDecodedIDToken();
     }
 
     /**
@@ -624,10 +625,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async getIDToken(): Promise<string> {
+    public async getIDToken(): Promise<string | undefined> {
         await this._validateMethod();
 
-        return this._client.getIDToken();
+        return this._client?.getIDToken();
     }
 
     /**
@@ -655,7 +656,7 @@ export class AsgardeoSPAClient {
     public async getAccessToken(): Promise<string> {
         await this._validateMethod();
 
-        if ([Storage.WebWorker, Storage.BrowserMemory].includes(this._storage)) {
+        if (this._storage && [(Storage.WebWorker, Storage.BrowserMemory)].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoSPAException(
                     "AUTH_CLIENT-GAT-IV01",
@@ -692,10 +693,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async refreshAccessToken(): Promise<BasicUserInfo> {
+    public async refreshAccessToken(): Promise<BasicUserInfo | undefined> {
         await this._validateMethod();
 
-        return this._client.refreshAccessToken();
+        return this._client?.refreshAccessToken();
     }
 
     /**
@@ -707,10 +708,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async isAuthenticated(): Promise<boolean> {
+    public async isAuthenticated(): Promise<boolean | undefined> {
         await this._isInitialized();
 
-        return this._client.isAuthenticated();
+        return this._client?.isAuthenticated();
     }
 
     /**
@@ -766,19 +767,19 @@ export class AsgardeoSPAClient {
                     this._onInitialize = callback;
                     break;
                 case Hooks.HttpRequestError:
-                    this._client.setHttpRequestErrorCallback(callback);
+                    this._client?.setHttpRequestErrorCallback(callback);
                     break;
                 case Hooks.HttpRequestFinish:
-                    this._client.setHttpRequestFinishCallback(callback);
+                    this._client?.setHttpRequestFinishCallback(callback);
                     break;
                 case Hooks.HttpRequestStart:
-                    this._client.setHttpRequestStartCallback(callback);
+                    this._client?.setHttpRequestStartCallback(callback);
                     break;
                 case Hooks.HttpRequestSuccess:
-                    this._client.setHttpRequestSuccessCallback(callback);
+                    this._client?.setHttpRequestSuccessCallback(callback);
                     break;
                 case Hooks.CustomGrant:
-                    this._onCustomGrant.set(id, callback);
+                    id && this._onCustomGrant.set(id, callback);
                     break;
                 default:
                     throw new AsgardeoSPAException(
@@ -816,10 +817,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async enableHttpHandler(): Promise<boolean> {
+    public async enableHttpHandler(): Promise<boolean | undefined> {
         await this._isInitialized();
 
-        return this._client.enableHttpHandler();
+        return this._client?.enableHttpHandler();
     }
 
     /**
@@ -838,10 +839,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async disableHttpHandler(): Promise<boolean> {
+    public async disableHttpHandler(): Promise<boolean | undefined> {
         await this._isInitialized();
 
-        return this._client.disableHttpHandler();
+        return this._client?.disableHttpHandler();
     }
 
     /**

@@ -64,25 +64,25 @@ export const WebWorkerCore = async (
         };
     };
 
-    await _httpClient.init(
+    _httpClient?.init && await _httpClient.init(
         true,
         attachToken
     );
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _httpClient.setHttpRequestStartCallback(callback);
+        _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
     };
 
     const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _httpClient.setHttpRequestSuccessCallback(callback);
+        _httpClient?.setHttpRequestSuccessCallback && _httpClient.setHttpRequestSuccessCallback(callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _httpClient.setHttpRequestErrorCallback(callback);
+        _httpClient?.setHttpRequestErrorCallback &&_httpClient.setHttpRequestErrorCallback(callback);
     };
 
     const httpRequest = async (config: HttpRequestConfig): Promise<HttpResponse> => {
@@ -119,8 +119,8 @@ export const WebWorkerCore = async (
                                         "WORKER_CORE-HR-ES01",
                                         "worker-core",
                                         "httpRequest",
-                                        null,
-                                        null,
+                                        "",
+                                        "",
                                         refreshError
                                     )
                                 );
@@ -144,10 +144,10 @@ export const WebWorkerCore = async (
         }
     };
 
-    const httpRequestAll = async (configs: HttpRequestConfig[]): Promise<HttpResponse[]> => {
+    const httpRequestAll = async (configs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
         let matches = false;
         (await _dataLayer.getConfigData()).resourceServerURLs.forEach((baseUrl) => {
-            if (configs.every((config) => config.url.startsWith(baseUrl))) {
+            if (configs.every((config) => config?.url?.startsWith(baseUrl))) {
                 matches = true;
             }
         });
@@ -157,7 +157,7 @@ export const WebWorkerCore = async (
             requests.push(_httpClient.request(request));
         });
         if (matches) {
-            return _httpClient
+            return _httpClient?.all && _httpClient
                 .all(requests)
                 .then((responses: HttpResponse[]) => {
                     return Promise.resolve(responses);
@@ -167,7 +167,7 @@ export const WebWorkerCore = async (
                         return _authenticationClient
                             .refreshAccessToken()
                             .then(() => {
-                                return _httpClient
+                                return _httpClient.all && _httpClient
                                     .all(requests)
                                     .then((response) => {
                                         return Promise.resolve(response);
@@ -182,8 +182,8 @@ export const WebWorkerCore = async (
                                         "WORKER_CORE-HRA-ES01",
                                         "worker-core",
                                         "httpRequestAll",
-                                        null,
-                                        null,
+                                        "",
+                                        "",
                                         refreshError
                                     )
                                 );
@@ -208,11 +208,11 @@ export const WebWorkerCore = async (
     };
 
     const enableHttpHandler = (): void => {
-        _httpClient.enableHandler();
+        _httpClient.enableHandler && _httpClient.enableHandler();
     };
 
     const disableHttpHandler = (): void => {
-        _httpClient.disableHandler();
+        _httpClient.disableHandler && _httpClient.disableHandler();
     };
 
     const getAuthorizationURL = async (params?: AuthorizationURLParams): Promise<AuthorizationResponse> => {

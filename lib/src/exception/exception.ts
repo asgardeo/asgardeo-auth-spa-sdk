@@ -22,7 +22,7 @@ export class AsgardeoSPAException extends Error {
     public file: string;
     public method: string;
     public description: string;
-    public error: AsgardeoSPAException;
+    public error: AsgardeoSPAException | undefined;
 
     public constructor(
         code: string,
@@ -30,7 +30,7 @@ export class AsgardeoSPAException extends Error {
         method: string,
         message: string,
         description: string,
-        error?: AsgardeoSPAException
+        error?: AsgardeoSPAException | undefined
     ) {
         super(message ?? error?.message);
         this.name = this.constructor.name;

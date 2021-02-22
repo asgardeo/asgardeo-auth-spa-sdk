@@ -32,6 +32,7 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
+import { AsgardeoSPAException } from "../exception";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -44,7 +45,7 @@ import {
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
 
-const initiateStore = (store: Storage): Store => {
+const initiateStore = (store: Storage | undefined): Store => {
     switch (store) {
         case Storage.LocalStorage:
             return new LocalStore();
@@ -77,35 +78,35 @@ export const MainThreadClient = async (
         };
     };
 
-    await _httpClient.init(true, attachToken);
+    _httpClient?.init && await _httpClient.init(true, attachToken);
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _httpClient.setHttpRequestStartCallback(callback);
+        _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
     };
 
     const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _httpClient.setHttpRequestSuccessCallback(callback);
+        _httpClient?.setHttpRequestSuccessCallback && _httpClient.setHttpRequestSuccessCallback(callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback &&  _httpClient.setHttpRequestFinishCallback(callback);
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _httpClient.setHttpRequestErrorCallback(callback);
+        _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
     };
 
     const httpRequest = (config: HttpRequestConfig): Promise<HttpResponse> => {
         return _httpClient.request(config);
     };
 
-    const httpRequestAll = (config: HttpRequestConfig[]): Promise<HttpResponse[]> => {
+    const httpRequestAll = (config: HttpRequestConfig[]): Promise<HttpResponse[]> | undefined => {
         const requests: Promise<HttpResponse<any>>[] = [];
         config.forEach((request) => {
             requests.push(_httpClient.request(request));
         });
 
-        return _httpClient.all(requests);
+        return _httpClient.all && _httpClient.all(requests);
     };
 
     const getHttpClient = (): HttpClientInstance => {
@@ -113,13 +114,13 @@ export const MainThreadClient = async (
     };
 
     const enableHttpHandler = (): boolean => {
-        _httpClient.enableHandler();
+        _httpClient?.enableHandler && _httpClient.enableHandler();
 
         return true;
     };
 
     const disableHttpHandler = (): boolean => {
-        _httpClient.disableHandler();
+        _httpClient?.disableHandler && _httpClient.disableHandler();
 
         return true;
     };
@@ -129,12 +130,12 @@ export const MainThreadClient = async (
 
         _sessionManagementHelper.initialize(
             config.clientID,
-            oidcEndpoints.checkSessionIframe,
+            oidcEndpoints.checkSessionIframe ?? "",
             (await _authenticationClient.getBasicUserInfo()).sessionState,
-            config.checkSessionInterval,
-            config.sessionRefreshInterval,
+            config.checkSessionInterval ?? 3,
+            config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint,
+            oidcEndpoints.authorizationEndpoint ?? "",
             async () => {
                 return _authenticationClient.signOut();
             }
@@ -146,12 +147,11 @@ export const MainThreadClient = async (
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
-            async (sessionState: string) => {
-                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState);
-                return;
-            }
-        );
+        const isLoggingOut = await _sessionManagementHelper
+            .receivePromptNoneResponse(async (sessionState: string | null) => {
+            await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
+            return;
+        });
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -178,8 +178,8 @@ export const MainThreadClient = async (
             resolvedAuthorizationCode = authorizationCode;
             resolvedSessionState = sessionState;
         } else {
-            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE);
-            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
+            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
+            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
             SPAUtils.removeAuthorizationCode();
         }
 
@@ -209,22 +209,24 @@ export const MainThreadClient = async (
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
+        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
 
         if (error) {
             const url = new URL(window.location.href);
             url.searchParams.delete(ERROR);
             url.searchParams.delete(ERROR_DESCRIPTION);
 
-            location.href = url.toString();
+            history.pushState(null, document.title, url.toString());
 
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-SI-BE",
+                    "main-thread-client",
+                    "signIn",
+                    error,
+                    errorDescription ?? ""
+                )
+            );
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -308,7 +310,7 @@ export const MainThreadClient = async (
 
     const getIDToken = async (): Promise<string> => {
         return _authenticationClient.getIDToken();
-    }
+    };
 
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
         return _authenticationClient.getOIDCServiceEndpoints();

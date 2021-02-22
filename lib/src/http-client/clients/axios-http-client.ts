@@ -53,11 +53,11 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
     private static axiosInstance: HttpClientInstance;
     private static clientInstance: HttpClient;
     private static isHandlerEnabled: boolean;
-    private attachToken: (request: HttpRequestConfig) => Promise<void>;
-    private requestStartCallback: (request: HttpRequestConfig) => void;
-    private requestSuccessCallback: (response: HttpResponse) => void;
-    private requestErrorCallback: (error: HttpError) => void;
-    private requestFinishCallback: () => void;
+    private attachToken: (request: HttpRequestConfig) => Promise<void> = () => Promise.resolve();
+    private requestStartCallback: (request: HttpRequestConfig) => void = () => null;
+    private requestSuccessCallback: (response: HttpResponse) => void = () => null;
+    private requestErrorCallback: (error: HttpError) => void = () => null;
+    private requestFinishCallback: () => void = () => null;
     private static readonly DEFAULT_HANDLER_DISABLE_TIMEOUT: number = 1000;
 
     /**

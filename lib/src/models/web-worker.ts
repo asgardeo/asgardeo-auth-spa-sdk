@@ -32,7 +32,7 @@ interface WebWorkerEvent<T> extends MessageEvent {
 }
 
 export class WebWorkerClass<T> extends Worker {
-    public onmessage: (this: WebWorkerClass<T>, event: WebWorkerEvent<T>) => any;
+    public onmessage: (this: Worker, event: WebWorkerEvent<T>) => any = () => null;
 }
 
 export interface WebWorkerCoreInterface {
@@ -41,7 +41,7 @@ export interface WebWorkerCoreInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
-    httpRequestAll(configs: HttpRequestConfig[]): Promise<HttpResponse[]>;
+    httpRequestAll(configs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined>;
     enableHttpHandler(): void;
     disableHttpHandler(): void;
     getAuthorizationURL(params?: AuthorizationURLParams, signInRedirectURL?: string): Promise<AuthorizationResponse>;

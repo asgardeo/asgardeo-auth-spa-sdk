@@ -30,7 +30,7 @@ export class SPAUtils {
     }
 
     public static getPKCE(): string {
-        return sessionStorage.getItem(PKCE_CODE_VERIFIER);
+        return sessionStorage.getItem(PKCE_CODE_VERIFIER) ?? "";
     }
 
     public static setPKCE(pkce: string): void {
@@ -42,7 +42,7 @@ export class SPAUtils {
     }
 
     public static getSignOutURL(): string {
-        return sessionStorage.getItem(SIGN_OUT_URL);
+        return sessionStorage.getItem(SIGN_OUT_URL) ?? "";
     }
 
     public static removePKCE(): void {
@@ -50,7 +50,7 @@ export class SPAUtils {
     }
 
     public static setInitializedSignIn(callOnlyOnRedirect: boolean): boolean {
-        const isInitialized = JSON.parse(sessionStorage.getItem(INITIALIZED_SIGN_IN));
+        const isInitialized = JSON.parse(sessionStorage.getItem(INITIALIZED_SIGN_IN) ?? "");
         if (callOnlyOnRedirect && isInitialized) {
             sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
 
