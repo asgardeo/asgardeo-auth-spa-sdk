@@ -110,14 +110,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 clearTimeout(timer);
 
                 if (data?.success) {
-                    const responseData = JSON.parse(data?.data ?? "");
+                    const responseData = data?.data ? JSON.parse(data?.data) : null;
                     if (data?.blob) {
                         responseData.data = data?.blob;
                     }
 
                     resolve(responseData);
                 } else {
-                    reject(JSON.parse(data.error ?? ""));
+                    reject(data.error ? JSON.parse(data.error) : null);
                 }
             });
         });
@@ -239,7 +239,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             switch (data.type) {
                 case REQUEST_ERROR:
                     httpClientHandlers?.requestErrorCallback &&
-                        httpClientHandlers?.requestErrorCallback(JSON.parse(data.data ?? ""));
+                        httpClientHandlers?.requestErrorCallback(data.data ? JSON.parse(data.data) : null);
                     break;
                 case REQUEST_FINISH:
                     httpClientHandlers?.requestFinishCallback && httpClientHandlers?.requestFinishCallback();
@@ -249,7 +249,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                     break;
                 case REQUEST_SUCCESS:
                     httpClientHandlers?.requestSuccessCallback &&
-                        httpClientHandlers?.requestSuccessCallback(JSON.parse(data.data ?? ""));
+                        httpClientHandlers?.requestSuccessCallback(data.data ? JSON.parse(data.data) : null);
                     break;
             }
         };

@@ -50,7 +50,8 @@ export class SPAUtils {
     }
 
     public static setInitializedSignIn(callOnlyOnRedirect: boolean): boolean {
-        const isInitialized = JSON.parse(sessionStorage.getItem(INITIALIZED_SIGN_IN) ?? "");
+        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SIGN_IN);
+        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
         if (callOnlyOnRedirect && isInitialized) {
             sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
 

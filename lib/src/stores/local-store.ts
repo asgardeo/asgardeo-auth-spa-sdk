@@ -23,7 +23,7 @@ export class LocalStore implements Store {
     }
 
     public async getData(key: string): Promise<string> {
-        return localStorage.getItem(key) ?? "";
+        return localStorage.getItem(key) ?? "{}";
     }
 
     public async removeData(key: string): Promise<void> {
