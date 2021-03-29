@@ -1,0 +1,45 @@
+#  Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+#  WSO2 Inc. licenses this file to you under the Apache License,
+#  Version 2.0 (the "License"); you may not use this file except
+#  in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied. See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
+# This upload sample applications to latest release assets.
+
+name: Generate Certificate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [closed]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - uses: actions/checkout@v2
+          
+    - name: Generate certificate
+      working-directory: samples/asgardeo-html-js-app
+      run: |
+        openssl req -config openssl.cnf -new -sha256 -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 825 -out cert.pem
+        echo Certificate generated
+    - name: Push Certificates
+      run: |
+        git config --global user.email "cert.gen@github.action.com"
+        git config --global user.name "certificate-bot"
+        git add samples/asgardeo-html-js-app/*.pem
+        git commit -m "Regenerate certificate"
+        git push
+        echo Certificates pushed
