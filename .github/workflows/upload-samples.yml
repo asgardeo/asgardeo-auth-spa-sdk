@@ -31,9 +31,10 @@ jobs:
     - name: Zip Samples into Assets Directory
       working-directory: samples
       run: |
-        mkdir ../assets
+        rm -rf assets/new-release
+        mkdir ../assets/new-release
         for dir in */ ; do
-            zip -r "../assets/${dir%/}.zip" $dir
+            zip -r "../assets/new-release/${dir%/}.zip" $dir
         done
 
     - name: Get Latest Release Tag
@@ -48,7 +49,7 @@ jobs:
       uses: svenstaro/upload-release-action@c5cd3d711a186bb9da45dd49f8a7d3c61ad2f4d4
       with:
         repo_token: ${{ secrets.ASGARDIO_GITHUB_BOT_TOKEN }}
-        file: assets/*
+        file: assets/new-release/*
         tag: ${{ steps.get-latest-release-tag.outputs.LATEST_RELEASE_TAG }}
         overwrite: true
         file_glob: true
