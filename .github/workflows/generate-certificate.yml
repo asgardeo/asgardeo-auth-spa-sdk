@@ -29,6 +29,9 @@ jobs:
     if: github.event.pull_request.merged == true
     steps:
     - uses: actions/checkout@v2
+      with:
+        token: ${{secrets.ASGARDIO_GITHUB_BOT_TOKEN}}
+      if: github.repository == 'asgardeo/asgardeo-auth-spa-sdk'
           
     - name: Generate certificate
       working-directory: samples/asgardeo-html-js-app
