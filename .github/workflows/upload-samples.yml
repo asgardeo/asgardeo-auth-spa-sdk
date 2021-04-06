@@ -31,7 +31,6 @@ jobs:
     - name: Zip Samples into Assets Directory
       working-directory: samples
       run: |
-        rm -rf assets/new-release
         mkdir ../assets/new-release
         for dir in */ ; do
             zip -r "../assets/new-release/${dir%/}.zip" $dir
