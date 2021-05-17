@@ -39,13 +39,14 @@ var state = {
  * Pass the callback function to be called after sign in using the `sign-in` hook.
  */
 authClient.on("sign-in", function (response) {
-    const username = response?.username?.split("/");
+    var username = response?.username?.split("/");
 
     if (username.length >= 2) {
         username.shift();
         response.username = username.join("/");
     }
 
+    updateView();
     setAuthenticatedState(response);
 });
 
@@ -82,7 +83,7 @@ function parseIdToken(idToken) {
     idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[0])));
     idTokenObject["decoded"].push(JSON.parse(atob(idTokenObject.encoded[1])));
 
-    const sub = idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.sub?.split("/");
+    var sub = idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.sub?.split("/");
 
     if (sub.length >= 2) {
         sub.shift();
@@ -142,6 +143,8 @@ function updateView() {
         loggedInView.style.display = "none";
         loggedOutView.style.display = "block";
     }
+
+    document.getElementById("loading").style.display = "none";
 }
 
 /**
@@ -181,7 +184,6 @@ if (authConfig.clientID === "") {
     // continue the sign-in flow
     if (JSON.parse(sessionStorage.getItem("initialized-sign-in"))) {
         authClient.signIn({ callOnlyOnRedirect: true });
-        updateView();
     } else {
         authClient.isAuthenticated().then(function(isAuthenticated) {
             if (isAuthenticated) {
@@ -192,9 +194,9 @@ if (authConfig.clientID === "") {
 
                     updateView();
                 });
+            } else {
+                updateView();
             }
-
-            updateView();
         });
     }
 }
