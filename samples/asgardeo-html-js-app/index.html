@@ -67,8 +67,16 @@
     <div id="root">
         <div class="container">
 
-            <div id="missing-config" style="display:none;">
-                <div class="content">
+            <div class="header-title">
+                <h1>
+                    JavaScript Authentication Sample
+                </h1>
+            </div>
+            <div class="content">
+
+                <div id="loading">Loading ...</div>
+
+                <div id="missing-config" style="display:none;">
                     <h2>You need to update the Client ID to proceed.</h2>
                     <p>Please open the <b>index.html</b> file using an editor and scroll down to the <b>script</b>
                         tag at the the end of the <b>body</b> tag, find the <code>authConfig</code>, and
@@ -78,15 +86,8 @@
                             README
                         </a> for more details.</p>
                 </div>
-            </div>
 
-            <div id="logged-in-view" style="display:none;">
-                <div class="header-title">
-                    <h1>
-                        JavaScript Authentication Sample
-                    </h1>
-                </div>
-                <div class="content">
+                <div id="logged-in-view" style="display:none;">
                     <h2>Authentication response derived by the Asgardeo Auth SPA SDK</h2>
                     <div class="json">
                         <div id="authentication-response" class="json-container"></div>
@@ -134,15 +135,8 @@
 
                     <button class="btn primary mt-4" onClick="handleLogout()">Logout</button>
                 </div>
-            </div>
 
-            <div id="logged-out-view" style="display:none;">
-                <div class="header-title">
-                    <h1>
-                        JavaScript Authentication Sample
-                    </h1>
-                </div>
-                <div class="content">
+                <div id="logged-out-view" style="display:none;">
                     <div class="home-image">
                         <img src="images/js-logo.png" class="js-logo-image logo" />
                     </div>
@@ -155,6 +149,7 @@
                     </h3>
                     <button class="btn primary" onClick="handleLogin()">Login</button>
                 </div>
+
             </div>
 
         </div>
