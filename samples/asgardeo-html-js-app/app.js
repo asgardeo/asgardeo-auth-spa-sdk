@@ -145,6 +145,7 @@ function updateView() {
     }
 
     document.getElementById("loading").style.display = "none";
+    document.getElementById("error").style.display = "none";
 }
 
 /**
@@ -183,7 +184,10 @@ if (authConfig.clientID === "") {
     // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
     // continue the sign-in flow
     if (JSON.parse(sessionStorage.getItem("initialized-sign-in"))) {
-        authClient.signIn({ callOnlyOnRedirect: true });
+        authClient.signIn({ callOnlyOnRedirect: true }).catch((error)=> {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("error").style.display = "block";
+        });
     } else {
         authClient.isAuthenticated().then(function(isAuthenticated) {
             if (isAuthenticated) {

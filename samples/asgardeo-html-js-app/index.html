@@ -75,6 +75,7 @@
             <div class="content">
 
                 <div id="loading">Loading ...</div>
+                <div id="error" style="display: none;">Error in loading this page ...</div>
 
                 <div id="missing-config" style="display:none;">
                     <h2>You need to update the Client ID to proceed.</h2>
@@ -165,7 +166,7 @@
     <script>
         const authConfig = {
             // ClientID generated for the application
-            clientID: "",
+            clientID: "WP7MqYjf4hSiixtSECsM7CD6wTIa",
             // After login redirect URL - We have use app root path, since this is a SPA
             // (Add it in application OIDC settings "Authorized redirect Url")
             signInRedirectURL: "https://localhost:5000",
