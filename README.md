@@ -167,7 +167,7 @@ npm run build
 
 The _Callback URL_ of this app is `http://localhost:3000`.
 
-You can try out the HTML JavaScript Sample App from the [samples/html-js-app](../../samples/using-oidc-js-sdk/html-js-app). The instructions to run the app can be found [here](/samples/vanilla-js-app/README.md)
+You can try out the HTML JavaScript Sample App from the [samples/html-js-app](/samples/asgardeo-html-js-app/). The instructions to run the app can be found [here](/samples/asgardeo-html-js-app/README.md)
 
 #### 2. React Typescript Sample
 
