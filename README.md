@@ -173,13 +173,13 @@ You can try out the HTML JavaScript Sample App from the [samples/asgardeo-html-j
 
 The _Callback URL_ of this app is `http://localhost:5000`.
 
-You can try out the React JS Sample Application from the [samples/asgardeo-react-js-app](/samples/asgardeo-react-js-app). The instructions to run the app can be found [here](/samples/asgardeo-react-js-app/README.md)
+You can try out the React JS Sample App from the [samples/asgardeo-react-js-app](/samples/asgardeo-react-js-app). The instructions to run the app can be found [here](/samples/asgardeo-react-js-app/README.md)
 
 #### 3. React Typescript Sample
 
 The _Callback URL_ of this app is `http://localhost:5000`.
 
-You can try out the React Sample App from the [samples/asgardeo-react-ts-app](/samples/asgardeo-react-ts-app). The instructions to run the app can be found [here](/samples/asgardeo-react-ts-app/README.md)
+You can try out the React Typescript Sample App from the [samples/asgardeo-react-ts-app](/samples/asgardeo-react-ts-app). The instructions to run the app can be found [here](/samples/asgardeo-react-ts-app/README.md)
 
 #### 4. Java Webapp Sample
 
