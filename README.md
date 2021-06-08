@@ -167,19 +167,25 @@ npm run build
 
 The _Callback URL_ of this app is `http://localhost:5000`.
 
-You can try out the HTML JavaScript Sample App from the [samples/html-js-app](/samples/asgardeo-html-js-app/). The instructions to run the app can be found [here](/samples/asgardeo-html-js-app/README.md)
+You can try out the HTML JavaScript Sample App from the [samples/asgardeo-html-js-app](/samples/asgardeo-html-js-app/). The instructions to run the app can be found [here](/samples/asgardeo-html-js-app/README.md)
 
-#### 2. React Typescript Sample
+#### 2. React JavaScript Sample
 
-The _Callback URL_ of this app is `http://localhost:3000`.
+The _Callback URL_ of this app is `http://localhost:5000`.
 
-You can try out the React Sample App from the [samples/react-typescript-app](../../samples/using-oidc-js-sdk/react-typescript-app). The instructions to run the app can be found [here](/samples/react-js-app/README.md)
+You can try out the React JS Sample Application from the [samples/asgardeo-react-js-app](/samples/asgardeo-react-js-app). The instructions to run the app can be found [here](/samples/asgardeo-react-js-app/README.md)
 
-#### 2. Java Webapp Sample
+#### 3. React Typescript Sample
+
+The _Callback URL_ of this app is `http://localhost:5000`.
+
+You can try out the React Sample App from the [samples/asgardeo-react-ts-app](/samples/asgardeo-react-ts-app). The instructions to run the app can be found [here](/samples/asgardeo-react-ts-app/README.md)
+
+#### 4. Java Webapp Sample
 
 The _Callback URL_ of this app is the URL of this app on the server. For instance, if your Tomcat server is running on `http://localhost:8080`, then the callback URL will be `http://localhost:8080/java-webapp`.
 
-You can try out the Java Webapp Sample App from the [samples/java-webapp](../../samples/using-oidc-js-sdk/java-webapp). The instructions to run the app can be found [here](/samples/java-webapp/README.md)
+You can try out the Java Webapp Sample App from the [samples/asgardeo-java-webapp](/samples/asgardeo-java-webapp). The instructions to run the app can be found [here](/samples/asgardeo-java-webapp/README.md)
 
 ## Browser Compatibility
 
