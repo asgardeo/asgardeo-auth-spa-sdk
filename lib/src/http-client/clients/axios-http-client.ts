@@ -195,20 +195,7 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
         attachToken: (request: HttpRequestConfig) => Promise<void>
     ): Promise<void> {
         HttpClient.isHandlerEnabled = isHandlerEnabled;
-
-        if (
-            this.requestStartCallback &&
-            this.attachToken &&
-            this.requestSuccessCallback &&
-            this.requestErrorCallback &&
-            this.requestFinishCallback
-        ) {
-            return;
-        }
-
-        if (!this.attachToken) {
-            this.attachToken = attachToken;
-        }
+        this.attachToken = attachToken;
     }
 
     /**
