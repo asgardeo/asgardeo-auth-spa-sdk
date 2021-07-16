@@ -25,22 +25,32 @@ import {
     DecodedIDTokenPayload,
     GetAuthURLConfig,
     OIDCEndpoints,
-    PKCE_CODE_VERIFIER,
     ResponseMode,
     SESSION_STATE,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
-import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
+import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
+    ERROR,
+    ERROR_DESCRIPTION,
+    PROMPT_NONE_IFRAME,
+    RP_IFRAME,
+    STATE,
+    Storage
+} from "../constants";
 import { AsgardeoSPAException } from "../exception";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
+    AuthorizationInfo,
     HttpError,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
-    MainThreadClientInterface
+    MainThreadClientInterface,
+    Message
 } from "../models";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
@@ -78,7 +88,7 @@ export const MainThreadClient = async (
         };
     };
 
-    _httpClient?.init && await _httpClient.init(true, attachToken);
+    _httpClient?.init && (await _httpClient.init(true, attachToken));
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
         _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
@@ -89,7 +99,7 @@ export const MainThreadClient = async (
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestFinishCallback &&  _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
@@ -147,11 +157,12 @@ export const MainThreadClient = async (
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper
-            .receivePromptNoneResponse(async (sessionState: string | null) => {
-            await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
-            return;
-        });
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
+                return;
+            }
+        );
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -184,28 +195,7 @@ export const MainThreadClient = async (
         }
 
         if (resolvedAuthorizationCode) {
-            if (config.storage === Storage.BrowserMemory) {
-                const pkce = SPAUtils.getPKCE();
-
-                await _dataLayer.setTemporaryDataParameter(PKCE_CODE_VERIFIER, pkce);
-            }
-
-            return _authenticationClient
-                .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
-                .then(async () => {
-                    if (config.storage === Storage.BrowserMemory) {
-                        SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-                    }
-
-                    _spaHelper.clearRefreshTokenTimeout();
-                    _spaHelper.refreshAccessTokenAutomatically();
-                    checkSession();
-
-                    return _authenticationClient.getBasicUserInfo();
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
@@ -230,8 +220,8 @@ export const MainThreadClient = async (
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
-            if (config.storage === Storage.BrowserMemory) {
-                SPAUtils.setPKCE((await _dataLayer.getTemporaryDataParameter(PKCE_CODE_VERIFIER)) as string);
+            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
             }
 
             location.href = url;
@@ -298,6 +288,89 @@ export const MainThreadClient = async (
                 return Promise.resolve(true);
             })
             .catch((error) => Promise.reject(error));
+    };
+
+    const requestAccessToken = async (
+        resolvedAuthorizationCode: string,
+        resolvedSessionState: string
+    ): Promise<BasicUserInfo> => {
+        if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+            const pkce = SPAUtils.getPKCE();
+
+            await _authenticationClient.setPKCECode(pkce);
+        }
+
+        return _authenticationClient
+            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
+            .then(async () => {
+                if (config.storage === Storage.BrowserMemory) {
+                    SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
+                }
+
+                _spaHelper.clearRefreshTokenTimeout();
+                _spaHelper.refreshAccessTokenAutomatically();
+                checkSession();
+
+                return _authenticationClient.getBasicUserInfo();
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
+    };
+
+    /**
+     * This method checks if there is an active user session in the server by sending a prompt none request.
+     * If the user is signed in, this method sends a token request. Returns false otherwise.
+     *
+     * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
+     * if the user is signed in or with `false` if there is no active user session in the server.
+     */
+    const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+
+        try {
+            const url: string = await _authenticationClient.getAuthorizationURL({
+                prompt: "none",
+                state: STATE
+            });
+
+            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
+            }
+
+            promptNoneIFrame.src = url;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise((resolve, reject) => {
+            const listenToPrompNoneIFrame = async (e: MessageEvent) => {
+                const data: Message<AuthorizationInfo | null> = e.data;
+
+                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
+                    window.removeEventListener("message", listenToPrompNoneIFrame);
+                    resolve(false);
+                }
+
+                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
+                    requestAccessToken(data.data.code, data?.data?.sessionState)
+                        .then((response: BasicUserInfo) => {
+                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            resolve(response);
+                        })
+                        .catch((error) => {
+                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            reject(error);
+                        });
+                }
+            };
+
+            window.addEventListener("message", listenToPrompNoneIFrame);
+        });
     };
 
     const getBasicUserInfo = async (): Promise<BasicUserInfo> => {
