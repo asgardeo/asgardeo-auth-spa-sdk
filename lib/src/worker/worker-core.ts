@@ -233,7 +233,7 @@ export const WebWorkerCore = async (
         sessionState?: string,
         pkce?: string
     ): Promise<BasicUserInfo> => {
-        if (pkce) {
+        if (pkce && config.enablePKCE) {
             await _authenticationClient.setPKCECode(pkce);
         }
 
