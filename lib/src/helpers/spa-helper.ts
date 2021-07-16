@@ -18,7 +18,9 @@
 
 import { AsgardeoAuthClient, DataLayer, REFRESH_TOKEN_TIMER } from "@asgardeo/auth-js";
 
-export class SPAHelper<T> {
+import { MainThreadClientConfig, WebWorkerClientConfig } from "..";
+
+export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig> {
     private _authenticationClient: AsgardeoAuthClient<T>;
     private _dataLayer: DataLayer<T>;
     public constructor(authClient: AsgardeoAuthClient<T>) {
@@ -43,7 +45,9 @@ export class SPAHelper<T> {
 
     public async clearRefreshTokenTimeout(): Promise<void> {
         if (await this._dataLayer.getTemporaryDataParameter(REFRESH_TOKEN_TIMER)) {
-            const oldTimer = JSON.parse(await this._dataLayer.getTemporaryDataParameter(REFRESH_TOKEN_TIMER) as string);
+            const oldTimer = JSON.parse(
+                (await this._dataLayer.getTemporaryDataParameter(REFRESH_TOKEN_TIMER)) as string
+            );
 
             clearTimeout(oldTimer);
         }
