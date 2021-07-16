@@ -16,8 +16,16 @@
  * under the License.
  */
 
-import { OP_IFRAME, PROMPT_NONE_IFRAME, RP_IFRAME, STATE } from "../constants";
-import { SessionManagementHelperInterface } from "../models";
+import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
+    OP_IFRAME,
+    PROMPT_NONE_IFRAME,
+    RP_IFRAME,
+    SILENT_SIGN_IN_STATE,
+    STATE
+} from "../constants";
+import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
 
 export const SessionManagementHelper = (() => {
     let _clientID: string;
@@ -156,21 +164,51 @@ export const SessionManagementHelper = (() => {
             getRandomPKCEChallenge();
     };
 
+    /**
+     * This contains the logic to process the response of a prompt none request.
+     *
+     * @param setSessionState The method that sets the session state.
+     * on the output of the content of the redirect URL
+     */
     const receivePromptNoneResponse = async (
         setSessionState: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
             const state = new URL(window.location.href).searchParams.get("state");
-            if (state !== null && state === STATE) {
+            if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
                 // Prompt none response.
                 const code = new URL(window.location.href).searchParams.get("code");
 
                 if (code !== null && code.length !== 0) {
+                    if (state === SILENT_SIGN_IN_STATE) {
+                        const message: Message<AuthorizationInfo> = {
+                            data: {
+                                code,
+                                sessionState: state
+                            },
+                            type: CHECK_SESSION_SIGNED_IN
+                        };
+
+                        window.top.postMessage(message, window.top.origin);
+
+                        return true;
+                    }
+
                     const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
                     await setSessionState(newSessionState);
 
                     window.stop();
                 } else {
+                    if (state === SILENT_SIGN_IN_STATE) {
+                         const message: Message<null> = {
+                             type: CHECK_SESSION_SIGNED_OUT
+                         };
+
+                         window.top.postMessage(message, window.top.origin);
+
+                         return true;
+                    }
+
                     window.top.location.href = await _signOut();
                     window.stop();
 
