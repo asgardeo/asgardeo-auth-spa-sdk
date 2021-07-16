@@ -30,6 +30,8 @@ import {
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
     ERROR,
@@ -44,6 +46,7 @@ import {
     HTTP_REQUEST_ALL,
     INIT,
     IS_AUTHENTICATED,
+    PROMPT_NONE_IFRAME,
     REFRESH_ACCESS_TOKEN,
     REQUEST_ACCESS_TOKEN,
     REQUEST_CUSTOM_GRANT,
@@ -52,9 +55,11 @@ import {
     REQUEST_START,
     REQUEST_SUCCESS,
     REVOKE_ACCESS_TOKEN,
+    RP_IFRAME,
     SET_SESSION_STATE,
     SIGN_OUT,
     START_AUTO_REFRESH_TOKEN,
+    STATE,
     UPDATE_CONFIG
 } from "../constants";
 import { AsgardeoSPAException } from "../exception";
@@ -314,6 +319,100 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     };
 
     /**
+     * This method checks if there is an active user session in the server by sending a prompt none request.
+     * If the user is signed in, this method sends a token request. Returns false otherwise.
+     *
+     * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
+     * if the user is signed in or with `false` if there is no active user session in the server.
+     */
+    const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+
+        const message: Message<GetAuthURLConfig> = {
+            data: {
+                prompt: "none",
+                state: STATE
+            },
+            type: GET_AUTH_URL
+        };
+
+        try {
+            const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
+
+            (response.pkce && config.enablePKCE) && SPAUtils.setPKCE(response.pkce);
+
+            promptNoneIFrame.src = response.authorizationURL;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise((resolve, reject) => {
+            const listenToPrompNoneIFrame = async (e: MessageEvent) => {
+                const data: Message<AuthorizationInfo | null> = e.data;
+
+                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
+                    window.removeEventListener("message", listenToPrompNoneIFrame);
+                    resolve(false);
+                }
+
+                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
+                        window.removeEventListener("message", listenToPrompNoneIFrame);
+                        resolve(response);
+                    }).catch((error) => {
+                        window.removeEventListener("message", listenToPrompNoneIFrame);
+                        reject(error);
+                    })
+
+                }
+            };
+
+            window.addEventListener("message", listenToPrompNoneIFrame)
+        });
+    };
+
+    const requestAccessToken = (
+        resolvedAuthorizationCode: string,
+        resolvedSessionState: string
+    ): Promise<BasicUserInfo> => {
+        const message: Message<AuthorizationInfo> = {
+            data: {
+                code: resolvedAuthorizationCode,
+                pkce: config.enablePKCE ? SPAUtils.getPKCE() : undefined,
+                sessionState: resolvedSessionState
+            },
+            type: REQUEST_ACCESS_TOKEN
+        };
+
+        config.enablePKCE && SPAUtils.removePKCE();
+
+        return communicate<AuthorizationInfo, BasicUserInfo>(message)
+            .then((response) => {
+                const message: Message<null> = {
+                    type: GET_SIGN_OUT_URL
+                };
+
+                return communicate<null, string>(message)
+                    .then((url: string) => {
+                        SPAUtils.setSignOutURL(url);
+                        checkSession();
+
+                        return Promise.resolve(response);
+                    })
+                    .catch((error) => {
+                        return Promise.reject(error);
+                    });
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
+    };
+
+    /**
      * Initiates the authentication flow.
      *
      * @returns {Promise<UserInfo>} A promise that resolves when authentication is successful.
@@ -323,10 +422,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper
-            .receivePromptNoneResponse(async (sessionState: string | null) => {
-            return setSessionState(sessionState);
-        });
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                return setSessionState(sessionState);
+            }
+        );
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -351,8 +451,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
             return Promise.reject(
                 new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-SI-BE",
-                    "main-thread-client",
+                    "WEB_WORKER_CLIENT-SI-BE",
+                    "web-worker-client",
                     "signIn",
                     error,
                     errorDescription ?? ""
@@ -380,37 +480,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
 
         if (resolvedAuthorizationCode) {
-            const message: Message<AuthorizationInfo> = {
-                data: {
-                    code: resolvedAuthorizationCode,
-                    pkce: SPAUtils.getPKCE(),
-                    sessionState: resolvedSessionState
-                },
-                type: REQUEST_ACCESS_TOKEN
-            };
-
-            SPAUtils.removePKCE();
-
-            return communicate<AuthorizationInfo, BasicUserInfo>(message)
-                .then((response) => {
-                    const message: Message<null> = {
-                        type: GET_SIGN_OUT_URL
-                    };
-
-                    return communicate<null, string>(message)
-                        .then((url: string) => {
-                            SPAUtils.setSignOutURL(url);
-                            checkSession();
-
-                            return Promise.resolve(response);
-                        })
-                        .catch((error) => {
-                            return Promise.reject(error);
-                        });
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
         }
 
         const message: Message<GetAuthURLConfig> = {
@@ -420,7 +490,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
             .then((response) => {
-                if (response.pkce) {
+                if (response.pkce && config.enablePKCE) {
                     SPAUtils.setPKCE(response.pkce);
                 }
 
