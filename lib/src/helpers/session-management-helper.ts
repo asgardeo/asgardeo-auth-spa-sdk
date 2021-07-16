@@ -98,13 +98,14 @@ export const SessionManagementHelper = (() => {
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
         (rpIFrame.contentWindow as any).eval(startCheckSession.toString());
-        rpIFrame?.contentWindow && rpIFrame?.contentWindow[startCheckSession.name](
-            _checkSessionEndpoint,
-            _clientID,
-            _redirectURL,
-            _sessionState,
-            _interval
-        );
+        rpIFrame?.contentWindow &&
+            rpIFrame?.contentWindow[startCheckSession.name](
+                _checkSessionEndpoint,
+                _clientID,
+                _redirectURL,
+                _sessionState,
+                _interval
+            );
 
         listenToResponseFromOPIFrame();
     };
@@ -173,48 +174,50 @@ export const SessionManagementHelper = (() => {
     const receivePromptNoneResponse = async (
         setSessionState: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
-            const state = new URL(window.location.href).searchParams.get("state");
-            if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
-                // Prompt none response.
-                const code = new URL(window.location.href).searchParams.get("code");
+        const state = new URL(window.location.href).searchParams.get("state");
+        if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
+            // Prompt none response.
+            const code = new URL(window.location.href).searchParams.get("code");
 
-                if (code !== null && code.length !== 0) {
-                    if (state === SILENT_SIGN_IN_STATE) {
-                        const message: Message<AuthorizationInfo> = {
-                            data: {
-                                code,
-                                sessionState: state
-                            },
-                            type: CHECK_SESSION_SIGNED_IN
-                        };
+            if (code !== null && code.length !== 0) {
+                if (state === SILENT_SIGN_IN_STATE) {
+                    const message: Message<AuthorizationInfo> = {
+                        data: {
+                            code,
+                            sessionState: state
+                        },
+                        type: CHECK_SESSION_SIGNED_IN
+                    };
 
-                        window.top.postMessage(message, window.top.origin);
-
-                        return true;
-                    }
-
-                    const newSessionState = new URL(window.location.href).searchParams.get("session_state");
-
-                    await setSessionState(newSessionState);
-
-                    window.stop();
-                } else {
-                    if (state === SILENT_SIGN_IN_STATE) {
-                         const message: Message<null> = {
-                             type: CHECK_SESSION_SIGNED_OUT
-                         };
-
-                         window.top.postMessage(message, window.top.origin);
-
-                         return true;
-                    }
-
-                    window.top.location.href = await _signOut();
+                    window.top.postMessage(message, window.top.origin);
                     window.stop();
 
-                    return true;
+                    return false;
                 }
+
+                const newSessionState = new URL(window.location.href).searchParams.get("session_state");
+
+                await setSessionState(newSessionState);
+
+                window.stop();
+            } else {
+                if (state === SILENT_SIGN_IN_STATE) {
+                    const message: Message<null> = {
+                        type: CHECK_SESSION_SIGNED_OUT
+                    };
+
+                    window.top.postMessage(message, window.top.origin);
+                    window.stop();
+
+                    return false;
+                }
+
+                window.top.location.href = await _signOut();
+                window.stop();
+
+                return true;
             }
+        }
 
         return false;
     };
