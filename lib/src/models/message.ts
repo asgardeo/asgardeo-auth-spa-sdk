@@ -18,6 +18,8 @@
 
 import {
     AUTH_CODE,
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
     END_USER_SESSION,
@@ -91,7 +93,9 @@ export type MessageType =
     | typeof SET_SESSION_STATE
     | typeof START_AUTO_REFRESH_TOKEN
     | typeof UPDATE_CONFIG
-    | typeof GET_ID_TOKEN;
+    | typeof GET_ID_TOKEN
+    | typeof CHECK_SESSION_SIGNED_IN
+    | typeof CHECK_SESSION_SIGNED_OUT;
 
 export interface CommunicationHelperInterface {
     communicate: <T, R>(message: Message<T>) => Promise<R>;
