@@ -694,6 +694,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
         signIn,
+        signInSilently,
         signOut,
         updateConfig
     };

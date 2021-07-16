@@ -422,6 +422,7 @@ export const MainThreadClient = async (
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
         signIn,
+        signInSilently,
         signOut,
         updateConfig
     };
