@@ -190,9 +190,9 @@ export const SessionManagementHelper = (() => {
                     };
 
                     window.top.postMessage(message, window.top.origin);
-                    window.stop();
+                    window.location.href = "about:blank";
 
-                    return false;
+                    return true;
                 }
 
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
@@ -207,13 +207,13 @@ export const SessionManagementHelper = (() => {
                     };
 
                     window.top.postMessage(message, window.top.origin);
-                    window.stop();
+                    window.location.href = "about:blank";
 
-                    return false;
+                    return true;
                 }
 
                 window.top.location.href = await _signOut();
-                window.stop();
+                window.location.href = "about:blank";
 
                 return true;
             }
