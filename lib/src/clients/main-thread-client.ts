@@ -37,7 +37,7 @@ import {
     ERROR_DESCRIPTION,
     PROMPT_NONE_IFRAME,
     RP_IFRAME,
-    STATE,
+    SILENT_SIGN_IN_STATE,
     Storage
 } from "../constants";
 import { AsgardeoSPAException } from "../exception";
@@ -84,7 +84,7 @@ export const MainThreadClient = async (
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
         request.headers = {
             ...request.headers,
-            Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+            Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
         };
     };
 
@@ -335,7 +335,7 @@ export const MainThreadClient = async (
         try {
             const url: string = await _authenticationClient.getAuthorizationURL({
                 prompt: "none",
-                state: STATE
+                state: SILENT_SIGN_IN_STATE
             });
 
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {

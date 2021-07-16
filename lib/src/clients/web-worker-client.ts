@@ -58,8 +58,8 @@ import {
     RP_IFRAME,
     SET_SESSION_STATE,
     SIGN_OUT,
+    SILENT_SIGN_IN_STATE,
     START_AUTO_REFRESH_TOKEN,
-    STATE,
     UPDATE_CONFIG
 } from "../constants";
 import { AsgardeoSPAException } from "../exception";
@@ -335,7 +335,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         const message: Message<GetAuthURLConfig> = {
             data: {
                 prompt: "none",
-                state: STATE
+                state: SILENT_SIGN_IN_STATE
             },
             type: GET_AUTH_URL
         };
