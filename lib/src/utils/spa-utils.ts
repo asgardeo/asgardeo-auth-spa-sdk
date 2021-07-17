@@ -17,7 +17,7 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
-import { INITIALIZED_SIGN_IN } from "../constants";
+import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN } from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -58,10 +58,29 @@ export class SPAUtils {
             return true;
         } else if (callOnlyOnRedirect) {
             return false;
+        } else if (isInitialized) {
+            sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
+
+            return true;
         } else {
             sessionStorage.setItem(INITIALIZED_SIGN_IN, "true");
 
             return true;
+        }
+    }
+
+    public static setIsInitializedSilentSignIn(): boolean {
+        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
+        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
+
+        if (isInitialized) {
+            sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
+
+            return true;
+        } else {
+            sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "true");
+
+            return false;
         }
     }
 
