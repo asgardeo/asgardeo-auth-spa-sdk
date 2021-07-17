@@ -174,6 +174,9 @@ export const MainThreadClient = async (
                 username: ""
             });
         }
+
+        SPAUtils.setIsInitializedSilentSignIn();
+
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
@@ -326,6 +329,19 @@ export const MainThreadClient = async (
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        if (SPAUtils.setIsInitializedSilentSignIn()) {
+            await _sessionManagementHelper.receivePromptNoneResponse();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
