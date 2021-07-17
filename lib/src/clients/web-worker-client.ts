@@ -326,6 +326,19 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        if (SPAUtils.setIsInitializedSilentSignIn()) {
+            await _sessionManagementHelper.receivePromptNoneResponse();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
@@ -438,6 +451,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 username: ""
             });
         }
+
+        SPAUtils.setIsInitializedSilentSignIn();
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
         const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
