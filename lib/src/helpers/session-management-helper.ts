@@ -172,7 +172,7 @@ export const SessionManagementHelper = (() => {
      * on the output of the content of the redirect URL
      */
     const receivePromptNoneResponse = async (
-        setSessionState: (sessionState: string | null) => Promise<void>
+        setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
         const state = new URL(window.location.href).searchParams.get("state");
         if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
@@ -197,7 +197,7 @@ export const SessionManagementHelper = (() => {
 
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
-                await setSessionState(newSessionState);
+                setSessionState && await setSessionState(newSessionState);
 
                 window.stop();
             } else {
