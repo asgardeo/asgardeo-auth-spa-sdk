@@ -379,7 +379,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             SPAUtils.removeAuthorizationCode();
         }
 
-        if (resolvedAuthorizationCode && resolvedSessionState) {
+        if (resolvedAuthorizationCode) {
             const message: Message<AuthorizationInfo> = {
                 data: {
                     code: resolvedAuthorizationCode,

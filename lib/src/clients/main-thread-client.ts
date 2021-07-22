@@ -183,7 +183,7 @@ export const MainThreadClient = async (
             SPAUtils.removeAuthorizationCode();
         }
 
-        if (resolvedAuthorizationCode && resolvedSessionState) {
+        if (resolvedAuthorizationCode) {
             if (config.storage === Storage.BrowserMemory) {
                 const pkce = SPAUtils.getPKCE();
 
