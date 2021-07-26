@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { SESSION_STATE } from "@asgardeo/auth-js";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
@@ -175,6 +176,8 @@ export const SessionManagementHelper = (() => {
         setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
         const state = new URL(window.location.href).searchParams.get("state");
+        const sessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
+
         if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
             // Prompt none response.
             const code = new URL(window.location.href).searchParams.get("code");
@@ -184,7 +187,7 @@ export const SessionManagementHelper = (() => {
                     const message: Message<AuthorizationInfo> = {
                         data: {
                             code,
-                            sessionState: state
+                            sessionState: sessionState ?? ""
                         },
                         type: CHECK_SESSION_SIGNED_IN
                     };
