@@ -370,8 +370,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         let resolvedAuthorizationCode: string;
         let resolvedSessionState: string;
 
-        if (config?.responseMode === ResponseMode.formPost && (authorizationCode || sessionState)) {
-            resolvedAuthorizationCode = authorizationCode ?? "";
+        if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
+            resolvedAuthorizationCode = authorizationCode;
             resolvedSessionState = sessionState ?? "";
         } else {
             resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";

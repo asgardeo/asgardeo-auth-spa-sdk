@@ -174,9 +174,9 @@ export const MainThreadClient = async (
         let resolvedAuthorizationCode: string;
         let resolvedSessionState: string;
 
-        if (config?.responseMode === ResponseMode.formPost && authorizationCode && sessionState) {
+        if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
             resolvedAuthorizationCode = authorizationCode;
-            resolvedSessionState = sessionState;
+            resolvedSessionState = sessionState ?? "";
         } else {
             resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
             resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
