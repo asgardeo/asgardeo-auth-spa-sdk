@@ -237,9 +237,9 @@ export const WebWorkerCore = async (
             await _authenticationClient.setPKCECode(pkce);
         }
 
-        if (authorizationCode && sessionState) {
+        if (authorizationCode) {
             return _authenticationClient
-                .requestAccessToken(authorizationCode, sessionState)
+                .requestAccessToken(authorizationCode, sessionState ?? "")
                 .then(() => {
                     _spaHelper.refreshAccessTokenAutomatically();
 
@@ -255,8 +255,8 @@ export const WebWorkerCore = async (
                 "WORKER_CORE-RAT1-NF01",
                 "worker-core",
                 "requestAccessToken",
-                "No authorization code found.",
-                "No authorization code and session state found."
+                "No authorization code.",
+                "No authorization code was found."
             )
         );
     };
