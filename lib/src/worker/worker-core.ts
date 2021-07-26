@@ -255,8 +255,8 @@ export const WebWorkerCore = async (
                 "WORKER_CORE-RAT1-NF01",
                 "worker-core",
                 "requestAccessToken",
-                "No authorization code found.",
-                "No authorization code found."
+                "No authorization code.",
+                "No authorization code was found."
             )
         );
     };
