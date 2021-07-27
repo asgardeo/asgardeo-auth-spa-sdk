@@ -82,10 +82,13 @@ export const MainThreadClient = async (
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        request.headers = {
-            ...request.headers,
-            Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
-        };
+        const requestConfig = { attachToken: true, ...request };
+        if (requestConfig.attachToken) {
+            request.headers = {
+                ...request.headers,
+                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+            };
+        }
     };
 
     _httpClient?.init && (await _httpClient.init(true, attachToken));
@@ -106,17 +109,148 @@ export const MainThreadClient = async (
         _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
     };
 
-    const httpRequest = (config: HttpRequestConfig): Promise<HttpResponse> => {
-        return _httpClient.request(config);
+    const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
+        let matches = false;
+        for (const baseUrl of [...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [], config?.serverOrigin]) {
+            if (requestConfig?.url?.startsWith(baseUrl)) {
+                matches = true;
+
+                break;
+            }
+        }
+
+        if (matches) {
+            return _httpClient
+                .request(requestConfig)
+                .then((response: HttpResponse) => {
+                    return Promise.resolve(response);
+                })
+                .catch((error: HttpError) => {
+                    if (error?.response?.status === 401) {
+                        return _authenticationClient
+                            .refreshAccessToken()
+                            .then(() => {
+                                return _httpClient
+                                    .request(requestConfig)
+                                    .then((response) => {
+                                        return Promise.resolve(response);
+                                    })
+                                    .catch((error) => {
+                                        return Promise.reject(error);
+                                    });
+                            })
+                            .catch((refreshError) => {
+                                return Promise.reject(
+                                    new AsgardeoSPAException(
+                                        "MAIN_THREAD_CLIENT-HR-ES01",
+                                        "main-thread-client",
+                                        "httpRequest",
+                                        "",
+                                        "",
+                                        refreshError
+                                    )
+                                );
+                            });
+                    }
+
+                    return Promise.reject(error);
+                });
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-HR-IV02",
+                    "main-thread-client",
+                    "httpRequest",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                        " attribute while initializing the SDK. The specified endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
-    const httpRequestAll = (config: HttpRequestConfig[]): Promise<HttpResponse[]> | undefined => {
+    const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
+        let matches = true;
+
+        for (const requestConfig of requestConfigs) {
+            let urlMatches = false;
+
+            for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
+                config?.serverOrigin ]) {
+                if (requestConfig.url?.startsWith(baseUrl)) {
+                    urlMatches = true;
+
+                    break;
+                }
+            }
+
+            if (!urlMatches) {
+                matches = false;
+
+                break;
+            }
+        }
+
         const requests: Promise<HttpResponse<any>>[] = [];
-        config.forEach((request) => {
+        requestConfigs.forEach((request) => {
             requests.push(_httpClient.request(request));
         });
+        if (matches) {
+            return (
+                _httpClient?.all &&
+                _httpClient
+                    .all(requests)
+                    .then((responses: HttpResponse[]) => {
+                        return Promise.resolve(responses);
+                    })
+                    .catch((error: HttpError) => {
+                        if (error?.response?.status === 401) {
+                            return _authenticationClient
+                                .refreshAccessToken()
+                                .then(() => {
+                                    return (
+                                        _httpClient.all &&
+                                        _httpClient
+                                            .all(requests)
+                                            .then((response) => {
+                                                return Promise.resolve(response);
+                                            })
+                                            .catch((error) => {
+                                                return Promise.reject(error);
+                                            })
+                                    );
+                                })
+                                .catch((refreshError) => {
+                                    return Promise.reject(
+                                        new AsgardeoSPAException(
+                                            "MAIN_THREAD_CLIENT-HRA-ES01",
+                                            "main-thread-client",
+                                            "httpRequestAll",
+                                            "",
+                                            "",
+                                            refreshError
+                                        )
+                                    );
+                                });
+                        }
 
-        return _httpClient.all && _httpClient.all(requests);
+                        return Promise.reject(error);
+                    })
+            );
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-HRA-IV02",
+                    "main-thread-client",
+                    "httpRequest",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                        " attribute while initializing the SDK. The specified endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
     const getHttpClient = (): HttpClientInstance => {

@@ -58,10 +58,13 @@ export const WebWorkerCore = async (
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        request.headers = {
-            ...request.headers,
-            Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
-        };
+        const requestConfig = { attachToken: true, ...request };
+        if (requestConfig.attachToken) {
+            request.headers = {
+                ...request.headers,
+                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+            };
+        }
     };
 
     _httpClient?.init && await _httpClient.init(
@@ -85,17 +88,19 @@ export const WebWorkerCore = async (
         _httpClient?.setHttpRequestErrorCallback &&_httpClient.setHttpRequestErrorCallback(callback);
     };
 
-    const httpRequest = async (config: HttpRequestConfig): Promise<HttpResponse> => {
+    const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
-        (await _dataLayer.getConfigData()).resourceServerURLs.forEach((baseUrl) => {
-            if (config?.url?.startsWith(baseUrl)) {
+        for (const baseUrl of [...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [], config?.serverOrigin]) {
+            if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
+
+                break;
             }
-        });
+        }
 
         if (matches) {
             return _httpClient
-                .request(config)
+                .request(requestConfig)
                 .then((response: HttpResponse) => {
                     return Promise.resolve(response);
                 })
@@ -105,7 +110,7 @@ export const WebWorkerCore = async (
                             .refreshAccessToken()
                             .then(() => {
                                 return _httpClient
-                                    .request(config)
+                                    .request(requestConfig)
                                     .then((response) => {
                                         return Promise.resolve(response);
                                     })
@@ -144,54 +149,75 @@ export const WebWorkerCore = async (
         }
     };
 
-    const httpRequestAll = async (configs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
-        let matches = false;
-        (await _dataLayer.getConfigData()).resourceServerURLs.forEach((baseUrl) => {
-            if (configs.every((config) => config?.url?.startsWith(baseUrl))) {
-                matches = true;
+    const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
+        let matches = true;
+
+        for (const requestConfig of requestConfigs) {
+            let urlMatches = false;
+
+            for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
+                config?.serverOrigin ]) {
+                if (requestConfig.url?.startsWith(baseUrl)) {
+                    urlMatches = true;
+
+                    break;
+                }
             }
-        });
+
+            if (!urlMatches) {
+                matches = false;
+
+                break;
+            }
+
+        }
 
         const requests: Promise<HttpResponse<any>>[] = [];
-        configs.forEach((request) => {
+        requestConfigs.forEach((request) => {
             requests.push(_httpClient.request(request));
         });
         if (matches) {
-            return _httpClient?.all && _httpClient
-                .all(requests)
-                .then((responses: HttpResponse[]) => {
-                    return Promise.resolve(responses);
-                })
-                .catch((error: HttpError) => {
-                    if (error?.response?.status === 401) {
-                        return _authenticationClient
-                            .refreshAccessToken()
-                            .then(() => {
-                                return _httpClient.all && _httpClient
-                                    .all(requests)
-                                    .then((response) => {
-                                        return Promise.resolve(response);
-                                    })
-                                    .catch((error) => {
-                                        return Promise.reject(error);
-                                    });
-                            })
-                            .catch((refreshError) => {
-                                return Promise.reject(
-                                    new AsgardeoSPAException(
-                                        "WORKER_CORE-HRA-ES01",
-                                        "worker-core",
-                                        "httpRequestAll",
-                                        "",
-                                        "",
-                                        refreshError
-                                    )
-                                );
-                            });
-                    }
+            return (
+                _httpClient?.all &&
+                _httpClient
+                    .all(requests)
+                    .then((responses: HttpResponse[]) => {
+                        return Promise.resolve(responses);
+                    })
+                    .catch((error: HttpError) => {
+                        if (error?.response?.status === 401) {
+                            return _authenticationClient
+                                .refreshAccessToken()
+                                .then(() => {
+                                    return (
+                                        _httpClient.all &&
+                                        _httpClient
+                                            .all(requests)
+                                            .then((response) => {
+                                                return Promise.resolve(response);
+                                            })
+                                            .catch((error) => {
+                                                return Promise.reject(error);
+                                            })
+                                    );
+                                })
+                                .catch((refreshError) => {
+                                    return Promise.reject(
+                                        new AsgardeoSPAException(
+                                            "WORKER_CORE-HRA-ES01",
+                                            "worker-core",
+                                            "httpRequestAll",
+                                            "",
+                                            "",
+                                            refreshError
+                                        )
+                                    );
+                                });
+                        }
 
-                    return Promise.reject(error);
-                });
+                        return Promise.reject(error);
+                    })
+            );
         } else {
             return Promise.reject(
                 new AsgardeoSPAException(
