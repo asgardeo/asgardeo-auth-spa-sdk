@@ -40,7 +40,7 @@ export interface MainThreadClientInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
-    httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[]> | undefined;
+    httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[] | undefined>;
     getHttpClient(): HttpClientInstance;
     enableHttpHandler(): boolean;
     disableHttpHandler(): boolean;
