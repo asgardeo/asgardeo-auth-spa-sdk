@@ -17,6 +17,7 @@
  */
 
 import { HttpError, HttpResponse } from ".";
+import { AxiosRequestConfig } from "axios";
 
 export interface HttpClient {
     requestStartCallback: () => void;
@@ -25,8 +26,11 @@ export interface HttpClient {
     requestFinishCallback: () => void;
 }
 
+export interface HttpRequestConfig extends AxiosRequestConfig {
+    attachToken?: boolean;
+}
+
 export {
-    AxiosRequestConfig as HttpRequestConfig,
     AxiosResponse as HttpResponse,
     Method,
     AxiosTransformer as HttpTransformer,
