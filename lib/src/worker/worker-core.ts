@@ -272,18 +272,21 @@ export const WebWorkerCore = async (
     };
 
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
-        let matches = true;
+        let useDefaultEndpoint = true;
+        let matches = false;
 
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
-            (await _dataLayer.getConfigData()).resourceServerURLs.forEach((baseUrl) => {
-                if (!config.tokenEndpoint.startsWith(baseUrl)) {
-                    matches = false;
+            useDefaultEndpoint = false;
+            for (const baseUrl of (await _dataLayer.getConfigData()).resourceServerURLs) {
+                if (config.tokenEndpoint?.startsWith(baseUrl)) {
+                    matches = true;
+                    break;
                 }
-            });
+            }
         }
 
-        if (matches) {
+        if (useDefaultEndpoint || matches) {
             return _authenticationClient
                 .requestCustomGrant(config)
                 .then(async (response: HttpResponse | TokenResponse) => {
