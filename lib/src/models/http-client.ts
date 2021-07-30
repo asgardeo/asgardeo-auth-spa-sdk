@@ -16,8 +16,8 @@
  * under the License.
  */
 
-import { HttpError, HttpResponse } from ".";
 import { AxiosRequestConfig } from "axios";
+import { HttpError, HttpResponse } from ".";
 
 export interface HttpClient {
     requestStartCallback: () => void;
