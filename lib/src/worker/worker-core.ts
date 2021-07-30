@@ -272,20 +272,48 @@ export const WebWorkerCore = async (
     };
 
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
-        return _authenticationClient
-            .requestCustomGrant(config)
-            .then(async (response: HttpResponse | TokenResponse) => {
-                if (config.returnsSession) {
-                    _spaHelper.refreshAccessTokenAutomatically();
+        let useDefaultEndpoint = true;
+        let matches = false;
 
-                    return _authenticationClient.getBasicUserInfo();
-                } else {
-                    return response as HttpResponse;
+        // If the config does not contains a token endpoint, default token endpoint will be used.
+        if (config?.tokenEndpoint) {
+            useDefaultEndpoint = false;
+            for (const baseUrl of (await _dataLayer.getConfigData()).resourceServerURLs) {
+                if (config.tokenEndpoint?.startsWith(baseUrl)) {
+                    matches = true;
+                    break;
                 }
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+            }
+        }
+
+        if (useDefaultEndpoint || matches) {
+            return _authenticationClient
+                .requestCustomGrant(config)
+                .then(async (response: HttpResponse | TokenResponse) => {
+                    if (config.returnsSession) {
+                        _spaHelper.refreshAccessTokenAutomatically();
+
+                        return _authenticationClient.getBasicUserInfo();
+                    } else {
+                        return response as HttpResponse;
+                    }
+                })
+                .catch((error) => {
+                    return Promise.reject(error);
+                });
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "WORKER_CORE-RCG-IV03",
+                    "worker-core",
+                    "requestCustomGrant",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                    " attribute while initializing the SDK. The specified token endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
     const refreshAccessToken = (): Promise<BasicUserInfo> => {
