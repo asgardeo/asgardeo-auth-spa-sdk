@@ -25,6 +25,7 @@ import {
     END_USER_SESSION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
+    GET_CONFIG_DATA,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -95,7 +96,8 @@ export type MessageType =
     | typeof UPDATE_CONFIG
     | typeof GET_ID_TOKEN
     | typeof CHECK_SESSION_SIGNED_IN
-    | typeof CHECK_SESSION_SIGNED_OUT;
+    | typeof CHECK_SESSION_SIGNED_OUT
+    | typeof GET_CONFIG_DATA;
 
 export interface CommunicationHelperInterface {
     communicate: <T, R>(message: Message<T>) => Promise<R>;
