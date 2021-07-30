@@ -77,7 +77,9 @@ export const MainThreadClient = async (
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
-    const _sessionManagementHelper = SessionManagementHelper();
+    const _sessionManagementHelper = SessionManagementHelper(async () => {
+        return _authenticationClient.signOut();
+    });
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
@@ -86,7 +88,7 @@ export const MainThreadClient = async (
         if (requestConfig.attachToken) {
             request.headers = {
                 ...request.headers,
-                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
             };
         }
     };
@@ -113,15 +115,13 @@ export const MainThreadClient = async (
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [ ...await config?.resourceServerURLs ?? [],
-            config?.serverOrigin ]) {
+        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
                 break;
             }
         }
-
 
         if (matches) {
             return _httpClient
@@ -167,8 +167,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -181,8 +181,7 @@ export const MainThreadClient = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [ ...(await config)?.resourceServerURLs ?? [],
-                config?.serverOrigin ]) {
+            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
@@ -253,8 +252,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -287,10 +286,7 @@ export const MainThreadClient = async (
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            async () => {
-                return _authenticationClient.signOut();
-            }
+            oidcEndpoints.authorizationEndpoint ?? ""
         );
     };
 
@@ -577,7 +573,7 @@ export const MainThreadClient = async (
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
-        const config = { ...await _dataLayer.getConfigData(), ...newConfig };
+        const config = { ...(await _dataLayer.getConfigData()), ...newConfig };
         await _authenticationClient.updateConfig(config);
     };
 

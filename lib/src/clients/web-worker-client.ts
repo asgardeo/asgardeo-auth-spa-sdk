@@ -88,7 +88,19 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * API request time out.
      */
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
-    const _sessionManagementHelper = SessionManagementHelper();
+    const _sessionManagementHelper = SessionManagementHelper(async () => {
+        const message: Message<string> = {
+            type: SIGN_OUT
+        };
+
+        try {
+            const signOutURL = await communicate<string, string>(message);
+
+            return signOutURL;
+        } catch {
+            return SPAUtils.getSignOutURL();
+        }
+    });
 
     const worker: Worker = new WorkerFile();
 
@@ -303,20 +315,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            async () => {
-                const message: Message<string> = {
-                    type: SIGN_OUT
-                };
-
-                try {
-                    const signOutURL = await communicate<string, string>(message);
-
-                    return signOutURL;
-                } catch {
-                    return SPAUtils.getSignOutURL();
-                }
-            }
+            oidcEndpoints.authorizationEndpoint ?? ""
         );
     };
 
