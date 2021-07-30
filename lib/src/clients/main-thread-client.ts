@@ -111,8 +111,9 @@ export const MainThreadClient = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
+        const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
+        for (const baseUrl of [ ...await config?.resourceServerURLs ?? [],
             config?.serverOrigin ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
@@ -175,11 +176,12 @@ export const MainThreadClient = async (
 
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
         let matches = true;
+        const config = await _dataLayer.getConfigData();
 
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
+            for (const baseUrl of [ ...(await config)?.resourceServerURLs ?? [],
                 config?.serverOrigin ]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
@@ -276,6 +278,7 @@ export const MainThreadClient = async (
 
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await _authenticationClient.getOIDCServiceEndpoints();
+        const config = await _dataLayer.getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
@@ -296,6 +299,8 @@ export const MainThreadClient = async (
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
+        const config = await _dataLayer.getConfigData();
+
         const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
@@ -438,6 +443,8 @@ export const MainThreadClient = async (
         resolvedAuthorizationCode: string,
         resolvedSessionState: string
     ): Promise<BasicUserInfo> => {
+        const config = await _dataLayer.getConfigData();
+
         if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
             const pkce = SPAUtils.getPKCE();
 
@@ -470,6 +477,8 @@ export const MainThreadClient = async (
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const config = await _dataLayer.getConfigData();
+
         if (SPAUtils.setIsInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
 
@@ -555,7 +564,7 @@ export const MainThreadClient = async (
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
-        config = { ...config, ...newConfig };
+        const config = { ...await _dataLayer.getConfigData(), ...newConfig };
         await _authenticationClient.updateConfig(config);
     };
 
