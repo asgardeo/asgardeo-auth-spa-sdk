@@ -49,6 +49,7 @@
     -   [CustomGrantConfig](#CustomGrantConfig)
     -   [Custom Grant Template Tags](#Custom-Grant-Template-Tags)
     -   [DecodedIDTokenPayload](#DecodedIDTokenPayload)
+    -   [HttpRequestConfig](#HttpRequestConfig)
 -   [Develop](#develop)
     -   [Prerequisites](#prerequisites)
     -   [Installing Dependencies](#installing-dependencies)
@@ -964,7 +965,7 @@ Session information can be attached to the body of a custom-grant request using 
 
 ### DecodedIDTokenPayload
 
-| Method             | Type                   | Description                                    |
+| Attribute             | Type                   | Description                                    |
 | ------------------ | ---------------------- | ---------------------------------------------- |
 | aud                | `string` \| `string[]` | The audience.                                  |
 | sub                | `string`               | The subject. This is the username of the user. |
