@@ -492,6 +492,19 @@ export const MainThreadClient = async (
             });
         }
 
+        if (SPAUtils.isStatePresentInURL()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
