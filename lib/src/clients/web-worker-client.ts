@@ -38,6 +38,7 @@ import {
     ERROR_DESCRIPTION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
+    GET_CONFIG_DATA,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -293,6 +294,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await getOIDCServiceEndpoints();
         const sessionState: string = (await getBasicUserInfo()).sessionState;
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
@@ -326,6 +328,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
         if (SPAUtils.setIsInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
 
@@ -388,10 +392,12 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         });
     };
 
-    const requestAccessToken = (
+    const requestAccessToken = async (
         resolvedAuthorizationCode: string,
         resolvedSessionState: string
     ): Promise<BasicUserInfo> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
         const message: Message<AuthorizationInfo> = {
             data: {
                 code: resolvedAuthorizationCode,
@@ -435,6 +441,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
         const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 return setSessionState(sessionState);
@@ -593,6 +601,20 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
     };
 
+    const getConfigData = (): Promise<AuthClientConfig<WebWorkerClientConfig>> => {
+        const message: Message<null> = {
+            type: GET_CONFIG_DATA
+        };
+
+        return communicate< null, AuthClientConfig<WebWorkerClientConfig>>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+        })
+    }
+
     const getBasicUserInfo = (): Promise<BasicUserInfo> => {
         const message: Message<null> = {
             type: GET_BASIC_USER_INFO
@@ -681,8 +703,9 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
     };
 
-    const updateConfig = (newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
-        config = { ...config, ...newConfig };
+    const updateConfig = async(newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
+
+        const config = { ...await getConfigData(), ...newConfig };
 
         const message: Message<Partial<AuthClientConfig<WebWorkerClientConfig>>> = {
             data: config,
