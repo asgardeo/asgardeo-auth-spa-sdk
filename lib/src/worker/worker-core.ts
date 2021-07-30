@@ -90,6 +90,8 @@ export const WebWorkerCore = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
+        const config = await _dataLayer.getConfigData();
+
         for (const baseUrl of [...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [], config?.serverOrigin]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
@@ -151,6 +153,7 @@ export const WebWorkerCore = async (
 
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
         let matches = true;
+        const config = await _dataLayer.getConfigData();
 
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
@@ -261,6 +264,8 @@ export const WebWorkerCore = async (
         sessionState?: string,
         pkce?: string
     ): Promise<BasicUserInfo> => {
+        const config = await _dataLayer.getConfigData();
+
         if (pkce && config.enablePKCE) {
             await _authenticationClient.setPKCECode(pkce);
         }
@@ -403,12 +408,17 @@ export const WebWorkerCore = async (
         return;
     };
 
+    const getConfigData = async (): Promise<AuthClientConfig<WebWorkerClientConfig>> => {
+        return _dataLayer.getConfigData();
+    };
+
     return {
         disableHttpHandler,
         enableHttpHandler,
         getAccessToken,
         getAuthorizationURL,
         getBasicUserInfo,
+        getConfigData,
         getDecodedIDToken,
         getIDToken,
         getOIDCServiceEndpoints,
