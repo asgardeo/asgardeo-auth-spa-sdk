@@ -84,6 +84,23 @@ export class SPAUtils {
         }
     }
 
+    public static wasSignInCalled(): boolean {
+        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SIGN_IN);
+        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
+
+        const silentSignIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
+        const isSilentSignInInitialized = silentSignIsInitialized ? JSON.parse(silentSignIsInitialized) : null;
+
+        return isInitialized && !isSilentSignInInitialized;
+    }
+
+    public static wasSilentSignInCalled(): boolean {
+        const silentSignIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
+        const isSilentSignInInitialized = silentSignIsInitialized ? JSON.parse(silentSignIsInitialized) : null;
+
+        return Boolean(isSilentSignInInitialized);
+    }
+
     public static isSignOutSuccessful(): boolean {
         if (AsgardeoAuthClient.isSignOutSuccessful(window.location.href)) {
             const newUrl = window.location.href.split("?")[0];
