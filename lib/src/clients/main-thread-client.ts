@@ -111,13 +111,16 @@ export const MainThreadClient = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
-        for (const baseUrl of [...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [], config?.serverOrigin]) {
+
+        for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
+            config?.serverOrigin ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
                 break;
             }
         }
+
 
         if (matches) {
             return _httpClient
@@ -193,10 +196,12 @@ export const MainThreadClient = async (
         }
 
         const requests: Promise<HttpResponse<any>>[] = [];
-        requestConfigs.forEach((request) => {
-            requests.push(_httpClient.request(request));
-        });
+
         if (matches) {
+            requestConfigs.forEach((request) => {
+                requests.push(_httpClient.request(request));
+            });
+
             return (
                 _httpClient?.all &&
                 _httpClient
@@ -309,7 +314,9 @@ export const MainThreadClient = async (
             });
         }
 
-        SPAUtils.setIsInitializedSilentSignIn();
+        if (SPAUtils.wasSilentSignInCalled()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+        }
 
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
