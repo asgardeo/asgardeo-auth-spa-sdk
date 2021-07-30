@@ -173,10 +173,12 @@ export const WebWorkerCore = async (
         }
 
         const requests: Promise<HttpResponse<any>>[] = [];
-        requestConfigs.forEach((request) => {
-            requests.push(_httpClient.request(request));
-        });
+
         if (matches) {
+            requestConfigs.forEach((request) => {
+                requests.push(_httpClient.request(request));
+            });
+
             return (
                 _httpClient?.all &&
                 _httpClient
