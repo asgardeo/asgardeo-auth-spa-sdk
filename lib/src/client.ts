@@ -326,6 +326,10 @@ export class AsgardeoSPAClient {
      */
     public async signInSilently(): Promise<BasicUserInfo | boolean | undefined>{
         await this._isInitialized();
+        if (SPAUtils.wasSignInCalled()) {
+            return;
+        }
+
         SPAUtils.setInitializedSignIn(false);
 
         return this._client?.signInSilently().then((response: BasicUserInfo | boolean) => {
