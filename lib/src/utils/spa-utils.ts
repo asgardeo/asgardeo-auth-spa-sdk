@@ -17,7 +17,7 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
-import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN } from "../constants";
+import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, STATE, SILENT_SIGN_IN_STATE } from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -110,5 +110,11 @@ export class SPAUtils {
         }
 
         return false;
+    }
+
+    public static isStatePresentInURL(): boolean {
+        const state = new URL(window.location.href).searchParams.get("state");
+
+        return state === SILENT_SIGN_IN_STATE || state === STATE;
     }
 }
