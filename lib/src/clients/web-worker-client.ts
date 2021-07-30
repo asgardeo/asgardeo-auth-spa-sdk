@@ -452,7 +452,9 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
         }
 
-        SPAUtils.setIsInitializedSilentSignIn();
+        if (SPAUtils.wasSilentSignInCalled()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+        }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
         const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
