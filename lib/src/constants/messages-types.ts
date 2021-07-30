@@ -45,3 +45,4 @@ export const UPDATE_CONFIG = "update_config";
 export const GET_ID_TOKEN = "get_id_token";
 export const CHECK_SESSION_SIGNED_IN = "check_session_signed_in";
 export const CHECK_SESSION_SIGNED_OUT = "check_session_signed_out";
+export const GET_CONFIG_DATA = "get_config_data";
