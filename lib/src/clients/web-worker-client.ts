@@ -326,7 +326,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
-    const signInSilently = async (): Promise<BasicUserInfo | boolean> => {
+    const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         if (SPAUtils.setIsInitializedSilentSignIn()) {
@@ -746,7 +746,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
         signIn,
-        signInSilently,
+        trySignInSilently,
         signOut,
         updateConfig
     };

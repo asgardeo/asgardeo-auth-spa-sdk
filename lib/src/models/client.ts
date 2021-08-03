@@ -61,7 +61,7 @@ export interface MainThreadClientInterface {
     getAccessToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;
     updateConfig(config: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void>;
-    signInSilently(): Promise<BasicUserInfo | boolean>;
+    trySignInSilently(): Promise<BasicUserInfo | boolean>;
 }
 
 export interface WebWorkerClientInterface {
@@ -90,5 +90,5 @@ export interface WebWorkerClientInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     refreshAccessToken(): Promise<BasicUserInfo>;
     updateConfig(config: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void>;
-    signInSilently(): Promise<BasicUserInfo | boolean>;
+    trySignInSilently(): Promise<BasicUserInfo | boolean>;
 }
