@@ -354,9 +354,11 @@ signInSilently();
 This method attempts to sign a user in silently by sending an authorization request with the `prompt` query parameter set to `none`.
 This will be useful when you want to sign a user in automatically while avoiding the browser redirects.
 
-This method uses an iFrame to check if there is an active user session in the identity server by sending an authorization request. If the request returns an authorization code, then the token request is dispatched and the returned token is stored effectively signing the user in.
+This uses an iFrame to check if there is an active user session in the identity server by sending an authorization request. If the request returns an authorization code, then the token request is dispatched and the returned token is stored effectively signing the user in.
 
-This method returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` object following a successful sign in. If the user is not signed into the identity server, then the promise resolves with the boolean value of `false`.
+To dispatch a token request, the `[signIn()](#signIn)` or this `signInSilently()` method should be called by the page/component rendered by the redirect URL.
+
+This returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` object following a successful sign in. If the user is not signed into the identity server, then the promise resolves with the boolean value of `false`.
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
