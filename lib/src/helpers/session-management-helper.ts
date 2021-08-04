@@ -20,6 +20,7 @@ import { SESSION_STATE } from "@asgardeo/auth-js";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
+    INITIALIZED_SILENT_SIGN_IN,
     OP_IFRAME,
     PROMPT_NONE_IFRAME,
     RP_IFRAME,
@@ -190,6 +191,7 @@ export const SessionManagementHelper = (() => {
                         type: CHECK_SESSION_SIGNED_IN
                     };
 
+                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
                     window.top.postMessage(message, window.top.origin);
                     window.location.href = "about:blank";
 
@@ -207,6 +209,7 @@ export const SessionManagementHelper = (() => {
                         type: CHECK_SESSION_SIGNED_OUT
                     };
 
+                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
                     window.top.postMessage(message, window.top.origin);
                     window.location.href = "about:blank";
 
