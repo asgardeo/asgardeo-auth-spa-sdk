@@ -597,8 +597,8 @@ export const MainThreadClient = async (
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
         signIn,
-        trySignInSilently,
         signOut,
+        trySignInSilently,
         updateConfig
     };
 };

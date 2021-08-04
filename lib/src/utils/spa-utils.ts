@@ -17,7 +17,7 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
-import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, STATE, SILENT_SIGN_IN_STATE } from "../constants";
+import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, SILENT_SIGN_IN_STATE, STATE } from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
