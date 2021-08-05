@@ -362,6 +362,8 @@ This returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` ob
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
+> :warning: ***Since this method uses an iFrame, this method will not work if third-party cookies are blocked in the browser.***
+
 #### Example
 
 ```typescript
