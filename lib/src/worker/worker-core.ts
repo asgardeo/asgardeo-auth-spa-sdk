@@ -307,11 +307,15 @@ export const WebWorkerCore = async (
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
+        const clientConfig = await _dataLayer.getConfigData();
 
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
             useDefaultEndpoint = false;
-            for (const baseUrl of (await _dataLayer.getConfigData()).resourceServerURLs) {
+            for (const baseUrl of [
+                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
+                clientConfig?.serverOrigin
+            ]) {
                 if (config.tokenEndpoint?.startsWith(baseUrl)) {
                     matches = true;
                     break;
@@ -337,7 +341,7 @@ export const WebWorkerCore = async (
         } else {
             return Promise.reject(
                 new AsgardeoSPAException(
-                    "WORKER_CORE-RCG-IV03",
+                    "WORKER_CORE-RCG-IV01",
                     "worker-core",
                     "requestCustomGrant",
                     "Request to the provided endpoint is prohibited.",
