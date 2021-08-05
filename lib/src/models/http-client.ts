@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { AxiosRequestConfig } from "axios";
 import { HttpError, HttpResponse } from ".";
 
 export interface HttpClient {
@@ -25,8 +26,11 @@ export interface HttpClient {
     requestFinishCallback: () => void;
 }
 
+export interface HttpRequestConfig extends AxiosRequestConfig {
+    attachToken?: boolean;
+}
+
 export {
-    AxiosRequestConfig as HttpRequestConfig,
     AxiosResponse as HttpResponse,
     Method,
     AxiosTransformer as HttpTransformer,

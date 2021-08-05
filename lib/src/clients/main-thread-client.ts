@@ -25,22 +25,32 @@ import {
     DecodedIDTokenPayload,
     GetAuthURLConfig,
     OIDCEndpoints,
-    PKCE_CODE_VERIFIER,
     ResponseMode,
     SESSION_STATE,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
-import { ERROR, ERROR_DESCRIPTION, Storage } from "../constants";
+import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
+    ERROR,
+    ERROR_DESCRIPTION,
+    PROMPT_NONE_IFRAME,
+    RP_IFRAME,
+    SILENT_SIGN_IN_STATE,
+    Storage
+} from "../constants";
 import { AsgardeoSPAException } from "../exception";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
+    AuthorizationInfo,
     HttpError,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
-    MainThreadClientInterface
+    MainThreadClientInterface,
+    Message
 } from "../models";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
@@ -67,18 +77,23 @@ export const MainThreadClient = async (
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
-    const _sessionManagementHelper = SessionManagementHelper();
+    const _sessionManagementHelper = SessionManagementHelper(async () => {
+        return _authenticationClient.signOut();
+    });
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        request.headers = {
-            ...request.headers,
-            Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
-        };
+        const requestConfig = { attachToken: true, ...request };
+        if (requestConfig.attachToken) {
+            request.headers = {
+                ...request.headers,
+                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
+            };
+        }
     };
 
-    _httpClient?.init && await _httpClient.init(true, attachToken);
+    _httpClient?.init && (await _httpClient.init(true, attachToken));
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
         _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
@@ -89,24 +104,159 @@ export const MainThreadClient = async (
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestFinishCallback &&  _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
         _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
     };
 
-    const httpRequest = (config: HttpRequestConfig): Promise<HttpResponse> => {
-        return _httpClient.request(config);
+    const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
+        let matches = false;
+        const config = await _dataLayer.getConfigData();
+
+        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
+            if (requestConfig?.url?.startsWith(baseUrl)) {
+                matches = true;
+
+                break;
+            }
+        }
+
+        if (matches) {
+            return _httpClient
+                .request(requestConfig)
+                .then((response: HttpResponse) => {
+                    return Promise.resolve(response);
+                })
+                .catch((error: HttpError) => {
+                    if (error?.response?.status === 401) {
+                        return _authenticationClient
+                            .refreshAccessToken()
+                            .then(() => {
+                                return _httpClient
+                                    .request(requestConfig)
+                                    .then((response) => {
+                                        return Promise.resolve(response);
+                                    })
+                                    .catch((error) => {
+                                        return Promise.reject(error);
+                                    });
+                            })
+                            .catch((refreshError) => {
+                                return Promise.reject(
+                                    new AsgardeoSPAException(
+                                        "MAIN_THREAD_CLIENT-HR-ES01",
+                                        "main-thread-client",
+                                        "httpRequest",
+                                        "",
+                                        "",
+                                        refreshError
+                                    )
+                                );
+                            });
+                    }
+
+                    return Promise.reject(error);
+                });
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-HR-IV02",
+                    "main-thread-client",
+                    "httpRequest",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
-    const httpRequestAll = (config: HttpRequestConfig[]): Promise<HttpResponse[]> | undefined => {
-        const requests: Promise<HttpResponse<any>>[] = [];
-        config.forEach((request) => {
-            requests.push(_httpClient.request(request));
-        });
+    const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
+        let matches = true;
+        const config = await _dataLayer.getConfigData();
 
-        return _httpClient.all && _httpClient.all(requests);
+        for (const requestConfig of requestConfigs) {
+            let urlMatches = false;
+
+            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
+                if (requestConfig.url?.startsWith(baseUrl)) {
+                    urlMatches = true;
+
+                    break;
+                }
+            }
+
+            if (!urlMatches) {
+                matches = false;
+
+                break;
+            }
+        }
+
+        const requests: Promise<HttpResponse<any>>[] = [];
+
+        if (matches) {
+            requestConfigs.forEach((request) => {
+                requests.push(_httpClient.request(request));
+            });
+
+            return (
+                _httpClient?.all &&
+                _httpClient
+                    .all(requests)
+                    .then((responses: HttpResponse[]) => {
+                        return Promise.resolve(responses);
+                    })
+                    .catch((error: HttpError) => {
+                        if (error?.response?.status === 401) {
+                            return _authenticationClient
+                                .refreshAccessToken()
+                                .then(() => {
+                                    return (
+                                        _httpClient.all &&
+                                        _httpClient
+                                            .all(requests)
+                                            .then((response) => {
+                                                return Promise.resolve(response);
+                                            })
+                                            .catch((error) => {
+                                                return Promise.reject(error);
+                                            })
+                                    );
+                                })
+                                .catch((refreshError) => {
+                                    return Promise.reject(
+                                        new AsgardeoSPAException(
+                                            "MAIN_THREAD_CLIENT-HRA-ES01",
+                                            "main-thread-client",
+                                            "httpRequestAll",
+                                            "",
+                                            "",
+                                            refreshError
+                                        )
+                                    );
+                                });
+                        }
+
+                        return Promise.reject(error);
+                    })
+            );
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-HRA-IV02",
+                    "main-thread-client",
+                    "httpRequest",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
     const getHttpClient = (): HttpClientInstance => {
@@ -127,6 +277,7 @@ export const MainThreadClient = async (
 
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await _authenticationClient.getOIDCServiceEndpoints();
+        const config = await _dataLayer.getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
@@ -135,10 +286,7 @@ export const MainThreadClient = async (
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            async () => {
-                return _authenticationClient.signOut();
-            }
+            oidcEndpoints.authorizationEndpoint ?? ""
         );
     };
 
@@ -147,11 +295,14 @@ export const MainThreadClient = async (
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper
-            .receivePromptNoneResponse(async (sessionState: string | null) => {
-            await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
-            return;
-        });
+        const config = await _dataLayer.getConfigData();
+
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
+                return;
+            }
+        );
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -163,6 +314,11 @@ export const MainThreadClient = async (
                 username: ""
             });
         }
+
+        if (SPAUtils.wasSilentSignInCalled()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+        }
+
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
@@ -184,28 +340,7 @@ export const MainThreadClient = async (
         }
 
         if (resolvedAuthorizationCode) {
-            if (config.storage === Storage.BrowserMemory) {
-                const pkce = SPAUtils.getPKCE();
-
-                await _dataLayer.setTemporaryDataParameter(PKCE_CODE_VERIFIER, pkce);
-            }
-
-            return _authenticationClient
-                .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
-                .then(async () => {
-                    if (config.storage === Storage.BrowserMemory) {
-                        SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-                    }
-
-                    _spaHelper.clearRefreshTokenTimeout();
-                    _spaHelper.refreshAccessTokenAutomatically();
-                    checkSession();
-
-                    return _authenticationClient.getBasicUserInfo();
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
@@ -230,8 +365,8 @@ export const MainThreadClient = async (
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
-            if (config.storage === Storage.BrowserMemory) {
-                SPAUtils.setPKCE((await _dataLayer.getTemporaryDataParameter(PKCE_CODE_VERIFIER)) as string);
+            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
             }
 
             location.href = url;
@@ -259,21 +394,53 @@ export const MainThreadClient = async (
         return true;
     };
 
-    const requestCustomGrant = (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
-        return _authenticationClient
-            .requestCustomGrant(config)
-            .then(async (response: HttpResponse | TokenResponse) => {
-                if (config.returnsSession) {
-                    _spaHelper.refreshAccessTokenAutomatically();
+    const requestCustomGrant = async(config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+        let useDefaultEndpoint = true;
+        let matches = false;
+        const clientConfig = await _dataLayer.getConfigData();
 
-                    return _authenticationClient.getBasicUserInfo();
-                } else {
-                    return response as HttpResponse;
+        // If the config does not contains a token endpoint, default token endpoint will be used.
+        if (config?.tokenEndpoint) {
+            useDefaultEndpoint = false;
+            for (const baseUrl of [
+                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
+                clientConfig?.serverOrigin
+            ]) {
+                if (config.tokenEndpoint?.startsWith(baseUrl)) {
+                    matches = true;
+                    break;
                 }
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+            }
+        }
+
+        if (useDefaultEndpoint || matches) {
+            return _authenticationClient
+                .requestCustomGrant(config)
+                .then(async (response: HttpResponse | TokenResponse) => {
+                    if (config.returnsSession) {
+                        _spaHelper.refreshAccessTokenAutomatically();
+
+                        return _authenticationClient.getBasicUserInfo();
+                    } else {
+                        return response as HttpResponse;
+                    }
+                })
+                .catch((error) => {
+                    return Promise.reject(error);
+                });
+        } else {
+            return Promise.reject(
+                new AsgardeoSPAException(
+                    "MAIN_THREAD_CLIENT-RCG-IV01",
+                    "main-thread-client",
+                    "requestCustomGrant",
+                    "Request to the provided endpoint is prohibited.",
+                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                        " attribute while initializing the SDK. The specified token endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
+                )
+            );
+        }
     };
 
     const refreshAccessToken = (): Promise<BasicUserInfo> => {
@@ -298,6 +465,119 @@ export const MainThreadClient = async (
                 return Promise.resolve(true);
             })
             .catch((error) => Promise.reject(error));
+    };
+
+    const requestAccessToken = async (
+        resolvedAuthorizationCode: string,
+        resolvedSessionState: string
+    ): Promise<BasicUserInfo> => {
+        const config = await _dataLayer.getConfigData();
+
+        if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+            const pkce = SPAUtils.getPKCE();
+
+            await _authenticationClient.setPKCECode(pkce);
+        }
+
+        return _authenticationClient
+            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
+            .then(async () => {
+                if (config.storage === Storage.BrowserMemory) {
+                    SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
+                }
+
+                _spaHelper.clearRefreshTokenTimeout();
+                _spaHelper.refreshAccessTokenAutomatically();
+                checkSession();
+
+                return _authenticationClient.getBasicUserInfo();
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
+    };
+
+    /**
+     * This method checks if there is an active user session in the server by sending a prompt none request.
+     * If the user is signed in, this method sends a token request. Returns false otherwise.
+     *
+     * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
+     * if the user is signed in or with `false` if there is no active user session in the server.
+     */
+    const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const config = await _dataLayer.getConfigData();
+
+        if (SPAUtils.setIsInitializedSilentSignIn()) {
+            await _sessionManagementHelper.receivePromptNoneResponse();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        if (SPAUtils.isStatePresentInURL()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+
+        try {
+            const url: string = await _authenticationClient.getAuthorizationURL({
+                prompt: "none",
+                state: SILENT_SIGN_IN_STATE
+            });
+
+            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
+            }
+
+            promptNoneIFrame.src = url;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise((resolve, reject) => {
+            const listenToPrompNoneIFrame = async (e: MessageEvent) => {
+                const data: Message<AuthorizationInfo | null> = e.data;
+
+                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
+                    window.removeEventListener("message", listenToPrompNoneIFrame);
+                    resolve(false);
+                }
+
+                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
+                    requestAccessToken(data.data.code, data?.data?.sessionState)
+                        .then((response: BasicUserInfo) => {
+                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            resolve(response);
+                        })
+                        .catch((error) => {
+                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            reject(error);
+                        });
+                }
+            };
+
+            window.addEventListener("message", listenToPrompNoneIFrame);
+        });
     };
 
     const getBasicUserInfo = async (): Promise<BasicUserInfo> => {
@@ -325,7 +605,7 @@ export const MainThreadClient = async (
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
-        config = { ...config, ...newConfig };
+        const config = { ...(await _dataLayer.getConfigData()), ...newConfig };
         await _authenticationClient.updateConfig(config);
     };
 
@@ -350,6 +630,7 @@ export const MainThreadClient = async (
         setHttpRequestSuccessCallback,
         signIn,
         signOut,
+        trySignInSilently,
         updateConfig
     };
 };

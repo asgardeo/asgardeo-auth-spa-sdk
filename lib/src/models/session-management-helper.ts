@@ -25,9 +25,8 @@ export interface SessionManagementHelperInterface {
         sessionRefreshInterval: number,
         redirectURL: string,
         authorizationEndpoint: string,
-        signOut: () => Promise<string>
     ): void;
     receivePromptNoneResponse(
-        setSessionState: (sessionState: string | null) => Promise<void>
+        setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean>;
 }

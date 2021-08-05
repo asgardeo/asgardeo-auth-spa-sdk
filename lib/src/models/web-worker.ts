@@ -60,4 +60,5 @@ export interface WebWorkerCoreInterface {
     startAutoRefreshToken(): Promise<void>;
     setSessionState(sessionState: string): Promise<void>;
     updateConfig(config: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void>;
+    getConfigData(): Promise<AuthClientConfig<WebWorkerClientConfig>>;
 }

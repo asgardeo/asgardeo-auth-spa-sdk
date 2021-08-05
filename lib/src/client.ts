@@ -312,6 +312,44 @@ export class AsgardeoSPAClient {
     }
 
     /**
+     * This method allows you to sign in silently.
+     * First, this method sends a prompt none request to see if there is an active user session in the identity server.
+     * If there is one, then it requests the access token and stores it. Else, it returns false.
+     *
+     * @return {Promise<BasicUserInfo | boolean>} - A Promise that resolves with the user information after signing in
+     * or with `false` if the user is not signed in.
+     *
+     * @example
+     *```
+     * auth.trySignInSilently()
+     *```
+     */
+    public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined>{
+        await this._isInitialized();
+        if (SPAUtils.wasSignInCalled()) {
+            return;
+        }
+
+        SPAUtils.setInitializedSignIn(false);
+
+        return this._client?.trySignInSilently().then((response: BasicUserInfo | boolean) => {
+            if (this._onSignInCallback && response) {
+                const basicUserInfo = response as BasicUserInfo;
+                if (
+                    basicUserInfo.allowedScopes ||
+                    basicUserInfo.displayName ||
+                    basicUserInfo.email ||
+                    basicUserInfo.username
+                ) {
+                    this._onSignInCallback(basicUserInfo);
+                }
+            }
+
+            return response;
+        });
+    }
+
+    /**
      * This method initiates the sign-out flow.
      *
      * **To fire a callback function after signing out, use the `on()` method.**

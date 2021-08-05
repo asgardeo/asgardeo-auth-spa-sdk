@@ -16,8 +16,18 @@
  * under the License.
  */
 
-import { OP_IFRAME, PROMPT_NONE_IFRAME, RP_IFRAME, STATE } from "../constants";
-import { SessionManagementHelperInterface } from "../models";
+import { SESSION_STATE } from "@asgardeo/auth-js";
+import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
+    INITIALIZED_SILENT_SIGN_IN,
+    OP_IFRAME,
+    PROMPT_NONE_IFRAME,
+    RP_IFRAME,
+    SILENT_SIGN_IN_STATE,
+    STATE
+} from "../constants";
+import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
 
 export const SessionManagementHelper = (() => {
     let _clientID: string;
@@ -36,8 +46,7 @@ export const SessionManagementHelper = (() => {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string,
-        signOut: () => Promise<string>
+        authorizationEndpoint: string
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
@@ -46,7 +55,6 @@ export const SessionManagementHelper = (() => {
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
-        _signOut = signOut;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -90,13 +98,14 @@ export const SessionManagementHelper = (() => {
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
         (rpIFrame.contentWindow as any).eval(startCheckSession.toString());
-        rpIFrame?.contentWindow && rpIFrame?.contentWindow[startCheckSession.name](
-            _checkSessionEndpoint,
-            _clientID,
-            _redirectURL,
-            _sessionState,
-            _interval
-        );
+        rpIFrame?.contentWindow &&
+            rpIFrame?.contentWindow[startCheckSession.name](
+                _checkSessionEndpoint,
+                _clientID,
+                _redirectURL,
+                _sessionState,
+                _interval
+            );
 
         listenToResponseFromOPIFrame();
     };
@@ -156,32 +165,68 @@ export const SessionManagementHelper = (() => {
             getRandomPKCEChallenge();
     };
 
+    /**
+     * This contains the logic to process the response of a prompt none request.
+     *
+     * @param setSessionState The method that sets the session state.
+     * on the output of the content of the redirect URL
+     */
     const receivePromptNoneResponse = async (
-        setSessionState: (sessionState: string | null) => Promise<void>
+        setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
-            const state = new URL(window.location.href).searchParams.get("state");
-            if (state !== null && state === STATE) {
-                // Prompt none response.
-                const code = new URL(window.location.href).searchParams.get("code");
+        const state = new URL(window.location.href).searchParams.get("state");
+        const sessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
 
-                if (code !== null && code.length !== 0) {
-                    const newSessionState = new URL(window.location.href).searchParams.get("session_state");
+        if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
+            // Prompt none response.
+            const code = new URL(window.location.href).searchParams.get("code");
 
-                    await setSessionState(newSessionState);
+            if (code !== null && code.length !== 0) {
+                if (state === SILENT_SIGN_IN_STATE) {
+                    const message: Message<AuthorizationInfo> = {
+                        data: {
+                            code,
+                            sessionState: sessionState ?? ""
+                        },
+                        type: CHECK_SESSION_SIGNED_IN
+                    };
 
-                    window.stop();
-                } else {
-                    window.top.location.href = await _signOut();
-                    window.stop();
+                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
+                    window.top.postMessage(message, window.top.origin);
+                    window.location.href = "about:blank";
 
                     return true;
                 }
+
+                const newSessionState = new URL(window.location.href).searchParams.get("session_state");
+
+                setSessionState && await setSessionState(newSessionState);
+
+                window.stop();
+            } else {
+                if (state === SILENT_SIGN_IN_STATE) {
+                    const message: Message<null> = {
+                        type: CHECK_SESSION_SIGNED_OUT
+                    };
+
+                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
+                    window.top.postMessage(message, window.top.origin);
+                    window.location.href = "about:blank";
+
+                    return true;
+                }
+
+                window.top.location.href = await _signOut();
+                window.location.href = "about:blank";
+
+                return true;
             }
+        }
 
         return false;
     };
 
-    return (): SessionManagementHelperInterface => {
+    return (signOut: () => Promise<string>): SessionManagementHelperInterface => {
         const opIFrame = document.createElement("iframe");
         opIFrame.setAttribute("id", OP_IFRAME);
         opIFrame.style.display = "none";
@@ -198,6 +243,8 @@ export const SessionManagementHelper = (() => {
         rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
         rpIFrame?.contentDocument?.body.appendChild(opIFrame);
         rpIFrame?.contentDocument?.body.appendChild(promptNoneIFrame);
+
+        _signOut = signOut;
 
         return {
             initialize,

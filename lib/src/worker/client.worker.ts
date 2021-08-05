@@ -23,6 +23,7 @@ import {
     ENABLE_HTTP_HANDLER,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
+    GET_CONFIG_DATA,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -250,6 +251,14 @@ ctx.onmessage = async ({ data, ports }) => {
         case UPDATE_CONFIG:
             try {
                 port.postMessage(MessageUtils.generateSuccessMessage(await webWorker.updateConfig(data?.data)));
+            } catch (error) {
+                port.postMessage(MessageUtils.generateFailureMessage(error));
+            }
+
+            break;
+        case GET_CONFIG_DATA:
+            try {
+                port.postMessage(MessageUtils.generateSuccessMessage(await webWorker.getConfigData()));
             } catch (error) {
                 port.postMessage(MessageUtils.generateFailureMessage(error));
             }

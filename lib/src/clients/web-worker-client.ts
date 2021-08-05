@@ -30,12 +30,15 @@ import {
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
     ERROR,
     ERROR_DESCRIPTION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
+    GET_CONFIG_DATA,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -44,6 +47,7 @@ import {
     HTTP_REQUEST_ALL,
     INIT,
     IS_AUTHENTICATED,
+    PROMPT_NONE_IFRAME,
     REFRESH_ACCESS_TOKEN,
     REQUEST_ACCESS_TOKEN,
     REQUEST_CUSTOM_GRANT,
@@ -52,8 +56,10 @@ import {
     REQUEST_START,
     REQUEST_SUCCESS,
     REVOKE_ACCESS_TOKEN,
+    RP_IFRAME,
     SET_SESSION_STATE,
     SIGN_OUT,
+    SILENT_SIGN_IN_STATE,
     START_AUTO_REFRESH_TOKEN,
     UPDATE_CONFIG
 } from "../constants";
@@ -82,7 +88,19 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * API request time out.
      */
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
-    const _sessionManagementHelper = SessionManagementHelper();
+    const _sessionManagementHelper = SessionManagementHelper(async () => {
+        const message: Message<string> = {
+            type: SIGN_OUT
+        };
+
+        try {
+            const signOutURL = await communicate<string, string>(message);
+
+            return signOutURL;
+        } catch {
+            return SPAUtils.getSignOutURL();
+        }
+    });
 
     const worker: Worker = new WorkerFile();
 
@@ -288,6 +306,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await getOIDCServiceEndpoints();
         const sessionState: string = (await getBasicUserInfo()).sessionState;
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
@@ -296,21 +315,132 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            async () => {
-                const message: Message<string> = {
-                    type: SIGN_OUT
+            oidcEndpoints.authorizationEndpoint ?? ""
+        );
+    };
+
+    /**
+     * This method checks if there is an active user session in the server by sending a prompt none request.
+     * If the user is signed in, this method sends a token request. Returns false otherwise.
+     *
+     * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
+     * if the user is signed in or with `false` if there is no active user session in the server.
+     */
+    const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
+        if (SPAUtils.setIsInitializedSilentSignIn()) {
+            await _sessionManagementHelper.receivePromptNoneResponse();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        if (SPAUtils.isStatePresentInURL()) {
+            SPAUtils.setIsInitializedSilentSignIn();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+
+        const message: Message<GetAuthURLConfig> = {
+            data: {
+                prompt: "none",
+                state: SILENT_SIGN_IN_STATE
+            },
+            type: GET_AUTH_URL
+        };
+
+        try {
+            const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
+
+            (response.pkce && config.enablePKCE) && SPAUtils.setPKCE(response.pkce);
+
+            promptNoneIFrame.src = response.authorizationURL;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise((resolve, reject) => {
+            const listenToPrompNoneIFrame = async (e: MessageEvent) => {
+                const data: Message<AuthorizationInfo | null> = e.data;
+
+                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
+                    window.removeEventListener("message", listenToPrompNoneIFrame);
+                    resolve(false);
+                }
+
+                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
+                        window.removeEventListener("message", listenToPrompNoneIFrame);
+                        resolve(response);
+                    }).catch((error) => {
+                        window.removeEventListener("message", listenToPrompNoneIFrame);
+                        reject(error);
+                    })
+
+                }
+            };
+
+            window.addEventListener("message", listenToPrompNoneIFrame)
+        });
+    };
+
+    const requestAccessToken = async (
+        resolvedAuthorizationCode: string,
+        resolvedSessionState: string
+    ): Promise<BasicUserInfo> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
+        const message: Message<AuthorizationInfo> = {
+            data: {
+                code: resolvedAuthorizationCode,
+                pkce: config.enablePKCE ? SPAUtils.getPKCE() : undefined,
+                sessionState: resolvedSessionState
+            },
+            type: REQUEST_ACCESS_TOKEN
+        };
+
+        config.enablePKCE && SPAUtils.removePKCE();
+
+        return communicate<AuthorizationInfo, BasicUserInfo>(message)
+            .then((response) => {
+                const message: Message<null> = {
+                    type: GET_SIGN_OUT_URL
                 };
 
-                try {
-                    const signOutURL = await communicate<string, string>(message);
+                return communicate<null, string>(message)
+                    .then((url: string) => {
+                        SPAUtils.setSignOutURL(url);
+                        checkSession();
 
-                    return signOutURL;
-                } catch {
-                    return SPAUtils.getSignOutURL();
-                }
-            }
-        );
+                        return Promise.resolve(response);
+                    })
+                    .catch((error) => {
+                        return Promise.reject(error);
+                    });
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
     };
 
     /**
@@ -323,10 +453,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         authorizationCode?: string,
         sessionState?: string
     ): Promise<BasicUserInfo> => {
-        const isLoggingOut = await _sessionManagementHelper
-            .receivePromptNoneResponse(async (sessionState: string | null) => {
-            return setSessionState(sessionState);
-        });
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
+        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                return setSessionState(sessionState);
+            }
+        );
 
         if (isLoggingOut) {
             return Promise.resolve({
@@ -337,6 +470,10 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 tenantDomain: "",
                 username: ""
             });
+        }
+
+        if (SPAUtils.wasSilentSignInCalled()) {
+            SPAUtils.setIsInitializedSilentSignIn();
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
@@ -351,8 +488,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
             return Promise.reject(
                 new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-SI-BE",
-                    "main-thread-client",
+                    "WEB_WORKER_CLIENT-SI-BE",
+                    "web-worker-client",
                     "signIn",
                     error,
                     errorDescription ?? ""
@@ -380,37 +517,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
 
         if (resolvedAuthorizationCode) {
-            const message: Message<AuthorizationInfo> = {
-                data: {
-                    code: resolvedAuthorizationCode,
-                    pkce: SPAUtils.getPKCE(),
-                    sessionState: resolvedSessionState
-                },
-                type: REQUEST_ACCESS_TOKEN
-            };
-
-            SPAUtils.removePKCE();
-
-            return communicate<AuthorizationInfo, BasicUserInfo>(message)
-                .then((response) => {
-                    const message: Message<null> = {
-                        type: GET_SIGN_OUT_URL
-                    };
-
-                    return communicate<null, string>(message)
-                        .then((url: string) => {
-                            SPAUtils.setSignOutURL(url);
-                            checkSession();
-
-                            return Promise.resolve(response);
-                        })
-                        .catch((error) => {
-                            return Promise.reject(error);
-                        });
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
         }
 
         const message: Message<GetAuthURLConfig> = {
@@ -420,7 +527,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
             .then((response) => {
-                if (response.pkce) {
+                if (response.pkce && config.enablePKCE) {
                     SPAUtils.setPKCE(response.pkce);
                 }
 
@@ -505,6 +612,20 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 return Promise.reject(error);
             });
     };
+
+    const getConfigData = (): Promise<AuthClientConfig<WebWorkerClientConfig>> => {
+        const message: Message<null> = {
+            type: GET_CONFIG_DATA
+        };
+
+        return communicate< null, AuthClientConfig<WebWorkerClientConfig>>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+        })
+    }
 
     const getBasicUserInfo = (): Promise<BasicUserInfo> => {
         const message: Message<null> = {
@@ -594,8 +715,9 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
     };
 
-    const updateConfig = (newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
-        config = { ...config, ...newConfig };
+    const updateConfig = async(newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
+
+        const config = { ...await getConfigData(), ...newConfig };
 
         const message: Message<Partial<AuthClientConfig<WebWorkerClientConfig>>> = {
             data: config,
@@ -625,6 +747,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         setHttpRequestSuccessCallback,
         signIn,
         signOut,
+        trySignInSilently,
         updateConfig
     };
 };

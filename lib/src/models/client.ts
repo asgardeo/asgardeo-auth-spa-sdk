@@ -40,7 +40,7 @@ export interface MainThreadClientInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
-    httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[]> | undefined;
+    httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[] | undefined>;
     getHttpClient(): HttpClientInstance;
     enableHttpHandler(): boolean;
     disableHttpHandler(): boolean;
@@ -61,6 +61,7 @@ export interface MainThreadClientInterface {
     getAccessToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;
     updateConfig(config: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void>;
+    trySignInSilently(): Promise<BasicUserInfo | boolean>;
 }
 
 export interface WebWorkerClientInterface {
@@ -89,4 +90,5 @@ export interface WebWorkerClientInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     refreshAccessToken(): Promise<BasicUserInfo>;
     updateConfig(config: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void>;
+    trySignInSilently(): Promise<BasicUserInfo | boolean>;
 }

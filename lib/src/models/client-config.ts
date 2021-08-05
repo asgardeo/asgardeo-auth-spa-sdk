@@ -22,6 +22,7 @@ import { Storage } from "../constants";
 export interface SPAConfig {
     checkSessionInterval?: number;
     sessionRefreshInterval?: number;
+    resourceServerURLs?: string[];
 }
 
 /**
@@ -32,7 +33,6 @@ export interface MainThreadClientConfig extends SPAConfig {
 }
 
 export interface WebWorkerClientConfig  extends SPAConfig {
-    resourceServerURLs: string[];
     storage: Storage.WebWorker;
     requestTimeout?: number;
 }
