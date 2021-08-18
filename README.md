@@ -886,6 +886,7 @@ This table shows the extended attributes provided by the `Config` interface.
 |`requestTimeout` | Optional | `number`| 60000 (seconds) | Specifies in seconds how long a request to the web worker should wait before being timed out. |
 |`sessionRefreshInterval`|Optional|`number`| 300 (seconds)|Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.|
 |`checkSessionInterval` |Optional|`number`|3 (seconds)| Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout. |
+|`enableOIDCSessionManagement` |Optional|`boolean`| false | Flag to enable OIDC Session Management |
 
 #### The AuthClientConfig Interface
 
