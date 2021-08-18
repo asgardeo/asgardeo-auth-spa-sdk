@@ -44,6 +44,7 @@ import { SPAUtils } from "./utils";
  */
 const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     checkSessionInterval: 3,
+    enableOIDCSessionManagement: false,
     sessionRefreshInterval: 300
 };
 

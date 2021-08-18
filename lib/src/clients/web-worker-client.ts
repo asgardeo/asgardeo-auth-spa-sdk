@@ -430,7 +430,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 return communicate<null, string>(message)
                     .then((url: string) => {
                         SPAUtils.setSignOutURL(url);
-                        checkSession();
+
+                        // Enable OIDC Sessions Management only if it is set to true in the config.
+                        if (config.enableOIDCSessionManagement) {
+                            checkSession();
+                        }
 
                         return Promise.resolve(response);
                     })
@@ -499,7 +503,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         if (await isAuthenticated()) {
             await startAutoRefreshToken();
-            checkSession();
+
+            // Enable OIDC Sessions Management only if it is set to true in the config.
+            if (config.enableOIDCSessionManagement) {
+                checkSession();
+            }
 
             return getBasicUserInfo();
         }
