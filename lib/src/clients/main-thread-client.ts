@@ -322,7 +322,11 @@ export const MainThreadClient = async (
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
-            checkSession();
+
+            // Enable OIDC Sessions Management only if it is set to true in the config.
+            if (config.enableOIDCSessionManagement) {
+                checkSession();
+            }
 
             return Promise.resolve(await _authenticationClient.getBasicUserInfo());
         }
@@ -488,7 +492,11 @@ export const MainThreadClient = async (
 
                 _spaHelper.clearRefreshTokenTimeout();
                 _spaHelper.refreshAccessTokenAutomatically();
-                checkSession();
+
+                // Enable OIDC Sessions Management only if it is set to true in the config.
+                if (config.enableOIDCSessionManagement) {
+                    checkSession();
+                }
 
                 return _authenticationClient.getBasicUserInfo();
             })
