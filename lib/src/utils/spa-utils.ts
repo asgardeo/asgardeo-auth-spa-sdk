@@ -117,4 +117,19 @@ export class SPAUtils {
 
         return state === SILENT_SIGN_IN_STATE || state === STATE;
     }
+
+    /**
+     * Util function to test if `code` and `session_state` are available in the URL as search params.
+     * @since 0.2.0
+     *
+     * @param params - Search params.
+     * @return {boolean}
+     */
+    public static hasAuthSearchParamsInURL(params: string = window.location.search): boolean {
+
+        const AUTH_CODE_REGEXP: RegExp = /[?&]code=[^&]+/;
+        const SESSION_STATE_REGEXP: RegExp = /[?&]session_state=[^&]+/;
+
+        return AUTH_CODE_REGEXP.test(params) && SESSION_STATE_REGEXP.test(params);
+   }
 }

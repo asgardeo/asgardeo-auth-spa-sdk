@@ -22,6 +22,9 @@
 export * from "./client";
 export * from "./models";
 
+// Utils
+export * from "./utils/spa-utils"
+
 // Constants
 export * from "@asgardeo/auth-js";
 export * from "./constants/storage";
