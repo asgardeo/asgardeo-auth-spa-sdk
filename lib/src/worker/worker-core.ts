@@ -67,10 +67,7 @@ export const WebWorkerCore = async (
         }
     };
 
-    _httpClient?.init && await _httpClient.init(
-        true,
-        attachToken
-    );
+    _httpClient?.init && (await _httpClient.init(true, attachToken));
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
         _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
@@ -85,14 +82,17 @@ export const WebWorkerCore = async (
     };
 
     const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _httpClient?.setHttpRequestErrorCallback &&_httpClient.setHttpRequestErrorCallback(callback);
+        _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
     };
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [], config?.serverOrigin]) {
+        for (const baseUrl of [
+            ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
+            config?.serverOrigin
+        ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
@@ -158,8 +158,10 @@ export const WebWorkerCore = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [ ...(await _dataLayer.getConfigData())?.resourceServerURLs ?? [],
-                config?.serverOrigin ]) {
+            for (const baseUrl of [
+                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
+                config?.serverOrigin
+            ]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
@@ -172,7 +174,6 @@ export const WebWorkerCore = async (
 
                 break;
             }
-
         }
 
         const requests: Promise<HttpResponse<any>>[] = [];
@@ -247,9 +248,12 @@ export const WebWorkerCore = async (
     };
 
     const getAuthorizationURL = async (params?: AuthorizationURLParams): Promise<AuthorizationResponse> => {
-        return _authenticationClient.getAuthorizationURL(params).then(async (url: string) => {
-            return { authorizationURL: url, pkce: (await _authenticationClient.getPKCECode()) as string };
-        });
+        return _authenticationClient
+            .getAuthorizationURL(params)
+            .then(async (url: string) => {
+                return { authorizationURL: url, pkce: (await _authenticationClient.getPKCECode()) as string };
+            })
+            .catch((error) => Promise.reject(error));
     };
 
     const startAutoRefreshToken = async (): Promise<void> => {
@@ -346,8 +350,8 @@ export const WebWorkerCore = async (
                     "requestCustomGrant",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified token endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
+                        " attribute while initializing the SDK. The specified token endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -387,7 +391,7 @@ export const WebWorkerCore = async (
 
     const getIDToken = async (): Promise<string> => {
         return _authenticationClient.getIDToken();
-    }
+    };
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
         return _authenticationClient.getOIDCServiceEndpoints();
     };
