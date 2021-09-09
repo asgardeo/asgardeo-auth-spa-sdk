@@ -39,6 +39,7 @@
     -   [disableHttpHandler](#disableHttpHandler)
     -   [updateConfig](#updateConfig)
     -   [getHttpClient](#getHttpClient)
+-   [Utils](#utils)
 -   [Using the `form_post` Response Mode](#using-the-form_post-response-mode)
 -   [Storage](#storage)
 -   [Models](#Models)
@@ -843,6 +844,32 @@ This method returns the `HttpClientInstance`. This is the client that is used to
 
 ```TypeScript
 const httpClient = auth.getHttpClient();
+```
+
+## Utils
+
+### SPAUtils
+
+Collection of utils that could be used by consuming framework SDKs.
+
+#### hasAuthSearchParamsInURL
+
+```TypeScript
+SPAUtils.hasAuthSearchParamsInURL(): boolean
+```
+
+#### Returns
+
+An `boolean`
+
+#### Description
+
+Util function to test if `code` and `session_state` are available in the URL as search params.
+
+#### Example
+
+```TypeScript
+const hasParams: boolean = SPAUtils.hasAuthSearchParamsInURL();
 ```
 
 ## Using the `form_post` response mode
