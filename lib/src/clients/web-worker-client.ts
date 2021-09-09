@@ -329,6 +329,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
+        // This block is executed by the iFrame when the server redirects with the authorization code.
         if (SPAUtils.setIsInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
 
@@ -343,6 +344,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
 
         if (SPAUtils.isStatePresentInURL()) {
+            // The state that is used to detect the auth request sent by this method is not there in the URL.
+            // Happens if it is the first time this method is being called.
+            // Or when this method is called inside the iFrame during the check session execution.
+
+            // This reverses the silent sign in flag being set to true by the previous code block.
             SPAUtils.setIsInitializedSilentSignIn();
 
             return Promise.resolve({
@@ -355,6 +361,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
         }
 
+        // This gets executed in the main thread and sends the prompt none request.
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
@@ -435,6 +442,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         if (config.enableOIDCSessionManagement) {
                             checkSession();
                         }
+
+                        startAutoRefreshToken();
 
                         return Promise.resolve(response);
                     })
