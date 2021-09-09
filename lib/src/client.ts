@@ -328,6 +328,8 @@ export class AsgardeoSPAClient {
      */
     public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
+
+        // checks if the `signIn` method has been called and this method has not been called.
         if (SPAUtils.wasSignInCalled()) {
             return;
         }

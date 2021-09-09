@@ -69,6 +69,11 @@ export class SPAUtils {
         }
     }
 
+    /**
+     * Specifies if `trySilentSignIn` has been called.
+     *
+     * @returns {boolean} True if the `trySilentSignIn` method has been called once.
+     */
     public static setIsInitializedSilentSignIn(): boolean {
         const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
         const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
@@ -84,6 +89,11 @@ export class SPAUtils {
         }
     }
 
+    /**
+     * Specifies if the `signIn` method has been called.
+     *
+     * @returns {boolean} True if the `signIn` has been called once and `trySilentSignIn` has not been called.
+     */
     public static wasSignInCalled(): boolean {
         const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SIGN_IN);
         const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
