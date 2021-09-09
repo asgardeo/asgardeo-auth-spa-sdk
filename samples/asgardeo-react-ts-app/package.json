@@ -1,9 +1,9 @@
 {
     "name": "@asgardeo/sp-react-ts-app",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "private": true,
     "dependencies": {
-        "@asgardeo/auth-spa": "^0.2.1",
+        "@asgardeo/auth-spa": "^0.2.2",
         "@testing-library/jest-dom": "^5.11.4",
         "@testing-library/react": "^11.1.0",
         "@testing-library/user-event": "^12.1.10",
