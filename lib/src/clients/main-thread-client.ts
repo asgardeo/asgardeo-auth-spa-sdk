@@ -563,28 +563,28 @@ export const MainThreadClient = async (
         }
 
         return new Promise((resolve, reject) => {
-            const listenToPrompNoneIFrame = async (e: MessageEvent) => {
+            const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
-                    window.removeEventListener("message", listenToPrompNoneIFrame);
+                    window.removeEventListener("message", listenToPromptNoneIFrame);
                     resolve(false);
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
                     requestAccessToken(data.data.code, data?.data?.sessionState)
                         .then((response: BasicUserInfo) => {
-                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
                             resolve(response);
                         })
                         .catch((error) => {
-                            window.removeEventListener("message", listenToPrompNoneIFrame);
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
                             reject(error);
                         });
                 }
             };
 
-            window.addEventListener("message", listenToPrompNoneIFrame);
+            window.addEventListener("message", listenToPromptNoneIFrame);
         });
     };
 

@@ -239,10 +239,10 @@ export const SessionManagementHelper = (() => {
         promptNoneIFrame.setAttribute("id", PROMPT_NONE_IFRAME);
         promptNoneIFrame.style.display = "none";
 
-        document.body.appendChild(rpIFrame);
+        document?.body?.appendChild(rpIFrame);
         rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-        rpIFrame?.contentDocument?.body.appendChild(opIFrame);
-        rpIFrame?.contentDocument?.body.appendChild(promptNoneIFrame);
+        rpIFrame?.contentDocument?.body?.appendChild(opIFrame);
+        rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
 
         _signOut = signOut;
 

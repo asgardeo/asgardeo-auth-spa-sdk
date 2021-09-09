@@ -16,6 +16,7 @@
 * under the License.
 */
 
+import { AuthClientConfig } from "@asgardeo/auth-js";
 import { Storage } from "../constants";
 
 
@@ -44,3 +45,5 @@ export interface WebWorkerClientConfig  extends SPAConfig {
 }
 
 export type Config = MainThreadClientConfig | WebWorkerClientConfig;
+
+export type AuthSPAClientConfig = AuthClientConfig<Config>;

@@ -28,6 +28,7 @@ import { Hooks, Storage } from "./constants";
 import { AsgardeoSPAException } from "./exception";
 import { HttpClientInstance } from "./http-client";
 import {
+    AuthSPAClientConfig,
     Config,
     HttpRequestConfig,
     HttpResponse,
@@ -184,7 +185,7 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async initialize(config: AuthClientConfig<Config>): Promise<boolean> {
+    public async initialize(config: AuthSPAClientConfig): Promise<boolean> {
         this._storage = config.storage ?? Storage.SessionStorage;
         this._initialized = false;
         this._startedInitialize = true;
@@ -325,7 +326,7 @@ export class AsgardeoSPAClient {
      * auth.trySignInSilently()
      *```
      */
-    public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined>{
+    public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
         if (SPAUtils.wasSignInCalled()) {
             return;
@@ -373,7 +374,7 @@ export class AsgardeoSPAClient {
     public async signOut(): Promise<boolean> {
         await this._validateMethod();
 
-        const signOutResponse = await this._client?.signOut() ?? false;
+        const signOutResponse = (await this._client?.signOut()) ?? false;
 
         return signOutResponse;
     }

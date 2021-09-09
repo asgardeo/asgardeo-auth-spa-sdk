@@ -1010,7 +1010,7 @@ Session information can be attached to the body of a custom-grant request using 
 This extends the `AxiosRequestConfig` by providing an additional attribute that is used to specify if the access token should be attached to the request or not.
 |Attribute | Type | Description|
 |--|--|--|
-|attachToken| `boolean`| Specifies if teh access token should be attached to the header of the request.|
+|attachToken| `boolean`| Specifies if the access token should be attached to the header of the request.|
 
 ## Develop
 
