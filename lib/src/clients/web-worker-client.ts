@@ -389,18 +389,24 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         return new Promise((resolve, reject) => {
             const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
+                const timer = setTimeout(() => {
+                    resolve(false);
+                }, 10000);
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
                     window.removeEventListener("message", listenToPromptNoneIFrame);
+                    clearTimeout(timer);
                     resolve(false);
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
                     requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
+                        clearTimeout(timer);
                         resolve(response);
                     }).catch((error) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
+                        clearTimeout(timer);
                         reject(error);
                     })
 
