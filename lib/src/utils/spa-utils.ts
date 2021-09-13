@@ -122,6 +122,11 @@ export class SPAUtils {
         return false;
     }
 
+    /**
+     * Checks if the URL the user agent is redirected to after an authorization request has the state parameter.
+     *
+     * @returns {boolean} True if there is a session-check state or a silent sign-in state.
+     */
     public static isStatePresentInURL(): boolean {
         const state = new URL(window.location.href).searchParams.get("state");
 
