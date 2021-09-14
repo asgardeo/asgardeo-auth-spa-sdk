@@ -413,7 +413,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 }
             };
 
-            window.addEventListener("message", listenToPromptNoneIFrame)
+            window.addEventListener("message", listenToPromptNoneIFrame);
         });
     };
 
@@ -474,13 +474,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+        const shouldStopContinue = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 return setSessionState(sessionState);
             }
         );
 
-        if (isLoggingOut) {
+        if (shouldStopContinue) {
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -641,14 +641,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             type: GET_CONFIG_DATA
         };
 
-        return communicate< null, AuthClientConfig<WebWorkerClientConfig>>(message)
+        return communicate<null, AuthClientConfig<WebWorkerClientConfig>>(message)
             .then((response) => {
                 return Promise.resolve(response);
             })
             .catch((error) => {
                 return Promise.reject(error);
-        })
-    }
+            });
+    };
 
     const getBasicUserInfo = (): Promise<BasicUserInfo> => {
         const message: Message<null> = {
@@ -738,9 +738,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
     };
 
-    const updateConfig = async(newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
-
-        const config = { ...await getConfigData(), ...newConfig };
+    const updateConfig = async (newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
+        const config = { ...(await getConfigData()), ...newConfig };
 
         const message: Message<Partial<AuthClientConfig<WebWorkerClientConfig>>> = {
             data: config,
