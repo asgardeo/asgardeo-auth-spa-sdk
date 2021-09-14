@@ -202,7 +202,9 @@ export const SessionManagementHelper = (() => {
 
                 setSessionState && await setSessionState(newSessionState);
 
-                window.stop();
+                window.location.href = "about:blank";
+
+                return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
                     const message: Message<null> = {
