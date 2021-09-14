@@ -23,3 +23,4 @@ export const STATE = "Y2hlY2tTZXNzaW9u";
 export const SILENT_SIGN_IN_STATE = "sign-in-silently";
 export const INITIALIZED_SIGN_IN = "initialized-sign-in";
 export const INITIALIZED_SILENT_SIGN_IN = "initialized-silent-sign-in";
+export const PROMPT_NONE_REQUEST_SENT = "promptNoneRequestSent";
