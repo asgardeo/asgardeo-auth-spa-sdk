@@ -17,7 +17,7 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
-import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, SILENT_SIGN_IN_STATE, STATE } from "../constants";
+import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, PROMPT_NONE_REQUEST_SENT, SILENT_SIGN_IN_STATE, STATE } from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -146,5 +146,26 @@ export class SPAUtils {
         const SESSION_STATE_REGEXP: RegExp = /[?&]session_state=[^&]+/;
 
         return AUTH_CODE_REGEXP.test(params) && SESSION_STATE_REGEXP.test(params);
-   }
+    }
+
+    /**
+     * Checks if a prompt none can be sent by checking if a request has already been sent.
+     *
+     * @returns {boolean} - True if a prompt none request has not been sent.
+     */
+    public static canSendPromptNoneRequest(): boolean {
+        const promptNoneRequestSentRaw = sessionStorage.getItem(PROMPT_NONE_REQUEST_SENT);
+        const promptNoneRequestSent = promptNoneRequestSentRaw ? JSON.parse(promptNoneRequestSentRaw) : null;
+
+        return !promptNoneRequestSent;
+    }
+
+    /**
+     * Sets the status of prompt none request.
+     *
+     * @param canSend {boolean} - True if a prompt none request can be sent.
+     */
+    public static setPromptNoneRequestSent(canSend: boolean): void {
+        sessionStorage.setItem(PROMPT_NONE_REQUEST_SENT, JSON.stringify(canSend));
+    }
 }
