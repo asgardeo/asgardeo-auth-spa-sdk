@@ -17,7 +17,13 @@
  */
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
-import { INITIALIZED_SIGN_IN, INITIALIZED_SILENT_SIGN_IN, PROMPT_NONE_REQUEST_SENT, SILENT_SIGN_IN_STATE, STATE } from "../constants";
+import {
+    INITIALIZED_SIGN_IN,
+    INITIALIZED_SILENT_SIGN_IN,
+    PROMPT_NONE_REQUEST_SENT,
+    SILENT_SIGN_IN_STATE,
+    STATE
+} from "../constants";
 
 export class SPAUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -141,7 +147,6 @@ export class SPAUtils {
      * @return {boolean}
      */
     public static hasAuthSearchParamsInURL(params: string = window.location.search): boolean {
-
         const AUTH_CODE_REGEXP: RegExp = /[?&]code=[^&]+/;
         const SESSION_STATE_REGEXP: RegExp = /[?&]session_state=[^&]+/;
 
@@ -150,6 +155,8 @@ export class SPAUtils {
 
     /**
      * Checks if a prompt none can be sent by checking if a request has already been sent.
+     *
+     * @since 0.2.3
      *
      * @returns {boolean} - True if a prompt none request has not been sent.
      */
@@ -163,9 +170,22 @@ export class SPAUtils {
     /**
      * Sets the status of prompt none request.
      *
+     * @since 0.2.3
+     *
      * @param canSend {boolean} - True if a prompt none request can be sent.
      */
     public static setPromptNoneRequestSent(canSend: boolean): void {
         sessionStorage.setItem(PROMPT_NONE_REQUEST_SENT, JSON.stringify(canSend));
+    }
+
+    /**
+     * Waits for a specified amount of time to give the user agent enough time to redirect.
+     *
+     * @param time {number} - Time in seconds.
+     */
+    public static async waitTillPageRedirect(time?: number): Promise<void> {
+        const timeToWait = time ?? 3000;
+
+        await new Promise((resolve) => setTimeout(resolve, timeToWait*1000));
     }
 }
