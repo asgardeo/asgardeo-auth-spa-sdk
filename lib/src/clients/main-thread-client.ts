@@ -375,6 +375,8 @@ export const MainThreadClient = async (
 
             location.href = url;
 
+            await SPAUtils.waitTillPageRedirect();
+
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -394,6 +396,8 @@ export const MainThreadClient = async (
         }
 
         _spaHelper.clearRefreshTokenTimeout();
+
+        await SPAUtils.waitTillPageRedirect();
 
         return true;
     };

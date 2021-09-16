@@ -549,12 +549,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         };
 
         return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
-            .then((response) => {
+            .then(async (response) => {
                 if (response.pkce && config.enablePKCE) {
                     SPAUtils.setPKCE(response.pkce);
                 }
 
                 location.href = response.authorizationURL;
+
+                await SPAUtils.waitTillPageRedirect();
 
                 return Promise.resolve({
                     allowedScopes: "",
@@ -577,15 +579,17 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      */
     const signOut = (): Promise<boolean> => {
         return isAuthenticated()
-            .then((response: boolean) => {
+            .then(async (response: boolean) => {
                 if (response) {
                     const message: Message<null> = {
                         type: SIGN_OUT
                     };
 
                     return communicate<null, string>(message)
-                        .then((response) => {
+                        .then(async (response) => {
                             window.location.href = response;
+
+                            await SPAUtils.waitTillPageRedirect();
 
                             return Promise.resolve(true);
                         })
@@ -594,6 +598,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         });
                 } else {
                     window.location.href = SPAUtils.getSignOutURL();
+
+                    await SPAUtils.waitTillPageRedirect();
 
                     return Promise.resolve(true);
                 }
