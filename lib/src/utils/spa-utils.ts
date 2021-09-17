@@ -186,6 +186,6 @@ export class SPAUtils {
     public static async waitTillPageRedirect(time?: number): Promise<void> {
         const timeToWait = time ?? 3000;
 
-        await new Promise((resolve) => setTimeout(resolve, timeToWait*1000));
+        await new Promise((resolve) => setTimeout(resolve, timeToWait * 1000));
     }
 }
