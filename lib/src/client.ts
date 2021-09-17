@@ -296,7 +296,7 @@ export class AsgardeoSPAClient {
         sessionState?: string
     ): Promise<BasicUserInfo | undefined> {
         await this._isInitialized();
-        if (!SPAUtils.setInitializedSignIn(Boolean(config?.callOnlyOnRedirect))) {
+        if (!SPAUtils.setInitializedSignIn(Boolean(config?.callOnlyOnRedirect)) && !SPAUtils.isStatePresentInURL()) {
             return;
         }
 
@@ -328,6 +328,8 @@ export class AsgardeoSPAClient {
      */
     public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
+
+        // checks if the `signIn` method was called before and this method was not called.
         if (SPAUtils.wasSignInCalled()) {
             return;
         }

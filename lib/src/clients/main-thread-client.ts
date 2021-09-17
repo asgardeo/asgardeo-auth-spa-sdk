@@ -297,14 +297,14 @@ export const MainThreadClient = async (
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+        const shouldStopContinue = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
                 return;
             }
         );
 
-        if (isLoggingOut) {
+        if (shouldStopContinue) {
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -375,6 +375,8 @@ export const MainThreadClient = async (
 
             location.href = url;
 
+            await SPAUtils.waitTillPageRedirect();
+
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -395,10 +397,12 @@ export const MainThreadClient = async (
 
         _spaHelper.clearRefreshTokenTimeout();
 
+        await SPAUtils.waitTillPageRedirect();
+
         return true;
     };
 
-    const requestCustomGrant = async(config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+    const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
         const clientConfig = await _dataLayer.getConfigData();
@@ -440,8 +444,8 @@ export const MainThreadClient = async (
                     "requestCustomGrant",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified token endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified token endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -565,9 +569,13 @@ export const MainThreadClient = async (
         return new Promise((resolve, reject) => {
             const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
+                const timer = setTimeout(() => {
+                    resolve(false);
+                }, 10000);
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
                     window.removeEventListener("message", listenToPromptNoneIFrame);
+                    clearTimeout(timer);
                     resolve(false);
                 }
 
@@ -575,10 +583,12 @@ export const MainThreadClient = async (
                     requestAccessToken(data.data.code, data?.data?.sessionState)
                         .then((response: BasicUserInfo) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
+                            clearTimeout(timer);
                             resolve(response);
                         })
                         .catch((error) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
+                            clearTimeout(timer);
                             reject(error);
                         });
                 }

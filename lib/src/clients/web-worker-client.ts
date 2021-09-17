@@ -329,6 +329,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
+        // This block is executed by the iFrame when the server redirects with the authorization code.
         if (SPAUtils.setIsInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
 
@@ -343,6 +344,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
 
         if (SPAUtils.isStatePresentInURL()) {
+            // The state that is used to detect the auth request sent by this method is not there in the URL.
+            // Happens if it is the first time this method is being called.
+            // Or when this method is called inside the iFrame during the check session execution.
+
+            // This reverses the silent sign in flag being set to true by the previous code block.
             SPAUtils.setIsInitializedSilentSignIn();
 
             return Promise.resolve({
@@ -355,6 +361,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             });
         }
 
+        // This gets executed in the main thread and sends the prompt none request.
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
@@ -382,25 +389,31 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         return new Promise((resolve, reject) => {
             const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
+                const timer = setTimeout(() => {
+                    resolve(false);
+                }, 10000);
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
                     window.removeEventListener("message", listenToPromptNoneIFrame);
+                    clearTimeout(timer);
                     resolve(false);
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
                     requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
+                        clearTimeout(timer);
                         resolve(response);
                     }).catch((error) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
+                        clearTimeout(timer);
                         reject(error);
                     })
 
                 }
             };
 
-            window.addEventListener("message", listenToPromptNoneIFrame)
+            window.addEventListener("message", listenToPromptNoneIFrame);
         });
     };
 
@@ -436,6 +449,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                             checkSession();
                         }
 
+                        startAutoRefreshToken();
+
                         return Promise.resolve(response);
                     })
                     .catch((error) => {
@@ -459,13 +474,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
-        const isLoggingOut = await _sessionManagementHelper.receivePromptNoneResponse(
+        const shouldStopContinue = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 return setSessionState(sessionState);
             }
         );
 
-        if (isLoggingOut) {
+        if (shouldStopContinue) {
             return Promise.resolve({
                 allowedScopes: "",
                 displayName: "",
@@ -534,12 +549,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         };
 
         return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
-            .then((response) => {
+            .then(async (response) => {
                 if (response.pkce && config.enablePKCE) {
                     SPAUtils.setPKCE(response.pkce);
                 }
 
                 location.href = response.authorizationURL;
+
+                await SPAUtils.waitTillPageRedirect();
 
                 return Promise.resolve({
                     allowedScopes: "",
@@ -562,15 +579,17 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      */
     const signOut = (): Promise<boolean> => {
         return isAuthenticated()
-            .then((response: boolean) => {
+            .then(async (response: boolean) => {
                 if (response) {
                     const message: Message<null> = {
                         type: SIGN_OUT
                     };
 
                     return communicate<null, string>(message)
-                        .then((response) => {
+                        .then(async (response) => {
                             window.location.href = response;
+
+                            await SPAUtils.waitTillPageRedirect();
 
                             return Promise.resolve(true);
                         })
@@ -579,6 +598,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         });
                 } else {
                     window.location.href = SPAUtils.getSignOutURL();
+
+                    await SPAUtils.waitTillPageRedirect();
 
                     return Promise.resolve(true);
                 }
@@ -626,14 +647,14 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             type: GET_CONFIG_DATA
         };
 
-        return communicate< null, AuthClientConfig<WebWorkerClientConfig>>(message)
+        return communicate<null, AuthClientConfig<WebWorkerClientConfig>>(message)
             .then((response) => {
                 return Promise.resolve(response);
             })
             .catch((error) => {
                 return Promise.reject(error);
-        })
-    }
+            });
+    };
 
     const getBasicUserInfo = (): Promise<BasicUserInfo> => {
         const message: Message<null> = {
@@ -723,9 +744,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
     };
 
-    const updateConfig = async(newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
-
-        const config = { ...await getConfigData(), ...newConfig };
+    const updateConfig = async (newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
+        const config = { ...(await getConfigData()), ...newConfig };
 
         const message: Message<Partial<AuthClientConfig<WebWorkerClientConfig>>> = {
             data: config,

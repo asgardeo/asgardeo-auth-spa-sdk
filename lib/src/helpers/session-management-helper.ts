@@ -17,6 +17,7 @@
  */
 
 import { SESSION_STATE } from "@asgardeo/auth-js";
+import { SPAUtils } from "..";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
@@ -134,7 +135,7 @@ export const SessionManagementHelper = (() => {
             if (e.data === "unchanged") {
                 // [RP] session state has not changed
             } else if (e.data === "error") {
-                window.top.location.href = await _signOut();
+                window.parent.location.href = await _signOut();
             } else {
                 // [RP] session state has changed. Sending prompt=none request...
                 sendPromptNoneRequest();
@@ -150,19 +151,24 @@ export const SessionManagementHelper = (() => {
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
             PROMPT_NONE_IFRAME
         ) as HTMLIFrameElement;
-        promptNoneIFrame.src =
-            _authorizationEndpoint +
-            "?response_type=code" +
-            "&client_id=" +
-            _clientID +
-            "&scope=openid" +
-            "&redirect_uri=" +
-            _redirectURL +
-            "&state=" +
-            STATE +
-            "&prompt=none" +
-            "&code_challenge_method=S256&code_challenge=" +
-            getRandomPKCEChallenge();
+
+        if (SPAUtils.canSendPromptNoneRequest()) {
+            SPAUtils.setPromptNoneRequestSent(true);
+
+            promptNoneIFrame.src =
+                _authorizationEndpoint +
+                "?response_type=code" +
+                "&client_id=" +
+                _clientID +
+                "&scope=openid" +
+                "&redirect_uri=" +
+                _redirectURL +
+                "&state=" +
+                STATE +
+                "&prompt=none" +
+                "&code_challenge_method=S256&code_challenge=" +
+                getRandomPKCEChallenge();
+        }
     };
 
     /**
@@ -176,6 +182,7 @@ export const SessionManagementHelper = (() => {
     ): Promise<boolean> => {
         const state = new URL(window.location.href).searchParams.get("state");
         const sessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
+        const parent = window.parent.parent;
 
         if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
             // Prompt none response.
@@ -192,8 +199,12 @@ export const SessionManagementHelper = (() => {
                     };
 
                     sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
-                    window.top.postMessage(message, window.top.origin);
+                    parent.postMessage(message, parent.origin);
+                    SPAUtils.setPromptNoneRequestSent(false);
+
                     window.location.href = "about:blank";
+
+                    await SPAUtils.waitTillPageRedirect();
 
                     return true;
                 }
@@ -201,8 +212,13 @@ export const SessionManagementHelper = (() => {
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
                 setSessionState && await setSessionState(newSessionState);
+                SPAUtils.setPromptNoneRequestSent(false);
 
-                window.stop();
+                window.location.href = "about:blank";
+
+                await SPAUtils.waitTillPageRedirect();
+
+                return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
                     const message: Message<null> = {
@@ -210,14 +226,22 @@ export const SessionManagementHelper = (() => {
                     };
 
                     sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
-                    window.top.postMessage(message, window.top.origin);
+                    window.parent.parent.postMessage(message, parent.origin);
+                    SPAUtils.setPromptNoneRequestSent(false);
+
                     window.location.href = "about:blank";
+
+                    await SPAUtils.waitTillPageRedirect();
 
                     return true;
                 }
 
-                window.top.location.href = await _signOut();
+                SPAUtils.setPromptNoneRequestSent(false);
+
+                parent.location.href = await _signOut();
                 window.location.href = "about:blank";
+
+                await SPAUtils.waitTillPageRedirect();
 
                 return true;
             }
