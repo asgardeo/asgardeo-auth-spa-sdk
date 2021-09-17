@@ -402,13 +402,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
                     requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
-                        clearTimeout(timer);
                         resolve(response);
                     }).catch((error) => {
                         window.removeEventListener("message", listenToPromptNoneIFrame);
-                        clearTimeout(timer);
                         reject(error);
-                    })
+                    }).finally((() => {
+                        clearTimeout(timer);
+                    }));
 
                 }
             };
@@ -474,7 +474,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
-        const shouldStopContinue = await _sessionManagementHelper.receivePromptNoneResponse(
+        const shouldStopContinue: boolean = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 return setSessionState(sessionState);
             }
