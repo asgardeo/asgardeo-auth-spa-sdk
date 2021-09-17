@@ -88,7 +88,7 @@ export const MainThreadClient = async (
         if (requestConfig.attachToken) {
             request.headers = {
                 ...request.headers,
-                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
             };
         }
     };
@@ -115,7 +115,7 @@ export const MainThreadClient = async (
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [...((await config?.resourceServerURLs) ?? []), config?.serverOrigin]) {
+        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
@@ -167,8 +167,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -181,7 +181,7 @@ export const MainThreadClient = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [...((await config)?.resourceServerURLs ?? []), config?.serverOrigin]) {
+            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
@@ -252,8 +252,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -444,8 +444,8 @@ export const MainThreadClient = async (
                     "requestCustomGrant",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified token endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified token endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
