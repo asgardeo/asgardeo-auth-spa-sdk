@@ -297,7 +297,7 @@ export const MainThreadClient = async (
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
-        const shouldStopContinue = await _sessionManagementHelper.receivePromptNoneResponse(
+        const shouldStopContinue: boolean = await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
                 await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
                 return;
@@ -552,10 +552,15 @@ export const MainThreadClient = async (
         ) as HTMLIFrameElement;
 
         try {
-            const url: string = await _authenticationClient.getAuthorizationURL({
+            const urlString: string = await _authenticationClient.getAuthorizationURL({
                 prompt: "none",
                 state: SILENT_SIGN_IN_STATE
             });
+
+            // Replace form_post with query
+            const urlObject = new URL(urlString);
+            urlObject.searchParams.set("response_mode", "query");
+            const url: string = urlObject.toString();
 
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
                 SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
@@ -583,13 +588,14 @@ export const MainThreadClient = async (
                     requestAccessToken(data.data.code, data?.data?.sessionState)
                         .then((response: BasicUserInfo) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
-                            clearTimeout(timer);
                             resolve(response);
                         })
                         .catch((error) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
-                            clearTimeout(timer);
                             reject(error);
+                        })
+                        .finally(() => {
+                            clearTimeout(timer);
                         });
                 }
             };
