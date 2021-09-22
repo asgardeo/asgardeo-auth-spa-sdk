@@ -379,9 +379,16 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         try {
             const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
 
-            (response.pkce && config.enablePKCE) && SPAUtils.setPKCE(response.pkce);
+            response.pkce && config.enablePKCE && SPAUtils.setPKCE(response.pkce);
 
-            promptNoneIFrame.src = response.authorizationURL;
+            const urlString: string = response.authorizationURL;
+
+            // Replace form_post with query
+            const urlObject = new URL(urlString);
+            urlObject.searchParams.set("response_mode", "query");
+            const url: string = urlObject.toString();
+
+            promptNoneIFrame.src = url;
         } catch (error) {
             return Promise.reject(error);
         }
