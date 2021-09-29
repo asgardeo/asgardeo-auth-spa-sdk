@@ -629,8 +629,25 @@ export const MainThreadClient = async (
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
-        const config = { ...(await _dataLayer.getConfigData()), ...newConfig };
+        const existingConfig = await _dataLayer.getConfigData();
+        const isCheckSessionIframeDifferent: boolean = !(
+            existingConfig &&
+            existingConfig.endpoints &&
+            existingConfig.endpoints.checkSessionIframe &&
+            newConfig &&
+            newConfig.endpoints &&
+            newConfig.endpoints.checkSessionIframe &&
+            existingConfig.endpoints.checkSessionIframe === newConfig.endpoints.checkSessionIframe
+        );
+        const config = { ...existingConfig, ...newConfig };
         await _authenticationClient.updateConfig(config);
+
+        // Re-initiates check session if the check session endpoint is updated.
+        if (config.enableOIDCSessionManagement && isCheckSessionIframeDifferent) {
+            _sessionManagementHelper.reset();
+
+            checkSession();
+        }
     };
 
     return {
