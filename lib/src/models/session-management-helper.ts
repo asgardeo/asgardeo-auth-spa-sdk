@@ -29,4 +29,5 @@ export interface SessionManagementHelperInterface {
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean>;
+    reset();
 }
