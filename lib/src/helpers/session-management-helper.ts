@@ -17,7 +17,6 @@
  */
 
 import { SESSION_STATE } from "@asgardeo/auth-js";
-import { SPAUtils } from "..";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
@@ -29,6 +28,7 @@ import {
     STATE
 } from "../constants";
 import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
+import { SPAUtils } from "../utils";
 
 export const SessionManagementHelper = (() => {
     let _clientID: string;
@@ -39,6 +39,8 @@ export const SessionManagementHelper = (() => {
     let _authorizationEndpoint: string;
     let _sessionRefreshInterval: number;
     let _signOut: () => Promise<string>;
+    let _sessionRefreshIntervalTimeout: number;
+    let _checkSessionIntervalTimeout: number;
 
     const initialize = (
         clientID: string,
@@ -62,9 +64,9 @@ export const SessionManagementHelper = (() => {
         }
 
         if (_sessionRefreshInterval > -1) {
-            setTimeout(() => {
+            sessionRefreshInterval = setInterval(() => {
                 sendPromptNoneRequest();
-            }, _sessionRefreshInterval * 1000);
+            }, _sessionRefreshInterval * 1000) as unknown as number;
         }
     };
 
@@ -94,7 +96,7 @@ export const SessionManagementHelper = (() => {
             opIframe.src = checkSessionEndpoint + "?client_id=" + clientID + "&redirect_uri=" + redirectURL;
             checkSession();
 
-            setInterval(checkSession, interval * 1000);
+            _checkSessionIntervalTimeout =  setInterval(checkSession, interval * 1000) as unknown as number;
         }
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
@@ -110,6 +112,14 @@ export const SessionManagementHelper = (() => {
 
         listenToResponseFromOPIFrame();
     };
+
+    /**
+     * Destroys session intervals.
+     */
+    const reset = (): void => {
+        clearInterval(_checkSessionIntervalTimeout);
+        clearInterval(_sessionRefreshIntervalTimeout);
+    }
 
     const getRandomPKCEChallenge = (): string => {
         const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz-_";
@@ -272,7 +282,8 @@ export const SessionManagementHelper = (() => {
 
         return {
             initialize,
-            receivePromptNoneResponse
+            receivePromptNoneResponse,
+            reset
         };
     };
 })();
