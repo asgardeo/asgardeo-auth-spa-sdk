@@ -752,14 +752,31 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void> => {
-        const config = { ...(await getConfigData()), ...newConfig };
+        const existingConfig = await getConfigData();
+        const isCheckSessionIframeDifferent: boolean = !(
+            existingConfig &&
+            existingConfig.endpoints &&
+            existingConfig.endpoints.checkSessionIframe &&
+            newConfig &&
+            newConfig.endpoints &&
+            newConfig.endpoints.checkSessionIframe &&
+            existingConfig.endpoints.checkSessionIframe === newConfig.endpoints.checkSessionIframe
+        );
+        const config = { ...existingConfig, ...newConfig };
 
         const message: Message<Partial<AuthClientConfig<WebWorkerClientConfig>>> = {
             data: config,
             type: UPDATE_CONFIG
         };
 
-        return communicate<Partial<AuthClientConfig<WebWorkerClientConfig>>, void>(message);
+        await communicate<Partial<AuthClientConfig<WebWorkerClientConfig>>, void>(message);
+
+        // Re-initiates check session if the check session endpoint is updated.
+        if (config.enableOIDCSessionManagement && isCheckSessionIframeDifferent) {
+            _sessionManagementHelper.reset();
+
+            checkSession();
+        }
     };
 
     return {
