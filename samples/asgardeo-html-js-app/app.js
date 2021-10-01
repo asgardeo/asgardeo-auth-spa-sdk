@@ -91,16 +91,20 @@ function parseIdToken(idToken) {
     }
 
     const groups = [];
-    idTokenObject[ "decoded" ][ 1 ] && idTokenObject[ "decoded" ][ 1 ]?.groups?.forEach((group) => {
-        const groupArrays = group.split("/");
+    idTokenObject[ "decoded" ][ 1 ] && typeof idTokenObject[ "decoded" ][ 1 ]?.groups === "string" &&
+        groups.push(idTokenObject[ "decoded" ][ 1 ]?.groups);
 
-        if (groupArrays.length >= 2) {
-            groupArrays.shift();
-            groups.push(groupArrays.join("/"));
-        } else {
-            groups.push(group);
-        }
-    });
+    idTokenObject[ "decoded" ][ 1 ] && typeof idTokenObject[ "decoded" ][ 1 ]?.groups !== "string" &&
+        idTokenObject[ "decoded" ][ 1 ]?.groups?.forEach((group) => {
+            const groupArrays = group.split("/");
+
+            if (groupArrays.length >= 2) {
+                groupArrays.shift();
+                groups.push(groupArrays.join("/"));
+            } else {
+                groups.push(group);
+            }
+        });
 
     if (idTokenObject[ "decoded" ][ 1 ]?.groups) {
         idTokenObject[ "decoded" ][ 1 ].groups = groups;
