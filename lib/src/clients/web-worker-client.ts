@@ -305,17 +305,18 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await getOIDCServiceEndpoints();
-        const sessionState: string = (await getBasicUserInfo()).sessionState;
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
             oidcEndpoints.checkSessionIframe ?? "",
-            sessionState,
+            async () => (await getBasicUserInfo()).sessionState,
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.storage,
+            (sessionState: string) => setSessionState(sessionState)
         );
     };
 
