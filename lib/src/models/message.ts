@@ -43,6 +43,7 @@ import {
     REQUEST_SUCCESS,
     REVOKE_ACCESS_TOKEN,
     SET_SESSION_STATE,
+    SET_SESSION_STATE_FROM_IFRAME,
     SIGN_IN,
     SIGN_OUT,
     START_AUTO_REFRESH_TOKEN,
@@ -97,7 +98,8 @@ export type MessageType =
     | typeof GET_ID_TOKEN
     | typeof CHECK_SESSION_SIGNED_IN
     | typeof CHECK_SESSION_SIGNED_OUT
-    | typeof GET_CONFIG_DATA;
+    | typeof GET_CONFIG_DATA
+    | typeof SET_SESSION_STATE_FROM_IFRAME;
 
 export interface CommunicationHelperInterface {
     communicate: <T, R>(message: Message<T>) => Promise<R>;
