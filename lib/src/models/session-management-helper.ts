@@ -16,15 +16,19 @@
  * under the License.
  */
 
+import { Storage } from "../constants";
+
 export interface SessionManagementHelperInterface {
     initialize(
         clientID: string,
         checkSessionEndpoint: string,
-        sessionState: string,
+        getSessionState: () => Promise<string>,
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
         authorizationEndpoint: string,
+        storage?: Storage,
+        setSessionState?: (sessionState: string) => void
     ): void;
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>
