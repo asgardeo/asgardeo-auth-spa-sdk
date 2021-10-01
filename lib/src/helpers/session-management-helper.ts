@@ -24,8 +24,10 @@ import {
     OP_IFRAME,
     PROMPT_NONE_IFRAME,
     RP_IFRAME,
+    SET_SESSION_STATE_FROM_IFRAME,
     SILENT_SIGN_IN_STATE,
-    STATE
+    STATE,
+    Storage
 } from "../constants";
 import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
 import { SPAUtils } from "../utils";
@@ -33,7 +35,7 @@ import { SPAUtils } from "../utils";
 export const SessionManagementHelper = (() => {
     let _clientID: string;
     let _checkSessionEndpoint: string;
-    let _sessionState: string;
+    let _sessionState: () => Promise<string>;
     let _interval: number;
     let _redirectURL: string;
     let _authorizationEndpoint: string;
@@ -41,23 +43,29 @@ export const SessionManagementHelper = (() => {
     let _signOut: () => Promise<string>;
     let _sessionRefreshIntervalTimeout: number;
     let _checkSessionIntervalTimeout: number;
+    let _storage: Storage;
+    let _setSessionState: (sessionState: string) => void;
 
     const initialize = (
         clientID: string,
         checkSessionEndpoint: string,
-        sessionState: string,
+        getSessionState: () => Promise<string>,
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        storage: Storage,
+        setSessionState: (sessionState: string) => void
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
-        _sessionState = sessionState;
+        _sessionState = getSessionState;
         _interval = interval;
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
+        _storage = storage;
+        _setSessionState = setSessionState;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -70,19 +78,20 @@ export const SessionManagementHelper = (() => {
         }
     };
 
-    const initiateCheckSession = (): void => {
+    const initiateCheckSession = async (): Promise<void> => {
         if (!_checkSessionEndpoint || !_clientID || !_redirectURL) {
             return;
         }
 
         const OP_IFRAME = "opIFrame";
 
-        function checkSession(): void {
-            if (Boolean(_clientID) && Boolean(_sessionState)) {
-                const message = `${ _clientID } ${ _sessionState }`;
+        async function checkSession(): Promise<void> {
+            const sessionState = await _sessionState();
+            if (Boolean(_clientID) && Boolean(sessionState)) {
+                const message = `${ _clientID } ${ sessionState }`;
                 const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
                 const opIframe: HTMLIFrameElement
-                    = rpIFrame?.contentWindow?.document.getElementById(OP_IFRAME) as HTMLIFrameElement;
+                    = rpIFrame?.contentDocument?.getElementById(OP_IFRAME) as HTMLIFrameElement;
                 const win: Window | null = opIframe.contentWindow;
                 win?.postMessage(message, _checkSessionEndpoint);
             }
@@ -90,9 +99,9 @@ export const SessionManagementHelper = (() => {
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
         const opIframe: HTMLIFrameElement
-            = rpIFrame?.contentWindow?.document.getElementById(OP_IFRAME) as HTMLIFrameElement;
+            = rpIFrame?.contentDocument?.getElementById(OP_IFRAME) as HTMLIFrameElement;
         opIframe.src = _checkSessionEndpoint + "?client_id=" + _clientID + "&redirect_uri=" + _redirectURL;
-        checkSession();
+        await checkSession();
 
         _checkSessionIntervalTimeout =  setInterval(checkSession, _interval * 1000) as unknown as number;
 
@@ -119,7 +128,7 @@ export const SessionManagementHelper = (() => {
     };
 
     const listenToResponseFromOPIFrame = (): void => {
-        async function receiveMessage(e) {
+        async function receiveMessage(e: MessageEvent) {
             const targetOrigin = _checkSessionEndpoint;
 
             if (!targetOrigin || targetOrigin?.indexOf(e.origin) < 0) {
@@ -148,6 +157,17 @@ export const SessionManagementHelper = (() => {
 
         if (SPAUtils.canSendPromptNoneRequest()) {
             SPAUtils.setPromptNoneRequestSent(true);
+
+            const receiveMessageListener = (e: MessageEvent<Message<string>>) => {
+                if (e?.data?.type === SET_SESSION_STATE_FROM_IFRAME) {
+                    _setSessionState(e?.data?.data ?? "");
+                    window?.removeEventListener("message", receiveMessageListener);
+                }
+            };
+
+            if (_storage === Storage.BrowserMemory || _storage === Storage.WebWorker) {
+                window?.addEventListener("message", receiveMessageListener);
+            }
 
             promptNoneIFrame.src =
                 _authorizationEndpoint +
@@ -205,13 +225,22 @@ export const SessionManagementHelper = (() => {
 
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
-                setSessionState && await setSessionState(newSessionState);
+                if (_storage === Storage.LocalStorage || _storage === Storage.SessionStorage) {
+                    setSessionState && await setSessionState(newSessionState);
+                } else {
+                    const message: Message<string> = {
+                        data: newSessionState ?? "",
+                        type: SET_SESSION_STATE_FROM_IFRAME
+                    };
+
+                    window?.parent?.parent?.postMessage(message);
+                }
+
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 window.location.href = "about:blank";
 
                 await SPAUtils.waitTillPageRedirect();
-
                 return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
@@ -229,7 +258,6 @@ export const SessionManagementHelper = (() => {
 
                     return true;
                 }
-
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 parent.location.href = await _signOut();
