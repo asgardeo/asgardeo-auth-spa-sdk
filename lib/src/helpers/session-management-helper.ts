@@ -53,9 +53,7 @@ export const SessionManagementHelper = (() => {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string,
-        storage: Storage,
-        setSessionState: (sessionState: string) => void
+        authorizationEndpoint: string
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
@@ -64,8 +62,6 @@ export const SessionManagementHelper = (() => {
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
-        _storage = storage;
-        _setSessionState = setSessionState;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -272,7 +268,11 @@ export const SessionManagementHelper = (() => {
         return false;
     };
 
-    return (signOut: () => Promise<string>): SessionManagementHelperInterface => {
+    return (
+        signOut: () => Promise<string>,
+        storage: Storage,
+        setSessionState: (sessionState: string) => void
+    ): SessionManagementHelperInterface => {
         const opIFrame = document.createElement("iframe");
         opIFrame.setAttribute("id", OP_IFRAME);
         opIFrame.style.display = "none";
@@ -291,6 +291,9 @@ export const SessionManagementHelper = (() => {
         rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
 
         _signOut = signOut;
+
+        _storage = storage;
+        _setSessionState = setSessionState;
 
         return {
             initialize,

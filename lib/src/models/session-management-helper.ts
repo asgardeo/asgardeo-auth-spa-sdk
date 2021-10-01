@@ -16,8 +16,6 @@
  * under the License.
  */
 
-import { Storage } from "../constants";
-
 export interface SessionManagementHelperInterface {
     initialize(
         clientID: string,
@@ -26,9 +24,7 @@ export interface SessionManagementHelperInterface {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string,
-        storage?: Storage,
-        setSessionState?: (sessionState: string) => void
+        authorizationEndpoint: string
     ): void;
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>
