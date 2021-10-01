@@ -74,41 +74,27 @@ export const SessionManagementHelper = (() => {
         if (!_checkSessionEndpoint || !_clientID || !_redirectURL) {
             return;
         }
-        function startCheckSession(
-            checkSessionEndpoint: string,
-            clientID: string,
-            redirectURL: string,
-            sessionState: string,
-            interval: number
-        ): void {
-            const OP_IFRAME = "opIFrame";
 
-            function checkSession(): void {
-                if (Boolean(clientID) && Boolean(sessionState)) {
-                    const message = `${clientID} ${sessionState}`;
-                    const opIframe: HTMLIFrameElement = document.getElementById(OP_IFRAME) as HTMLIFrameElement;
-                    const win: Window | null = opIframe.contentWindow;
-                    win?.postMessage(message, checkSessionEndpoint);
-                }
+        const OP_IFRAME = "opIFrame";
+
+        function checkSession(): void {
+            if (Boolean(_clientID) && Boolean(_sessionState)) {
+                const message = `${ _clientID } ${ _sessionState }`;
+                const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+                const opIframe: HTMLIFrameElement
+                    = rpIFrame?.contentWindow?.document.getElementById(OP_IFRAME) as HTMLIFrameElement;
+                const win: Window | null = opIframe.contentWindow;
+                win?.postMessage(message, _checkSessionEndpoint);
             }
-
-            const opIframe: HTMLIFrameElement = document.getElementById(OP_IFRAME) as HTMLIFrameElement;
-            opIframe.src = checkSessionEndpoint + "?client_id=" + clientID + "&redirect_uri=" + redirectURL;
-            checkSession();
-
-            _checkSessionIntervalTimeout =  setInterval(checkSession, interval * 1000) as unknown as number;
         }
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-        (rpIFrame.contentWindow as any).eval(startCheckSession.toString());
-        rpIFrame?.contentWindow &&
-            rpIFrame?.contentWindow[startCheckSession.name](
-                _checkSessionEndpoint,
-                _clientID,
-                _redirectURL,
-                _sessionState,
-                _interval
-            );
+        const opIframe: HTMLIFrameElement
+            = rpIFrame?.contentWindow?.document.getElementById(OP_IFRAME) as HTMLIFrameElement;
+        opIframe.src = _checkSessionEndpoint + "?client_id=" + _clientID + "&redirect_uri=" + _redirectURL;
+        checkSession();
+
+        _checkSessionIntervalTimeout =  setInterval(checkSession, _interval * 1000) as unknown as number;
 
         listenToResponseFromOPIFrame();
     };
@@ -133,8 +119,6 @@ export const SessionManagementHelper = (() => {
     };
 
     const listenToResponseFromOPIFrame = (): void => {
-        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-
         async function receiveMessage(e) {
             const targetOrigin = _checkSessionEndpoint;
 
@@ -152,7 +136,7 @@ export const SessionManagementHelper = (() => {
             }
         }
 
-        rpIFrame?.contentWindow?.addEventListener("message", receiveMessage, false);
+        window?.addEventListener("message", receiveMessage, false);
     };
 
     const sendPromptNoneRequest = () => {
