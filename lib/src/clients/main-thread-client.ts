@@ -282,11 +282,13 @@ export const MainThreadClient = async (
         _sessionManagementHelper.initialize(
             config.clientID,
             oidcEndpoints.checkSessionIframe ?? "",
-            (await _authenticationClient.getBasicUserInfo()).sessionState,
+            async () => (await _authenticationClient.getBasicUserInfo()).sessionState,
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.storage,
+            (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
         );
     };
 
