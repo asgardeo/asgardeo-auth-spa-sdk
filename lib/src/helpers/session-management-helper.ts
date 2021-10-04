@@ -24,8 +24,10 @@ import {
     OP_IFRAME,
     PROMPT_NONE_IFRAME,
     RP_IFRAME,
+    SET_SESSION_STATE_FROM_IFRAME,
     SILENT_SIGN_IN_STATE,
-    STATE
+    STATE,
+    Storage
 } from "../constants";
 import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
 import { SPAUtils } from "../utils";
@@ -33,7 +35,7 @@ import { SPAUtils } from "../utils";
 export const SessionManagementHelper = (() => {
     let _clientID: string;
     let _checkSessionEndpoint: string;
-    let _sessionState: string;
+    let _sessionState: () => Promise<string>;
     let _interval: number;
     let _redirectURL: string;
     let _authorizationEndpoint: string;
@@ -41,23 +43,28 @@ export const SessionManagementHelper = (() => {
     let _signOut: () => Promise<string>;
     let _sessionRefreshIntervalTimeout: number;
     let _checkSessionIntervalTimeout: number;
+    let _storage: Storage;
+    let _setSessionState: (sessionState: string) => void;
+    let _isPKCEEnabled: boolean;
 
     const initialize = (
         clientID: string,
         checkSessionEndpoint: string,
-        sessionState: string,
+        getSessionState: () => Promise<string>,
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        isPKCEEnabled: boolean
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
-        _sessionState = sessionState;
+        _sessionState = getSessionState;
         _interval = interval;
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
+        _isPKCEEnabled = isPKCEEnabled;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -70,45 +77,32 @@ export const SessionManagementHelper = (() => {
         }
     };
 
-    const initiateCheckSession = (): void => {
+    const initiateCheckSession = async (): Promise<void> => {
         if (!_checkSessionEndpoint || !_clientID || !_redirectURL) {
             return;
         }
-        function startCheckSession(
-            checkSessionEndpoint: string,
-            clientID: string,
-            redirectURL: string,
-            sessionState: string,
-            interval: number
-        ): void {
-            const OP_IFRAME = "opIFrame";
 
-            function checkSession(): void {
-                if (Boolean(clientID) && Boolean(sessionState)) {
-                    const message = `${clientID} ${sessionState}`;
-                    const opIframe: HTMLIFrameElement = document.getElementById(OP_IFRAME) as HTMLIFrameElement;
-                    const win: Window | null = opIframe.contentWindow;
-                    win?.postMessage(message, checkSessionEndpoint);
-                }
+        const OP_IFRAME = "opIFrame";
+
+        async function checkSession(): Promise<void> {
+            const sessionState = await _sessionState();
+            if (Boolean(_clientID) && Boolean(sessionState)) {
+                const message = `${ _clientID } ${ sessionState }`;
+                const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+                const opIframe: HTMLIFrameElement
+                    = rpIFrame?.contentDocument?.getElementById(OP_IFRAME) as HTMLIFrameElement;
+                const win: Window | null = opIframe.contentWindow;
+                win?.postMessage(message, _checkSessionEndpoint);
             }
-
-            const opIframe: HTMLIFrameElement = document.getElementById(OP_IFRAME) as HTMLIFrameElement;
-            opIframe.src = checkSessionEndpoint + "?client_id=" + clientID + "&redirect_uri=" + redirectURL;
-            checkSession();
-
-            _checkSessionIntervalTimeout =  setInterval(checkSession, interval * 1000) as unknown as number;
         }
 
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-        (rpIFrame.contentWindow as any).eval(startCheckSession.toString());
-        rpIFrame?.contentWindow &&
-            rpIFrame?.contentWindow[startCheckSession.name](
-                _checkSessionEndpoint,
-                _clientID,
-                _redirectURL,
-                _sessionState,
-                _interval
-            );
+        const opIframe: HTMLIFrameElement
+            = rpIFrame?.contentDocument?.getElementById(OP_IFRAME) as HTMLIFrameElement;
+        opIframe.src = _checkSessionEndpoint + "?client_id=" + _clientID + "&redirect_uri=" + _redirectURL;
+        await checkSession();
+
+        _checkSessionIntervalTimeout =  setInterval(checkSession, _interval * 1000) as unknown as number;
 
         listenToResponseFromOPIFrame();
     };
@@ -133,9 +127,7 @@ export const SessionManagementHelper = (() => {
     };
 
     const listenToResponseFromOPIFrame = (): void => {
-        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-
-        async function receiveMessage(e) {
+        async function receiveMessage(e: MessageEvent) {
             const targetOrigin = _checkSessionEndpoint;
 
             if (!targetOrigin || targetOrigin?.indexOf(e.origin) < 0) {
@@ -152,7 +144,7 @@ export const SessionManagementHelper = (() => {
             }
         }
 
-        rpIFrame?.contentWindow?.addEventListener("message", receiveMessage, false);
+        window?.addEventListener("message", receiveMessage, false);
     };
 
     const sendPromptNoneRequest = () => {
@@ -165,19 +157,31 @@ export const SessionManagementHelper = (() => {
         if (SPAUtils.canSendPromptNoneRequest()) {
             SPAUtils.setPromptNoneRequestSent(true);
 
-            promptNoneIFrame.src =
-                _authorizationEndpoint +
-                "?response_type=code" +
-                "&client_id=" +
-                _clientID +
-                "&scope=openid" +
-                "&redirect_uri=" +
-                _redirectURL +
-                "&state=" +
-                STATE +
-                "&prompt=none" +
-                "&code_challenge_method=S256&code_challenge=" +
-                getRandomPKCEChallenge();
+            const receiveMessageListener = (e: MessageEvent<Message<string>>) => {
+                if (e?.data?.type === SET_SESSION_STATE_FROM_IFRAME) {
+                    _setSessionState(e?.data?.data ?? "");
+                    window?.removeEventListener("message", receiveMessageListener);
+                }
+            };
+
+            if (_storage === Storage.BrowserMemory || _storage === Storage.WebWorker) {
+                window?.addEventListener("message", receiveMessageListener);
+            }
+
+            const promptNoneURL = new URL(_authorizationEndpoint);
+            promptNoneURL.searchParams.set("response_type", "code");
+            promptNoneURL.searchParams.set("client_id", _clientID);
+            promptNoneURL.searchParams.set("scope", "openid");
+            promptNoneURL.searchParams.set("redirect_uri", _redirectURL);
+            promptNoneURL.searchParams.set("state", STATE);
+            promptNoneURL.searchParams.set("prompt", "none");
+
+            if(_isPKCEEnabled){
+                promptNoneURL.searchParams.set("code_challenge_method", "S256");
+                promptNoneURL.searchParams.set("code_challenge", getRandomPKCEChallenge());
+            }
+
+            promptNoneIFrame.src = promptNoneURL.toString();
         }
     };
 
@@ -221,13 +225,22 @@ export const SessionManagementHelper = (() => {
 
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
-                setSessionState && await setSessionState(newSessionState);
+                if (_storage === Storage.LocalStorage || _storage === Storage.SessionStorage) {
+                    setSessionState && await setSessionState(newSessionState);
+                } else {
+                    const message: Message<string> = {
+                        data: newSessionState ?? "",
+                        type: SET_SESSION_STATE_FROM_IFRAME
+                    };
+
+                    window?.parent?.parent?.postMessage(message);
+                }
+
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 window.location.href = "about:blank";
 
                 await SPAUtils.waitTillPageRedirect();
-
                 return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
@@ -245,7 +258,6 @@ export const SessionManagementHelper = (() => {
 
                     return true;
                 }
-
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 parent.location.href = await _signOut();
@@ -260,7 +272,11 @@ export const SessionManagementHelper = (() => {
         return false;
     };
 
-    return (signOut: () => Promise<string>): SessionManagementHelperInterface => {
+    return (
+        signOut: () => Promise<string>,
+        storage: Storage,
+        setSessionState: (sessionState: string) => void
+    ): SessionManagementHelperInterface => {
         const opIFrame = document.createElement("iframe");
         opIFrame.setAttribute("id", OP_IFRAME);
         opIFrame.style.display = "none";
@@ -279,6 +295,9 @@ export const SessionManagementHelper = (() => {
         rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
 
         _signOut = signOut;
+
+        _storage = storage;
+        _setSessionState = setSessionState;
 
         return {
             initialize,

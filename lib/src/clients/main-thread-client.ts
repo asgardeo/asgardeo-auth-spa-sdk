@@ -77,9 +77,13 @@ export const MainThreadClient = async (
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
-    const _sessionManagementHelper = SessionManagementHelper(async () => {
-        return _authenticationClient.signOut();
-    });
+    const _sessionManagementHelper = SessionManagementHelper(
+        async () => {
+            return _authenticationClient.signOut();
+        },
+        config.storage ?? Storage.SessionStorage,
+        (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
+    );
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
@@ -282,11 +286,12 @@ export const MainThreadClient = async (
         _sessionManagementHelper.initialize(
             config.clientID,
             oidcEndpoints.checkSessionIframe ?? "",
-            (await _authenticationClient.getBasicUserInfo()).sessionState,
+            async () => (await _authenticationClient.getBasicUserInfo()).sessionState,
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.enablePKCE
         );
     };
 

@@ -46,3 +46,4 @@ export const GET_ID_TOKEN = "get_id_token";
 export const CHECK_SESSION_SIGNED_IN = "check_session_signed_in";
 export const CHECK_SESSION_SIGNED_OUT = "check_session_signed_out";
 export const GET_CONFIG_DATA = "get_config_data";
+export const SET_SESSION_STATE_FROM_IFRAME = "set_session_state_from_iframe";

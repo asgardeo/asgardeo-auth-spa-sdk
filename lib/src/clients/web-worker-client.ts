@@ -88,19 +88,23 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * API request time out.
      */
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
-    const _sessionManagementHelper = SessionManagementHelper(async () => {
-        const message: Message<string> = {
-            type: SIGN_OUT
-        };
+    const _sessionManagementHelper = SessionManagementHelper(
+        async () => {
+            const message: Message<string> = {
+                type: SIGN_OUT
+            };
 
-        try {
-            const signOutURL = await communicate<string, string>(message);
+            try {
+                const signOutURL = await communicate<string, string>(message);
 
-            return signOutURL;
-        } catch {
-            return SPAUtils.getSignOutURL();
-        }
-    });
+                return signOutURL;
+            } catch {
+                return SPAUtils.getSignOutURL();
+            }
+        },
+        config.storage,
+        (sessionState: string) => setSessionState(sessionState)
+    );
 
     const worker: Worker = new WorkerFile();
 
@@ -305,17 +309,17 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
     const checkSession = async (): Promise<void> => {
         const oidcEndpoints: OIDCEndpoints = await getOIDCServiceEndpoints();
-        const sessionState: string = (await getBasicUserInfo()).sessionState;
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         _sessionManagementHelper.initialize(
             config.clientID,
             oidcEndpoints.checkSessionIframe ?? "",
-            sessionState,
+            async () => (await getBasicUserInfo()).sessionState,
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.enablePKCE
         );
     };
 

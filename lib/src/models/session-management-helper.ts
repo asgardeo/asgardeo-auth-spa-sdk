@@ -20,11 +20,12 @@ export interface SessionManagementHelperInterface {
     initialize(
         clientID: string,
         checkSessionEndpoint: string,
-        sessionState: string,
+        getSessionState: () => Promise<string>,
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
         authorizationEndpoint: string,
+        isPKCEEnabled?: boolean
     ): void;
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>
