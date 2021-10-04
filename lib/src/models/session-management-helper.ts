@@ -24,7 +24,8 @@ export interface SessionManagementHelperInterface {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        isPKCEEnabled?: boolean
     ): void;
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>

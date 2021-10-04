@@ -290,7 +290,8 @@ export const MainThreadClient = async (
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.enablePKCE
         );
     };
 

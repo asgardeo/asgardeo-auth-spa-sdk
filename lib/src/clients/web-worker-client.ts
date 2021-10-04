@@ -318,7 +318,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? ""
+            oidcEndpoints.authorizationEndpoint ?? "",
+            config.enablePKCE
         );
     };
 

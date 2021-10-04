@@ -45,6 +45,7 @@ export const SessionManagementHelper = (() => {
     let _checkSessionIntervalTimeout: number;
     let _storage: Storage;
     let _setSessionState: (sessionState: string) => void;
+    let _isPKCEEnabled: boolean;
 
     const initialize = (
         clientID: string,
@@ -53,7 +54,8 @@ export const SessionManagementHelper = (() => {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string
+        authorizationEndpoint: string,
+        isPKCEEnabled: boolean
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
@@ -62,6 +64,7 @@ export const SessionManagementHelper = (() => {
         _redirectURL = redirectURL;
         _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
+        _isPKCEEnabled = isPKCEEnabled;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -165,19 +168,20 @@ export const SessionManagementHelper = (() => {
                 window?.addEventListener("message", receiveMessageListener);
             }
 
-            promptNoneIFrame.src =
-                _authorizationEndpoint +
-                "?response_type=code" +
-                "&client_id=" +
-                _clientID +
-                "&scope=openid" +
-                "&redirect_uri=" +
-                _redirectURL +
-                "&state=" +
-                STATE +
-                "&prompt=none" +
-                "&code_challenge_method=S256&code_challenge=" +
-                getRandomPKCEChallenge();
+            const promptNoneURL = new URL(_authorizationEndpoint);
+            promptNoneURL.searchParams.set("response_type", "code");
+            promptNoneURL.searchParams.set("client_id", _clientID);
+            promptNoneURL.searchParams.set("scope", "openid");
+            promptNoneURL.searchParams.set("redirect_uri", _redirectURL);
+            promptNoneURL.searchParams.set("state", STATE);
+            promptNoneURL.searchParams.set("prompt", "none");
+
+            if(_isPKCEEnabled){
+                promptNoneURL.searchParams.set("code_challenge_method", "S256");
+                promptNoneURL.searchParams.set("code_challenge", getRandomPKCEChallenge());
+            }
+
+            promptNoneIFrame.src = promptNoneURL.toString();
         }
     };
 
