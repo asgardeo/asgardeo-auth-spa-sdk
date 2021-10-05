@@ -137,7 +137,7 @@ export const SessionManagementHelper = (() => {
             if (e.data === "unchanged") {
                 // [RP] session state has not changed
             } else if (e.data === "error") {
-                window.parent.location.href = await _signOut();
+                window.location.href = await _signOut();
             } else {
                 // [RP] session state has changed. Sending prompt=none request...
                 sendPromptNoneRequest();
