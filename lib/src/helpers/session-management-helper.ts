@@ -153,7 +153,6 @@ export const SessionManagementHelper = (() => {
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
             PROMPT_NONE_IFRAME
         ) as HTMLIFrameElement;
-
         if (SPAUtils.canSendPromptNoneRequest()) {
             SPAUtils.setPromptNoneRequestSent(true);
 
@@ -277,22 +276,32 @@ export const SessionManagementHelper = (() => {
         storage: Storage,
         setSessionState: (sessionState: string) => void
     ): SessionManagementHelperInterface => {
-        const opIFrame = document.createElement("iframe");
-        opIFrame.setAttribute("id", OP_IFRAME);
-        opIFrame.style.display = "none";
-
         let rpIFrame = document.createElement("iframe");
         rpIFrame.setAttribute("id", RP_IFRAME);
         rpIFrame.style.display = "none";
 
-        const promptNoneIFrame = document.createElement("iframe");
-        promptNoneIFrame.setAttribute("id", PROMPT_NONE_IFRAME);
-        promptNoneIFrame.style.display = "none";
+        rpIFrame.onload = () => {
+            rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+            const rpDoc = rpIFrame?.contentDocument;
+
+            const opIFrame = rpDoc?.createElement("iframe");
+            if (opIFrame) {
+                opIFrame.setAttribute("id", OP_IFRAME);
+                opIFrame.style.display = "none";
+            }
+
+            const promptNoneIFrame = rpDoc?.createElement("iframe");
+            if (promptNoneIFrame) {
+                promptNoneIFrame.setAttribute("id", PROMPT_NONE_IFRAME);
+                promptNoneIFrame.style.display = "none";
+            }
+
+            opIFrame && rpIFrame?.contentDocument?.body?.appendChild(opIFrame);
+            promptNoneIFrame && rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
+        }
 
         document?.body?.appendChild(rpIFrame);
-        rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-        rpIFrame?.contentDocument?.body?.appendChild(opIFrame);
-        rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
 
         _signOut = signOut;
 
