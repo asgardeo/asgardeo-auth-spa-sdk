@@ -153,6 +153,7 @@ export const SessionManagementHelper = (() => {
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
             PROMPT_NONE_IFRAME
         ) as HTMLIFrameElement;
+
         if (SPAUtils.canSendPromptNoneRequest()) {
             SPAUtils.setPromptNoneRequestSent(true);
 
