@@ -473,6 +473,7 @@ export const MainThreadClient = async (
         return _authenticationClient
             .revokeAccessToken()
             .then(() => {
+                _sessionManagementHelper.reset();
                 _spaHelper.clearRefreshTokenTimeout();
 
                 return Promise.resolve(true);

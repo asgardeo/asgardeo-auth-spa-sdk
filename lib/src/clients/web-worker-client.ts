@@ -632,6 +632,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         return communicate<null, boolean>(message)
             .then((response) => {
+                _sessionManagementHelper.reset();
                 return Promise.resolve(response);
             })
             .catch((error) => {
