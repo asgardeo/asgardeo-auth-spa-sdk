@@ -130,7 +130,9 @@ export const SessionManagementHelper = (() => {
         async function receiveMessage(e: MessageEvent) {
             const targetOrigin = _checkSessionEndpoint;
 
-            if (!targetOrigin || targetOrigin?.indexOf(e.origin) < 0) {
+            if (!targetOrigin
+                || targetOrigin?.indexOf(e.origin) < 0
+                || e?.data?.type === SET_SESSION_STATE_FROM_IFRAME) {
                 return;
             }
 
@@ -138,7 +140,7 @@ export const SessionManagementHelper = (() => {
                 // [RP] session state has not changed
             } else if (e.data === "error") {
                 window.location.href = await _signOut();
-            } else {
+            } else if (e.data === "changed") {
                 // [RP] session state has changed. Sending prompt=none request...
                 sendPromptNoneRequest();
             }
