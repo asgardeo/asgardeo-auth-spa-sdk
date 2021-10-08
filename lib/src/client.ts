@@ -560,7 +560,7 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         const revokeAccessToken = await this._client?.revokeAccessToken();
-        this._onEndUserSession && this._onEndUserSession(revokeAccessToken);
+        this._onEndUserSession && await this._onEndUserSession(revokeAccessToken);
 
         return revokeAccessToken;
     }
