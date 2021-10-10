@@ -18,11 +18,10 @@
 
 import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
 import {
-    INITIALIZED_SIGN_IN,
+    ERROR,
     INITIALIZED_SILENT_SIGN_IN,
     PROMPT_NONE_REQUEST_SENT,
-    SILENT_SIGN_IN_STATE,
-    STATE
+    SILENT_SIGN_IN_STATE
 } from "../constants";
 
 export class SPAUtils {
@@ -55,24 +54,29 @@ export class SPAUtils {
         sessionStorage.removeItem(PKCE_CODE_VERIFIER);
     }
 
-    public static setInitializedSignIn(callOnlyOnRedirect: boolean): boolean {
-        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SIGN_IN);
-        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
-        if (callOnlyOnRedirect && isInitialized) {
-            sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
-
-            return true;
-        } else if (callOnlyOnRedirect) {
+    /**
+     * This method is used to discontinue the execution of the `signIn` method if `callOnlyOnRedirect` is true and
+     * the method is not called on being redirected from the authorization server.
+     *
+     * This method can be used to allow the `signIn` method to be called only
+     * on being redirected from the authorization server.
+     *
+     * @param callOnlyOnRedirect {boolean} - True if the method should only be called on redirect.
+     * @param authorizationCode {string} - Authorization code.
+     *
+     * @returns {boolean} - True if the method should be called.
+     */
+    public static canContinueSignIn(callOnlyOnRedirect: boolean, authorizationCode?: string): boolean {
+        if (
+            callOnlyOnRedirect &&
+            !SPAUtils.hasErrorInURL() &&
+            !SPAUtils.hasAuthSearchParamsInURL() &&
+            !authorizationCode
+        ) {
             return false;
-        } else if (isInitialized) {
-            sessionStorage.setItem(INITIALIZED_SIGN_IN, "false");
-
-            return true;
-        } else {
-            sessionStorage.setItem(INITIALIZED_SIGN_IN, "true");
-
-            return true;
         }
+
+        return true;
     }
 
     /**
@@ -80,34 +84,23 @@ export class SPAUtils {
      *
      * @returns {boolean} True if the `trySilentSignIn` method has been called once.
      */
-    public static setIsInitializedSilentSignIn(): boolean {
-        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
-        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
-
-        if (isInitialized) {
-            sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
-
-            return true;
-        } else {
-            sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "true");
-
-            return false;
-        }
+    public static isInitializedSilentSignIn(): boolean {
+        return SPAUtils.isSilentStatePresentInURL();
     }
 
     /**
      * Specifies if the `signIn` method has been called.
      *
-     * @returns {boolean} True if the `signIn` has been called once and `trySilentSignIn` has not been called.
+     * @returns {boolean} True if the `signIn` has been called.
      */
     public static wasSignInCalled(): boolean {
-        const sessionIsInitialized = sessionStorage.getItem(INITIALIZED_SIGN_IN);
-        const isInitialized = sessionIsInitialized ? JSON.parse(sessionIsInitialized) : null;
+        if (SPAUtils.hasErrorInURL() || SPAUtils.hasAuthSearchParamsInURL()) {
+            if (!this.isSilentStatePresentInURL()) {
+                return true;
+            }
+        }
 
-        const silentSignIsInitialized = sessionStorage.getItem(INITIALIZED_SILENT_SIGN_IN);
-        const isSilentSignInInitialized = silentSignIsInitialized ? JSON.parse(silentSignIsInitialized) : null;
-
-        return isInitialized && !isSilentSignInInitialized;
+        return false;
     }
 
     public static wasSilentSignInCalled(): boolean {
@@ -133,10 +126,10 @@ export class SPAUtils {
      *
      * @returns {boolean} True if there is a session-check state or a silent sign-in state.
      */
-    public static isStatePresentInURL(): boolean {
+    public static isSilentStatePresentInURL(): boolean {
         const state = new URL(window.location.href).searchParams.get("state");
 
-        return state === SILENT_SIGN_IN_STATE || state === STATE;
+        return state === SILENT_SIGN_IN_STATE;
     }
 
     /**
@@ -148,9 +141,19 @@ export class SPAUtils {
      */
     public static hasAuthSearchParamsInURL(params: string = window.location.search): boolean {
         const AUTH_CODE_REGEXP: RegExp = /[?&]code=[^&]+/;
-        const SESSION_STATE_REGEXP: RegExp = /[?&]session_state=[^&]+/;
 
-        return AUTH_CODE_REGEXP.test(params) && SESSION_STATE_REGEXP.test(params);
+        return AUTH_CODE_REGEXP.test(params);
+    }
+
+    /**
+     * Util function to check if the URL contains an error.
+     *
+     * @param url - URL to be checked.
+     *
+     * @returns {boolean} - True if the URL contains an error.
+     */
+    public static hasErrorInURL(url: string = window.location.href): boolean {
+        return !!new URL(url).searchParams.get(ERROR);
     }
 
     /**

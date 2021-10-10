@@ -243,6 +243,7 @@ export const SessionManagementHelper = (() => {
                 window.location.href = "about:blank";
 
                 await SPAUtils.waitTillPageRedirect();
+
                 return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
@@ -250,7 +251,6 @@ export const SessionManagementHelper = (() => {
                         type: CHECK_SESSION_SIGNED_OUT
                     };
 
-                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
                     window.parent.parent.postMessage(message, parent.origin);
                     SPAUtils.setPromptNoneRequestSent(false);
 
@@ -260,6 +260,7 @@ export const SessionManagementHelper = (() => {
 
                     return true;
                 }
+
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 parent.location.href = await _signOut();

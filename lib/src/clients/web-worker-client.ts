@@ -334,26 +334,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
         // This block is executed by the iFrame when the server redirects with the authorization code.
-        if (SPAUtils.setIsInitializedSilentSignIn()) {
+        if (SPAUtils.isInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        if (SPAUtils.isStatePresentInURL()) {
-            // The state that is used to detect the auth request sent by this method is not there in the URL.
-            // Happens if it is the first time this method is being called.
-            // Or when this method is called inside the iFrame during the check session execution.
-
-            // This reverses the silent sign in flag being set to true by the previous code block.
-            SPAUtils.setIsInitializedSilentSignIn();
 
             return Promise.resolve({
                 allowedScopes: "",
@@ -500,10 +482,6 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 tenantDomain: "",
                 username: ""
             });
-        }
-
-        if (SPAUtils.wasSilentSignInCalled()) {
-            SPAUtils.setIsInitializedSilentSignIn();
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);

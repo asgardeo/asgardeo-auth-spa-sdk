@@ -320,10 +320,6 @@ export const MainThreadClient = async (
             });
         }
 
-        if (SPAUtils.wasSilentSignInCalled()) {
-            SPAUtils.setIsInitializedSilentSignIn();
-        }
-
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
@@ -525,21 +521,8 @@ export const MainThreadClient = async (
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
         const config = await _dataLayer.getConfigData();
 
-        if (SPAUtils.setIsInitializedSilentSignIn()) {
+        if (SPAUtils.isInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        if (SPAUtils.isStatePresentInURL()) {
-            SPAUtils.setIsInitializedSilentSignIn();
 
             return Promise.resolve({
                 allowedScopes: "",
