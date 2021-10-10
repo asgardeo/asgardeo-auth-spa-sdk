@@ -561,11 +561,12 @@ export const MainThreadClient = async (
         }
 
         return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                resolve(false);
+            }, 10000);
+
             const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
-                const timer = setTimeout(() => {
-                    resolve(false);
-                }, 10000);
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
                     window.removeEventListener("message", listenToPromptNoneIFrame);
