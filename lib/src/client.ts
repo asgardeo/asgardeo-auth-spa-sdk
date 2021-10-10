@@ -297,7 +297,10 @@ export class AsgardeoSPAClient {
         sessionState?: string
     ): Promise<BasicUserInfo | undefined> {
         await this._isInitialized();
-        if (!SPAUtils.setInitializedSignIn(Boolean(config?.callOnlyOnRedirect)) && !SPAUtils.isStatePresentInURL()) {
+
+        // Discontinues the execution of this method if `config.callOnlyOnRedirect` is true and the `signIn` method
+        // is not being called on redirect.
+        if (!SPAUtils.canContinueSignIn(Boolean(config?.callOnlyOnRedirect), authorizationCode)) {
             return;
         }
 
@@ -319,6 +322,9 @@ export class AsgardeoSPAClient {
      * First, this method sends a prompt none request to see if there is an active user session in the identity server.
      * If there is one, then it requests the access token and stores it. Else, it returns false.
      *
+     * If this method is to be called on page load and the `signIn` method is also to be called on page load,
+     * then it is advisable to call this method after the `signIn` call.
+     *
      * @return {Promise<BasicUserInfo | boolean>} - A Promise that resolves with the user information after signing in
      * or with `false` if the user is not signed in.
      *
@@ -330,12 +336,10 @@ export class AsgardeoSPAClient {
     public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
 
-        // checks if the `signIn` method was called before and this method was not called.
+        // checks if the `signIn` method has been called.
         if (SPAUtils.wasSignInCalled()) {
             return;
         }
-
-        SPAUtils.setInitializedSignIn(false);
 
         return this._client?.trySignInSilently().then((response: BasicUserInfo | boolean) => {
             if (this._onSignInCallback && response) {

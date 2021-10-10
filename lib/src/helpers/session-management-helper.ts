@@ -130,7 +130,9 @@ export const SessionManagementHelper = (() => {
         async function receiveMessage(e: MessageEvent) {
             const targetOrigin = _checkSessionEndpoint;
 
-            if (!targetOrigin || targetOrigin?.indexOf(e.origin) < 0) {
+            if (!targetOrigin
+                || targetOrigin?.indexOf(e.origin) < 0
+                || e?.data?.type === SET_SESSION_STATE_FROM_IFRAME) {
                 return;
             }
 
@@ -138,7 +140,7 @@ export const SessionManagementHelper = (() => {
                 // [RP] session state has not changed
             } else if (e.data === "error") {
                 window.location.href = await _signOut();
-            } else {
+            } else if (e.data === "changed") {
                 // [RP] session state has changed. Sending prompt=none request...
                 sendPromptNoneRequest();
             }
@@ -241,6 +243,7 @@ export const SessionManagementHelper = (() => {
                 window.location.href = "about:blank";
 
                 await SPAUtils.waitTillPageRedirect();
+
                 return true;
             } else {
                 if (state === SILENT_SIGN_IN_STATE) {
@@ -248,7 +251,6 @@ export const SessionManagementHelper = (() => {
                         type: CHECK_SESSION_SIGNED_OUT
                     };
 
-                    sessionStorage.setItem(INITIALIZED_SILENT_SIGN_IN, "false");
                     window.parent.parent.postMessage(message, parent.origin);
                     SPAUtils.setPromptNoneRequestSent(false);
 
@@ -258,6 +260,7 @@ export const SessionManagementHelper = (() => {
 
                     return true;
                 }
+
                 SPAUtils.setPromptNoneRequestSent(false);
 
                 parent.location.href = await _signOut();

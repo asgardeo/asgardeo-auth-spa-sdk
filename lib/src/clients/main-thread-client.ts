@@ -320,10 +320,6 @@ export const MainThreadClient = async (
             });
         }
 
-        if (SPAUtils.wasSilentSignInCalled()) {
-            SPAUtils.setIsInitializedSilentSignIn();
-        }
-
         if (await _authenticationClient.isAuthenticated()) {
             _spaHelper.clearRefreshTokenTimeout();
             _spaHelper.refreshAccessTokenAutomatically();
@@ -525,21 +521,8 @@ export const MainThreadClient = async (
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
         const config = await _dataLayer.getConfigData();
 
-        if (SPAUtils.setIsInitializedSilentSignIn()) {
+        if (SPAUtils.isInitializedSilentSignIn()) {
             await _sessionManagementHelper.receivePromptNoneResponse();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        if (SPAUtils.isStatePresentInURL()) {
-            SPAUtils.setIsInitializedSilentSignIn();
 
             return Promise.resolve({
                 allowedScopes: "",
@@ -578,11 +561,12 @@ export const MainThreadClient = async (
         }
 
         return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                resolve(false);
+            }, 10000);
+
             const listenToPromptNoneIFrame = async (e: MessageEvent) => {
                 const data: Message<AuthorizationInfo | null> = e.data;
-                const timer = setTimeout(() => {
-                    resolve(false);
-                }, 10000);
 
                 if (data?.type == CHECK_SESSION_SIGNED_OUT) {
                     window.removeEventListener("message", listenToPromptNoneIFrame);

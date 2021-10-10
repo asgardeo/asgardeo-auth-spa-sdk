@@ -109,7 +109,8 @@
                 signInRedirectURL: origin,
                 // WSO2 Identity Server URL
                 serverOrigin: "",
-                responseMode: "form_post"
+                responseMode: "form_post",
+                scope: ["profile"]
             };
         </script>
 
