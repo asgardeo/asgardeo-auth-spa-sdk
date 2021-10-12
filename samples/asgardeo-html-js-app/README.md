@@ -23,7 +23,7 @@ const authConfig = {
     // After login callback URL - We have to use the app root as this is a SPA
     // (Add it in application OIDC settings "Callback Url")
     signInRedirectURL: origin,
-    // WSO2 Identity Server URL
+    // Asgardeo URL
     serverOrigin: "<ADD_SERVER_ORIGIN_HERE>",
 };
 ```

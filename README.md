@@ -1,10 +1,10 @@
 # Asgardeo Auth SPA SDK
 
 ![Builder](https://github.com/asgardeo/asgardeo-auth-spa-sdk/workflows/Builder/badge.svg)
-[![Stackoverflow](https://img.shields.io/badge/Ask%20for%20help%20on-Stackoverflow-orange)](https://stackoverflow.com/questions/tagged/wso2is)
+[![Stackoverflow](https://img.shields.io/badge/Ask%20for%20help%20on-Stackoverflow-orange)](https://stackoverflow.com/questions/tagged/asgardeo)
 [![Join the chat at https://join.slack.com/t/wso2is/shared_invite/enQtNzk0MTI1OTg5NjM1LTllODZiMTYzMmY0YzljYjdhZGExZWVkZDUxOWVjZDJkZGIzNTE1NDllYWFhM2MyOGFjMDlkYzJjODJhOWQ4YjE](https://img.shields.io/badge/Join%20us%20on-Slack-%23e01563.svg)](https://join.slack.com/t/wso2is/shared_invite/enQtNzk0MTI1OTg5NjM1LTllODZiMTYzMmY0YzljYjdhZGExZWVkZDUxOWVjZDJkZGIzNTE1NDllYWFhM2MyOGFjMDlkYzJjODJhOWQ4YjE)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/wso2/product-is/blob/master/LICENSE)
-[![Twitter](https://img.shields.io/twitter/follow/wso2.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=wso2)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/asgardeo/asgardeo-auth-spa-sdk/blob/main/LICENSE)
+[![Twitter](https://img.shields.io/twitter/follow/wso2.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=asgardeo)
 
 ---
 
@@ -92,7 +92,7 @@ auth.initialize({
      signInRedirectURL: "http://localhost:3000/sign-in",
      signOutRedirectURL: "http://localhost:3000/dashboard",
      clientID: "client ID",
-     serverOrigin: "https://localhost:9443"
+     serverOrigin: "https://api.asgardeo.io"
 });
 
 // To sign in, simply call the `signIn()` method.
@@ -119,7 +119,7 @@ auth.initialize({
      signInRedirectURL: "http://localhost:3000/sign-in",
      signOutRedirectURL: "http://localhost:3000/dashboard",
      clientID: "client ID",
-     serverOrigin: "https://localhost:9443"
+     serverOrigin: "https://api.asgardeo.io"
 });
 
 // To sign in, simply call the `signIn()` method.
@@ -136,27 +136,21 @@ auth.on("sign-in", (response) => {
 
 ## Try Out the Sample Apps
 
-### 1. Create a Service Provider
+### 1. Create an Application in Asgardeo
 
-Before trying out the sample apps, you need to a create a service provider in the Identity Server.
+Before trying out the sample apps, you need to create an application in **Asgardeo**.
 
-1. So, navigate to `https://localhost:9443/carbon" and click on `Add`under`Service Providers` in the left-hand menu panel.
-
-2. Enter `Sample` as the name of the app and click on `Register`.
-
-3. Then, expand the `Inbound Authentication Configuration` section. Under that, expand `OAuth/OpenID Connect Configuration` section and click on `Configure`.
-
-4. Under `Allowed Grant Types` uncheck everything except `Code` and `Refresh Token`.
-
-5. Enter the Callback URL(s). You can find the relevant callback URL(s) of each sample app in the [Running the sample apps](#2.-running-the-sample-apps) section.
-
-6. Check `Allow authentication without the client secret`.
-
-7. Click `Add` at the bottom.
-
-8. Copy the `OAuth Client Key`.
-
-9. Enable CORS for the client application by following this guide (https://is.docs.wso2.com/en/5.11.0/learn/cors/).
+1. Navigate to [**Asgardeo Console**](https://console.asgardeo.io/login) and click on **Applications** under **Develop** tab
+   
+2. Click on **New Application** and then **Single Page Application**.
+   
+3. Enter **Sample** as the name of the app and add the redirect URL(s). You can find the relevant redirect URL(s) of each sample app in the [Running the sample apps](#2-running-the-sample-apps) section.
+   
+4. Click on Register. You will be navigated to management page of the **sample** application.
+   
+5. Add `https://localhost:5000` to **Allowed Origins** under **Access** tab and check **Public client** option.
+   
+6. Click on **Update** at the bottom.
 
 ### 2. Running the sample apps
 
@@ -238,7 +232,7 @@ An instance of the `AsgardeoSPAClient`.
 
 #### Description
 
-This returns a static instance of the `AsgardeoSPAClient`. The SDK allows you to create multiple instances of the `AsgardeoSPAClient`. To do so, you can pass an `id` into the `getInstance` method. If no instance has been created for the provided `id`, a new instance will be created and returned by this method. If an instance exists, then that instance will be returned. If no `id` is provided, the default instance will be returned. This allows the SDK to talk to multiple identity servers through the same app.
+This returns a static instance of the `AsgardeoSPAClient`. The SDK allows you to create multiple instances of the `AsgardeoSPAClient`. To do so, you can pass an `id` into the `getInstance` method. If no instance has been created for the provided `id`, a new instance will be created and returned by this method. If an instance exists, then that instance will be returned. If no `id` is provided, the default instance will be returned. This allows the SDK to talk to multiple identity providers through the same app.
 
 Creating a static instance affords the developers the flexibility of using multiple files to implement the authentication logic. That is, you can have the sign in logic implemented on one page and the sign out logic on another.
 
@@ -282,7 +276,7 @@ const config = {
     signInRedirectURL: "http://localhost:3000/sign-in",
     signOutRedirectURL: "http://localhost:3000/dashboard",
     clientID: "client ID",
-    serverOrigin: "https://localhost:9443"
+    serverOrigin: "https://api.asgardeo.io"
 }
 
 auth.initialize(config);
@@ -334,7 +328,7 @@ signIn(config?: SignInConfig, authorizationCode?: string, sessionState?: string)
 
 #### Description
 
-As the name implies, this method is used to sign-in users. This method will have to be called twice to implement the two phases of the authentication process. The first phase generates generates the authorization URl and takes the user to the single-sign-on page of the identity server, while second phase triggers the token request to complete the authentication process. So, this method should be called when initiating authentication and when the user is redirected back to the app after authentication themselves with the server.
+As the name implies, this method is used to sign-in users. This method will have to be called twice to implement the two phases of the authentication process. The first phase generates generates the authorization URl and takes the user to the single-sign-on page of the Asgardeo, while second phase triggers the token request to complete the authentication process. So, this method should be called when initiating authentication and when the user is redirected back to the app after authentication themselves with the server.
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
@@ -355,11 +349,11 @@ trySignInSilently();
 This method attempts to sign a user in silently by sending an authorization request with the `prompt` query parameter set to `none`.
 This will be useful when you want to sign a user in automatically while avoiding the browser redirects.
 
-This uses an iFrame to check if there is an active user session in the identity server by sending an authorization request. If the request returns an authorization code, then the token request is dispatched and the returned token is stored effectively signing the user in.
+This uses an iFrame to check if there is an active user session in the Asgardeo by sending an authorization request. If the request returns an authorization code, then the token request is dispatched and the returned token is stored effectively signing the user in.
 
 To dispatch a token request, the `[signIn()](#signIn)` or this `trySignInSilently()` method should be called by the page/component rendered by the redirect URL.
 
-This returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` object following a successful sign in. If the user is not signed into the identity server, then the promise resolves with the boolean value of `false`.
+This returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` object following a successful sign in. If the user is not signed into the Asgardeo, then the promise resolves with the boolean value of `false`.
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
@@ -388,7 +382,7 @@ signOut();
 
 #### Description
 
-This method ends the user session at the Identity Server and logs the user out.
+This method ends the user session at the Asgardeo and logs the user out.
 
 The `sign-out` hook is used to fire a callback function after signing out is successful. Check the [on()](#on) section for more information.
 
@@ -417,7 +411,7 @@ A Promise that resolves with the response.
 
 #### Description
 
-This method is used to send http requests to the Identity Server. The developer doesn't need to manually attach the access token since this method does it automatically.
+This method is used to send http requests to the Asgardeo. The developer doesn't need to manually attach the access token since this method does it automatically.
 
 If the `storage` type is set to `sessionStorage` or `localStorage`, the developer may choose to implement their own ways of sending http requests by obtaining the access token from the relevant storage medium and attaching it to the header. However, if the `storage` is set to `webWorker`, this is the _ONLY_ way http requests can be sent.
 
@@ -436,7 +430,7 @@ const requestConfig = {
         "Content-Type": "application/scim+json"
     },
     method: "GET",
-    url: "https://localhost:9443/scim2/me"
+    url: "https://api.asgardeo.io/scim2/me"
 };
 
 return auth.httpRequest(requestConfig)
@@ -500,7 +494,7 @@ A Promise that resolves either with the response or the [`BasicUserInfo`](#Basic
 
 #### Description
 
-This method allows developers to use custom grants provided by their Identity Servers. This method accepts an object that has the following attributes as the argument.
+This method allows developers to use custom grants provided by their Identity Providers. This method accepts an object that has the following attributes as the argument.
 
 The `custom-grant` hook is used to fire a callback function after a custom grant request is successful. Check the [on()](#on) section for more information.
 
@@ -723,7 +717,7 @@ If you are using TypeScript, you may want to use the `Hooks` enum that consists 
 | `"revoke-access-token"`  | `revokeAccessToken()`                                                            | A boolean value indicating if the process was successful or not                         |
 | `"custom-grant"`         | `customGrant()`                                                                  | Returns the response from the custom grant request.                                     |
 
-**When the user signs out, the user is taken to the identity server's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
+**When the user signs out, the user is taken to the Asgardeo's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
 
 #### Example
 
