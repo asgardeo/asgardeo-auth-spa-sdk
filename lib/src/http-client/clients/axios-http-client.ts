@@ -133,6 +133,16 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
     public async requestHandler(request: HttpRequestConfig): Promise<HttpRequestConfig> {
         await this.attachToken(request);
 
+        if (request?.shouldEncodeToFormData) {
+            const data = request?.data;
+            const formData = new FormData();
+            Object.keys(data).forEach((key) => {
+                formData.append(key, data[key]);
+            });
+
+            request.data = formData;
+        }
+
         if (HttpClient.isHandlerEnabled) {
             if (this.requestStartCallback && typeof this.requestStartCallback === "function") {
                 this.requestStartCallback(request);

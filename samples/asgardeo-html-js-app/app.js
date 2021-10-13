@@ -187,24 +187,22 @@ if (authConfig.clientID === "") {
 } else {
     // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
     // continue the sign-in flow
-    if (JSON.parse(sessionStorage.getItem("initialized-sign-in"))) {
-        authClient.signIn({ callOnlyOnRedirect: true }).catch((error)=> {
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("error").style.display = "block";
-        });
-    } else {
-        authClient.isAuthenticated().then(function(isAuthenticated) {
-            if (isAuthenticated) {
-                authClient.getIDToken().then(function(idToken) {
-                    state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
-                    state.idToken = parseIdToken(idToken);
-                    state.isAuth = true;
+    authClient.signIn({ callOnlyOnRedirect: true }).catch((error) => {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("error").style.display = "block";
+    });
 
-                    updateView();
-                });
-            } else {
+    authClient.isAuthenticated().then(function (isAuthenticated) {
+        if (isAuthenticated) {
+            authClient.getIDToken().then(function (idToken) {
+                state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
+                state.idToken = parseIdToken(idToken);
+                state.isAuth = true;
+
                 updateView();
-            }
-        });
-    }
+            });
+        } else {
+            updateView();
+        }
+    });
 }
