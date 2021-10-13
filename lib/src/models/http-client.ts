@@ -28,6 +28,7 @@ export interface HttpClient {
 
 export interface HttpRequestConfig extends AxiosRequestConfig {
     attachToken?: boolean;
+    shouldEncodeToFormData?: boolean;
 }
 
 export {
