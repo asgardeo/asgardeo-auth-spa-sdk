@@ -414,7 +414,7 @@ httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
    |Attribute|Type|Default|Description|
    |--|--|--|--|
    |`attachToken`|`boolean`|`true`|If set to `true`, the token will be attached to the request header.|
-   |`shouldEncodeToFormData`|`boolean`|`false`|If set to `true`, the request body will be encoded to `FormData`.|
+   |`shouldEncodeToFormData`|`boolean`|`false`|If set to `true`, the request body will be encoded to `FormData`. The body (specified by the `data` attribute) should be a Javascript object. |
 
 #### Returns
 
