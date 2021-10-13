@@ -409,7 +409,12 @@ httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
 #### Arguments
 
 1. config: `[HttpRequestConfig](#httpRequestConfig)`
-   A config object with the settings necessary to send http requests. This object is similar to the `AxiosRequestConfig` but provides an additional attribute called `attachToken` to allow you to specify if the access token should be attached to the request.
+   A config object with the settings necessary to send http requests. This object is similar to the `AxiosRequestConfig` but provides these additional attributes:
+
+   |Attribute|Type|Default|Description|
+   |--|--|--|--|
+   |`attachToken`|`boolean`|`true`|If set to `true`, the token will be attached to the request header.|
+   |`shouldEncodeToFormData`|`boolean`|`false`|If set to `true`, the request body will be encoded to `FormData`.|
 
 #### Returns
 
