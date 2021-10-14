@@ -319,7 +319,7 @@ export class AsgardeoSPAClient {
 
     /**
      * This method allows you to sign in silently.
-     * First, this method sends a prompt none request to see if there is an active user session in the Asgardeo.
+     * First, this method sends a prompt none request to see if there is an active user session in the identity server.
      * If there is one, then it requests the access token and stores it. Else, it returns false.
      *
      * If this method is to be called on page load and the `signIn` method is also to be called on page load,
