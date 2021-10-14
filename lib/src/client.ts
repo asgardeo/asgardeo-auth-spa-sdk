@@ -176,7 +176,7 @@ export class AsgardeoSPAClient {
      * auth.initialize({
      *     signInRedirectURL: "http://localhost:3000/sign-in",
      *     clientID: "client ID",
-     *     serverOrigin: "https://localhost:9443"
+     *     serverOrigin: "https://api.asgardeo.io"
      * });
      * ```
      *
@@ -401,11 +401,11 @@ export class AsgardeoSPAClient {
      *  const requestConfig = {
      *      headers: {
      *          "Accept": "application/json",
-     *          "Access-Control-Allow-Origin": "https://localhost:9443/myaccount",
+     *          "Access-Control-Allow-Origin": "https://api.asgardeo.io/myaccount",
      *          "Content-Type": "application/scim+json"
      *      },
      *      method: "GET",
-     *      url: "https://localhost:9443/scim2/me"
+     *      url: "https://api.asgardeo.io/scim2/me"
      *  };
      *
      *  return auth.httpRequest(requestConfig)
@@ -447,7 +447,7 @@ export class AsgardeoSPAClient {
      *          "Content-Type": "application/scim+json"
      *      },
      *      method: "GET",
-     *      url: "https://localhost:9443/scim2/me"
+     *      url: "https://api.asgardeo.io/scim2/me"
      *  };
      *
      *  const requestConfig2 = {
@@ -456,7 +456,7 @@ export class AsgardeoSPAClient {
      *          "Content-Type": "application/scim+json"
      *      },
      *      method: "GET",
-     *      url: "https://localhost:9443/scim2/me"
+     *      url: "https://api.asgardeo.io/scim2/me"
      *  };
      *
      *  return auth.httpRequest([requestConfig, requestConfig2])
@@ -902,7 +902,7 @@ export class AsgardeoSPAClient {
      * const config = {
      *     signInRedirectURL: "http://localhost:3000/sign-in",
      *     clientID: "client ID",
-     *     serverOrigin: "https://localhost:9443"
+     *     serverOrigin: "https://api.asgardeo.io"
      * }
      * const auth.updateConfig(config);
      * ```
