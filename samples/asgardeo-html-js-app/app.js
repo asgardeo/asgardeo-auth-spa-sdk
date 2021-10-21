@@ -41,7 +41,7 @@ var state = {
 authClient.on("sign-in", function (response) {
     var username = response?.username?.split("/");
 
-    if (username.length >= 2) {
+    if (username?.length >= 2) {
         username.shift();
         response.username = username.join("/");
     }
