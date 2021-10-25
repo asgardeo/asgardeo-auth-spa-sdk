@@ -63,7 +63,7 @@ Asgardeo Auth SPA SDK for JavaScript allows Single Page Applications to use OIDC
 
 ## Prerequisite
 
-Create an organization in Asgardeo if you don't already have one. The organization name you choose will be referred to as `<org_name>` throughout this tutorial.
+Create an organization in Asgardeo if you don't already have one. The organization name you choose will be referred to as `<org_name>` throughout this document.
 
 ## Install
 
