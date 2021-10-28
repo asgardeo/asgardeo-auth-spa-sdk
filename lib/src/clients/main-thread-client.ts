@@ -315,6 +315,7 @@ export const MainThreadClient = async (
                 displayName: "",
                 email: "",
                 sessionState: "",
+                sub: "",
                 tenantDomain: "",
                 username: ""
             });
@@ -383,6 +384,7 @@ export const MainThreadClient = async (
                 displayName: "",
                 email: "",
                 sessionState: "",
+                sub: "",
                 tenantDomain: "",
                 username: ""
             });
@@ -529,6 +531,7 @@ export const MainThreadClient = async (
                 displayName: "",
                 email: "",
                 sessionState: "",
+                sub: "",
                 tenantDomain: "",
                 username: ""
             });

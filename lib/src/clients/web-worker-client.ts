@@ -342,6 +342,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 displayName: "",
                 email: "",
                 sessionState: "",
+                sub: "",
                 tenantDomain: "",
                 username: ""
             });
@@ -480,6 +481,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 displayName: "",
                 email: "",
                 sessionState: "",
+                sub: "",
                 tenantDomain: "",
                 username: ""
             });
@@ -553,6 +555,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                     displayName: "",
                     email: "",
                     sessionState: "",
+                    sub: "",
                     tenantDomain: "",
                     username: ""
                 });
