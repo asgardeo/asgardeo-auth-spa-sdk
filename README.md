@@ -948,6 +948,7 @@ This table shows the extended attributes provided by the `Config` interface.
 | `allowedScopes` | `string` | The scopes allowed for the user.                                                                   |
 | `tenantDomain`  | `string` | The tenant domain to which the user belongs.                                                       |
 | `sessionState`  | `string` | The session state.                                                                                 |
+| `sub`           | `string` | The `uid` corresponding to the user to whom the ID token belongs to.                               |
 
 ### SignInConfig
 
