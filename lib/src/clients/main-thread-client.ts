@@ -86,13 +86,16 @@ export const MainThreadClient = async (
     );
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
+    let _isHttpHandlerEnabled: boolean = true;
+    let _httpErrorCallback: (error: HttpError) => void | Promise<void>;
+    let _httpFinishCallback: () => void;
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
         const requestConfig = { attachToken: true, ...request };
         if (requestConfig.attachToken) {
             request.headers = {
                 ...request.headers,
-                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
+                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
             };
         }
     };
@@ -109,17 +112,18 @@ export const MainThreadClient = async (
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
         _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
+        _httpFinishCallback = callback;
     };
 
-    const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
+    const setHttpRequestErrorCallback = (callback: (error: HttpError) => void | Promise<void>): void => {
+        _httpErrorCallback = callback;
     };
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
+        for (const baseUrl of [...((await config?.resourceServerURLs) ?? []), config?.serverOrigin]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
@@ -133,32 +137,61 @@ export const MainThreadClient = async (
                 .then((response: HttpResponse) => {
                     return Promise.resolve(response);
                 })
-                .catch((error: HttpError) => {
-                    if (error?.response?.status === 401) {
-                        return _authenticationClient
-                            .refreshAccessToken()
-                            .then(() => {
-                                return _httpClient
-                                    .request(requestConfig)
-                                    .then((response) => {
-                                        return Promise.resolve(response);
-                                    })
-                                    .catch((error) => {
-                                        return Promise.reject(error);
-                                    });
-                            })
-                            .catch((refreshError) => {
-                                return Promise.reject(
-                                    new AsgardeoSPAException(
-                                        "MAIN_THREAD_CLIENT-HR-ES01",
-                                        "main-thread-client",
-                                        "httpRequest",
-                                        "",
-                                        "",
-                                        refreshError
-                                    )
-                                );
-                            });
+                .catch(async (error: HttpError) => {
+                    if (error?.response?.status === 401 || !error?.response) {
+                        // Try to refresh the token
+                        let refreshTokenResponse;
+                        try {
+                            refreshTokenResponse = await _authenticationClient.refreshAccessToken();
+                        } catch (refreshError: any) {
+                            if (_isHttpHandlerEnabled) {
+                                if (typeof _httpErrorCallback === "function") {
+                                    await _httpErrorCallback(error);
+                                }
+                                if (typeof _httpFinishCallback === "function") {
+                                    _httpFinishCallback();
+                                }
+                            }
+
+                            return Promise.reject(
+                                new AsgardeoSPAException(
+                                    "MAIN_THREAD_CLIENT-HR-ES01",
+                                    "main-thread-client",
+                                    "httpRequest",
+                                    "",
+                                    "",
+                                    refreshError
+                                )
+                            );
+                        }
+
+                        // Retry the request after refreshing the token
+                        if (refreshTokenResponse) {
+                            try {
+                                const httpResponse = await _httpClient.request(requestConfig);
+                                return Promise.resolve(httpResponse);
+                            } catch (error: any) {
+                                if (_isHttpHandlerEnabled) {
+                                    if (typeof _httpErrorCallback === "function") {
+                                        await _httpErrorCallback(error);
+                                    }
+                                    if (typeof _httpFinishCallback === "function") {
+                                        _httpFinishCallback();
+                                    }
+                                }
+
+                                return Promise.reject(error);
+                            }
+                        }
+                    }
+
+                    if (_isHttpHandlerEnabled) {
+                        if (typeof _httpErrorCallback === "function") {
+                            await _httpErrorCallback(error);
+                        }
+                        if (typeof _httpFinishCallback === "function") {
+                            _httpFinishCallback();
+                        }
                     }
 
                     return Promise.reject(error);
@@ -171,8 +204,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
+                        " attribute while initializing the SDK. The specified endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -185,7 +218,7 @@ export const MainThreadClient = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
+            for (const baseUrl of [...((await config)?.resourceServerURLs ?? []), config?.serverOrigin]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
@@ -214,35 +247,62 @@ export const MainThreadClient = async (
                     .then((responses: HttpResponse[]) => {
                         return Promise.resolve(responses);
                     })
-                    .catch((error: HttpError) => {
-                        if (error?.response?.status === 401) {
-                            return _authenticationClient
-                                .refreshAccessToken()
-                                .then(() => {
-                                    return (
-                                        _httpClient.all &&
-                                        _httpClient
-                                            .all(requests)
-                                            .then((response) => {
-                                                return Promise.resolve(response);
-                                            })
-                                            .catch((error) => {
-                                                return Promise.reject(error);
-                                            })
-                                    );
-                                })
-                                .catch((refreshError) => {
-                                    return Promise.reject(
-                                        new AsgardeoSPAException(
-                                            "MAIN_THREAD_CLIENT-HRA-ES01",
-                                            "main-thread-client",
-                                            "httpRequestAll",
-                                            "",
-                                            "",
-                                            refreshError
-                                        )
-                                    );
-                                });
+                    .catch(async (error: HttpError) => {
+                        if (error?.response?.status === 401 || !error?.response) {
+                            let refreshTokenResponse;
+                            try {
+                                refreshTokenResponse = await _authenticationClient.refreshAccessToken();
+                            } catch (refreshError: any) {
+                                if (_isHttpHandlerEnabled) {
+                                    if (typeof _httpErrorCallback === "function") {
+                                        await _httpErrorCallback(error);
+                                    }
+                                    if (typeof _httpFinishCallback === "function") {
+                                        _httpFinishCallback();
+                                    }
+                                }
+
+                                return Promise.reject(
+                                    new AsgardeoSPAException(
+                                        "MAIN_THREAD_CLIENT-HRA-ES01",
+                                        "main-thread-client",
+                                        "httpRequestAll",
+                                        "",
+                                        "",
+                                        refreshError
+                                    )
+                                );
+                            }
+
+                            if (refreshTokenResponse) {
+                                return _httpClient.all &&
+                                    _httpClient
+                                        .all(requests)
+                                        .then((response) => {
+                                            return Promise.resolve(response);
+                                        })
+                                        .catch(async (error) => {
+                                            if (_isHttpHandlerEnabled) {
+                                                if (typeof _httpErrorCallback === "function") {
+                                                    await _httpErrorCallback(error);
+                                                }
+                                                if (typeof _httpFinishCallback === "function") {
+                                                    _httpFinishCallback();
+                                                }
+                                            }
+
+                                            return Promise.reject(error);
+                                        });
+                            }
+                        }
+
+                        if (_isHttpHandlerEnabled) {
+                            if (typeof _httpErrorCallback === "function") {
+                                await _httpErrorCallback(error);
+                            }
+                            if (typeof _httpFinishCallback === "function") {
+                                _httpFinishCallback();
+                            }
                         }
 
                         return Promise.reject(error);
@@ -256,8 +316,8 @@ export const MainThreadClient = async (
                     "httpRequest",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
+                        " attribute while initializing the SDK. The specified endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -269,12 +329,14 @@ export const MainThreadClient = async (
 
     const enableHttpHandler = (): boolean => {
         _httpClient?.enableHandler && _httpClient.enableHandler();
+        _isHttpHandlerEnabled = true;
 
         return true;
     };
 
     const disableHttpHandler = (): boolean => {
         _httpClient?.disableHandler && _httpClient.disableHandler();
+        _isHttpHandlerEnabled = false;
 
         return true;
     };
@@ -445,8 +507,8 @@ export const MainThreadClient = async (
                     "requestCustomGrant",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified token endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
+                        " attribute while initializing the SDK. The specified token endpoint in this request " +
+                        "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
