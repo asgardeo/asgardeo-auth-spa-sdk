@@ -35,7 +35,6 @@ import {
     REFRESH_ACCESS_TOKEN,
     REQUEST_ACCESS_TOKEN,
     REQUEST_CUSTOM_GRANT,
-    REQUEST_ERROR,
     REQUEST_FINISH,
     REQUEST_START,
     REQUEST_SUCCESS,
@@ -48,7 +47,6 @@ import {
 import { AsgardeoSPAException } from "../exception";
 import {
     AuthorizationResponse,
-    HttpError,
     HttpResponse,
     WebWorkerClass,
     WebWorkerClientConfig,
@@ -83,7 +81,6 @@ ctx.onmessage = async ({ data, ports }) => {
             try {
                 const config: AuthClientConfig<WebWorkerClientConfig> = { ...data.data };
                 webWorker = await WebWorkerCore(config);
-                webWorker.setHttpRequestErrorCallback(onRequestErrorCallback);
                 webWorker.setHttpRequestFinishCallback(onRequestFinishCallback);
                 webWorker.setHttpRequestStartCallback(onRequestStartCallback);
                 webWorker.setHttpRequestSuccessCallback(onRequestSuccessCallback);
@@ -279,22 +276,16 @@ ctx.onmessage = async ({ data, ports }) => {
     }
 };
 
-const onRequestStartCallback = () => {
+const onRequestStartCallback = (): void => {
     ctx.postMessage({ type: REQUEST_START });
 };
 
-const onRequestSuccessCallback = (response: HttpResponse) => {
+const onRequestSuccessCallback = (response: HttpResponse): void => {
     ctx.postMessage({ data: JSON.stringify(response ?? ""), type: REQUEST_SUCCESS });
 };
 
-const onRequestFinishCallback = () => {
+const onRequestFinishCallback = (): void => {
     ctx.postMessage({ type: REQUEST_FINISH });
-};
-
-const onRequestErrorCallback = (error: HttpError) => {
-    const errorObject: Partial<HttpError> = { ...error };
-    delete errorObject.toJSON;
-    ctx.postMessage({ data: JSON.stringify(errorObject ?? ""), type: REQUEST_ERROR });
 };
 
 export default {} as typeof Worker & { new (): Worker };
