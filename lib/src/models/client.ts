@@ -38,7 +38,7 @@ export interface MainThreadClientInterface {
     setHttpRequestStartCallback(callback: () => void): void;
     setHttpRequestSuccessCallback(callback: (response: HttpResponse) => void): void;
     setHttpRequestFinishCallback(callback: () => void): void;
-    setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
+    setHttpRequestErrorCallback(callback: (error: HttpError) => void | Promise<void>): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
     httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[] | undefined>;
     getHttpClient(): HttpClientInstance;
@@ -85,7 +85,7 @@ export interface WebWorkerClientInterface {
     getIDToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;
     setHttpRequestSuccessCallback(callback: (response: HttpResponse) => void): void;
-    setHttpRequestErrorCallback(callback: (response: HttpError) => void): void;
+    setHttpRequestErrorCallback(callback: (response: HttpError) => void | Promise<void>): void;
     setHttpRequestStartCallback(callback: () => void): void;
     setHttpRequestFinishCallback(callback: () => void): void;
     refreshAccessToken(): Promise<BasicUserInfo>;

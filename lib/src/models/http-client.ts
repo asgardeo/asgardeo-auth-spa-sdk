@@ -22,7 +22,7 @@ import { HttpError, HttpResponse } from ".";
 export interface HttpClient {
     requestStartCallback: () => void;
     requestSuccessCallback: (response: HttpResponse) => void;
-    requestErrorCallback: (error: HttpError) => void;
+    requestErrorCallback: (error: HttpError) => void | Promise<void>;
     requestFinishCallback: () => void;
 }
 
