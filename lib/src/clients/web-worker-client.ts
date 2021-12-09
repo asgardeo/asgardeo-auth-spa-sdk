@@ -51,7 +51,6 @@ import {
     REFRESH_ACCESS_TOKEN,
     REQUEST_ACCESS_TOKEN,
     REQUEST_CUSTOM_GRANT,
-    REQUEST_ERROR,
     REQUEST_FINISH,
     REQUEST_START,
     REQUEST_SUCCESS,
@@ -88,6 +87,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * API request time out.
      */
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
+    let _isHttpHandlerEnabled: boolean = true;
+
     const _sessionManagementHelper = SessionManagementHelper(
         async () => {
             const message: Message<string> = {
@@ -186,7 +187,16 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             .then((response) => {
                 return Promise.resolve(response);
             })
-            .catch((error) => {
+            .catch(async (error) => {
+                if (_isHttpHandlerEnabled) {
+                    if (typeof httpClientHandlers.requestErrorCallback === "function") {
+                        await httpClientHandlers.requestErrorCallback(error);
+                    }
+                    if (typeof httpClientHandlers.requestFinishCallback === "function") {
+                        httpClientHandlers.requestFinishCallback();
+                    }
+                }
+
                 return Promise.reject(error);
             });
     };
@@ -210,7 +220,16 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             .then((response) => {
                 return Promise.resolve(response);
             })
-            .catch((error) => {
+            .catch(async (error) => {
+                if (_isHttpHandlerEnabled) {
+                    if (typeof httpClientHandlers.requestErrorCallback === "function") {
+                        await httpClientHandlers.requestErrorCallback(error);
+                    }
+                    if (typeof httpClientHandlers.requestFinishCallback === "function") {
+                        httpClientHandlers.requestFinishCallback();
+                    }
+                }
+
                 return Promise.reject(error);
             });
     };
@@ -221,6 +240,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         };
         return communicate<null, null>(message)
             .then(() => {
+                _isHttpHandlerEnabled = true;
+
                 return Promise.resolve(true);
             })
             .catch((error) => {
@@ -234,6 +255,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         };
         return communicate<null, null>(message)
             .then(() => {
+                _isHttpHandlerEnabled = false;
+
                 return Promise.resolve(true);
             })
             .catch((error) => {
@@ -250,19 +273,17 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      *
      */
     const initialize = (): Promise<boolean> => {
-        httpClientHandlers = {
-            requestErrorCallback: () => null,
-            requestFinishCallback: () => null,
-            requestStartCallback: () => null,
-            requestSuccessCallback: () => null
-        };
+        if (!httpClientHandlers) {
+            httpClientHandlers = {
+                requestErrorCallback: () => Promise.resolve(),
+                requestFinishCallback: () => null,
+                requestStartCallback: () => null,
+                requestSuccessCallback: () => null
+            };
+        }
 
         worker.onmessage = ({ data }) => {
             switch (data.type) {
-                case REQUEST_ERROR:
-                    httpClientHandlers?.requestErrorCallback &&
-                        httpClientHandlers?.requestErrorCallback(data.data ? JSON.parse(data.data) : null);
-                    break;
                 case REQUEST_FINISH:
                     httpClientHandlers?.requestFinishCallback && httpClientHandlers?.requestFinishCallback();
                     break;
@@ -394,16 +415,18 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data?.data?.code, data?.data?.sessionState).then((response: BasicUserInfo) => {
-                        window.removeEventListener("message", listenToPromptNoneIFrame);
-                        resolve(response);
-                    }).catch((error) => {
-                        window.removeEventListener("message", listenToPromptNoneIFrame);
-                        reject(error);
-                    }).finally((() => {
-                        clearTimeout(timer);
-                    }));
-
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState)
+                        .then((response: BasicUserInfo) => {
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
+                            resolve(response);
+                        })
+                        .catch((error) => {
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
+                            reject(error);
+                        })
+                        .finally(() => {
+                            clearTimeout(timer);
+                        });
                 }
             };
 
@@ -717,7 +740,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         }
     };
 
-    const setHttpRequestErrorCallback = (callback: (response: HttpError) => void): void => {
+    const setHttpRequestErrorCallback = (callback: (response: HttpError) => void | Promise<void>): void => {
         if (callback && typeof callback === "function") {
             httpClientHandlers.requestErrorCallback = callback;
         }
