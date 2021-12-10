@@ -24,7 +24,7 @@ import {
     DecodedIDTokenPayload,
     OIDCEndpoints
 } from "@asgardeo/auth-js";
-import { HttpError, HttpRequestConfig, HttpResponse, Message } from ".";
+import { HttpRequestConfig, HttpResponse, Message } from ".";
 import { AuthorizationResponse, WebWorkerClientConfig } from "..";
 
 interface WebWorkerEvent<T> extends MessageEvent {
@@ -39,7 +39,6 @@ export interface WebWorkerCoreInterface {
     setHttpRequestStartCallback(callback: () => void): void;
     setHttpRequestSuccessCallback(callback: (response: HttpResponse) => void): void;
     setHttpRequestFinishCallback(callback: () => void): void;
-    setHttpRequestErrorCallback(callback: (error: HttpError) => void): void;
     httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
     httpRequestAll(configs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined>;
     enableHttpHandler(): void;

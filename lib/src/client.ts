@@ -795,7 +795,7 @@ export class AsgardeoSPAClient {
             | Hooks.SignOut,
         callback: (response?: any) => void
     ): Promise<void>;
-    public async on(hook: Hooks, callback: (response?: any) => void, id?: string): Promise<void> {
+    public async on(hook: Hooks, callback: (response?: any) => void | Promise<void>, id?: string): Promise<void> {
         await this._isInitialized();
         if (callback && typeof callback === "function") {
             switch (hook) {

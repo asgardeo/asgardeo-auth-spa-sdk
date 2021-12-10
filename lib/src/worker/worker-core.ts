@@ -81,10 +81,6 @@ export const WebWorkerCore = async (
         _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
 
-    const setHttpRequestErrorCallback = (callback: (error: HttpError) => void): void => {
-        _httpClient?.setHttpRequestErrorCallback && _httpClient.setHttpRequestErrorCallback(callback);
-    };
-
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
         const config = await _dataLayer.getConfigData();
@@ -107,7 +103,7 @@ export const WebWorkerCore = async (
                     return Promise.resolve(response);
                 })
                 .catch((error: HttpError) => {
-                    if (error?.response?.status === 401) {
+                    if (error?.response?.status === 401 || !error?.response) {
                         return _authenticationClient
                             .refreshAccessToken()
                             .then(() => {
@@ -438,7 +434,6 @@ export const WebWorkerCore = async (
         requestAccessToken,
         requestCustomGrant,
         revokeAccessToken,
-        setHttpRequestErrorCallback,
         setHttpRequestFinishCallback,
         setHttpRequestStartCallback,
         setHttpRequestSuccessCallback,
