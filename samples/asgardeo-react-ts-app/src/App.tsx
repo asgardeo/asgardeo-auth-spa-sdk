@@ -16,13 +16,24 @@
  * under the License.
  */
 
-import React, { FunctionComponent, ReactElement, useEffect, useState } from "react";
+import React, {
+  FunctionComponent,
+  ReactElement,
+  useEffect,
+  useState,
+} from "react";
 import "./App.css";
 import ReactLogo from "./images/react-logo.png";
 import JavascriptLogo from "./images/js-logo.png";
 import FooterLogo from "./images/footer.png";
 import { default as authConfig } from "./config.json";
-import { AsgardeoSPAClient, AuthClientConfig, Hooks, BasicUserInfo, Config } from "@asgardeo/auth-spa";
+import {
+  AsgardeoSPAClient,
+  AuthClientConfig,
+  Hooks,
+  BasicUserInfo,
+  Config,
+} from "@asgardeo/auth-spa";
 
 /**
  * SDK Client instance.
@@ -30,149 +41,171 @@ import { AsgardeoSPAClient, AuthClientConfig, Hooks, BasicUserInfo, Config } fro
  */
 const auth: AsgardeoSPAClient = AsgardeoSPAClient.getInstance();
 
+const authConfigx = {
+  signInRedirectURL: "https://localhost:3000/signin",
+  signOutRedirectURL: "https://localhost:3000/login",
+  clientID: "GEjPOPRsoMMlNrDuO8fqCBL4mS8a",
+  serverOrigin: "https://id.dv.choreo.dev:443",
+  clientHost: "https://localhost:3000",
+  enablePKCE: true,
+  storage: "sessionStorage",
+  checkSessionInterval: -1,
+  disableTrySignInSilently: true,
+  resourceServerURLs: [
+    "https://km.preview-dv.choreo.dev",
+    "https://apim.preview-dv.choreo.dev",
+    "https://apim.preview-st.choreo.dev",
+    "https://id.dv.choreo.dev",
+    "https://consolev2.preview-dv.choreo.dev",
+    "https://app.preview-dv.choreo.dev",
+    "https://appv2.preview-dv.choreo.dev",
+    "https://app.preview-st.choreo.dev",
+    "https://appv2.preview-st.choreo.dev",
+    "https://choreocontrolplane.preview-dv.choreo.dev/insights/1.0.0/query-api",
+    "https://choreocontrolplane.preview-dv.choreo.dev/insightsalert/1.0.0/",
+    "https://localhost:3000",
+    "https://run.mocky.io",
+  ],
+};
+
+const TOKEN_EXCHANGE_CONFIG = {
+  tokenEndpoint: "https://apim.preview-dv.choreo.dev:443/oauth2/token",
+  attachToken: false,
+  data: {
+    client_id: "Wxqy0liCfLBsdpXOhkcxZz6uLPka",
+    grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+    subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+    requested_token_type: "urn:ietf:params:oauth:token-type:jwt",
+    scope:
+      "apim:api_manage apim:subscription_manage apim:tier_manage apim:admin apim:publisher_settings",
+    subject_token: "{{token}}",
+  },
+  id: "apim-token-exchange",
+  returnResponse: true,
+  returnsSession: true,
+  signInRequired: true,
+};
 /**
  * Main App component.
  *
  * @return {React.ReactElement}
  */
 export const App: FunctionComponent<{}> = (): ReactElement => {
+  const [authenticatedUser, setAuthenticatedUser] =
+    useState<BasicUserInfo>(undefined);
+  const [isAuth, setIsAuth] = useState<boolean>(false);
 
-    const [ authenticatedUser, setAuthenticatedUser ] = useState<BasicUserInfo>(undefined);
-    const [ isAuth, setIsAuth ] = useState<boolean>(false);
+  /**
+   * Initialize the SDK & register Sign in and Sign out hooks.
+   */
+  useEffect(() => {
+    // Initialize the client with the config object.
+    auth.initialize(authConfigx as AuthClientConfig<Config>);
 
-    /**
-     * Initialize the SDK & register Sign in and Sign out hooks.
-     */
-    useEffect(() => {
-        const config: AuthClientConfig<Config> = authConfig as AuthClientConfig<Config>;
-        // Initialize the client with the config object.
-        auth.initialize(config);
-
-        auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
-            setIsAuth(true);
-            setAuthenticatedUser(response);
-        });
-
-        auth.on(Hooks.SignOut, () => {
-            setIsAuth(false);
-        });
-
-        auth.signIn({callOnlyOnRedirect: true});
-
-    }, []);
-
-    /**
-     * Check if the page redirected by the sign-in method with authorization code,
-     * if it is recall sing-in method to continue the sign-in flow
-     */
-    useEffect(() => {
-        if (isAuth) {
-            return;
-        }
-
-        auth.isAuthenticated().then(async (response) => {
-            if (response) {
-                const userInfo = await auth.getBasicUserInfo();
-                setAuthenticatedUser({
-                    ...userInfo
-                });
-
-                setIsAuth(true);
-            }
-        });
-    }, [ authenticatedUser, isAuth ]);
-
-    /**
-     * Handles login button click event.
-     */
-    const handleLogin = (): void => {
-        auth.signIn();
-    };
-
-    /**
-     * Handles logout button click event.
-     */
-    const handleLogout = (): void => {
-        auth.signOut();
-    };
-
-    return (
-        <>
-            <div className="container">
-                {
-                    (authConfig.clientID === "")
-                        ? (
-                            <div className="content">
-                                <h2>You need to update the Client ID to proceed.</h2>
-                                <p>
-                                    Please open "src/config.json" file using an editor, and update
-                                    the <code>clientID</code> value with the registered app clientID.
-                                </p>
-                                <p>Visit repo <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master/samples/asgardeo-react-typescript-app">README</a> for more details.</p>
-                            </div>
-                        )
-                        : (isAuth && authenticatedUser)
-                        ? (
-                            <>
-                                <div className="header-title">
-                                    <h1>
-                                        Javascript-based React SPA Authentication Sample
-                                    </h1>
-                                </div>
-                                <div className="content">
-                                    <h3>Below are the basic details retrieved from the server on a successful
-                                        login.</h3>
-                                    <div>
-                                        <ul className="details">
-                                            {
-                                                authenticatedUser.displayName && (
-                                                    <li><b>Name:</b> { authenticatedUser.displayName }</li>
-                                                )
-                                            }
-                                            {
-                                                authenticatedUser.username && (
-                                                    <li><b>Username:</b> { authenticatedUser.username }</li>
-                                                )
-                                            }
-                                            {
-                                                authenticatedUser.email && authenticatedUser.email !== "null" && (
-                                                    <li><b>Email:</b> { authenticatedUser.email }</li>
-                                                )
-                                            }
-                                        </ul>
-                                    </div>
-                                    <button className="btn primary" onClick={ () => handleLogout() }>Logout</button>
-                                </div>
-                            </>
-                        )
-                        : (
-                            <>
-                                <div className="header-title">
-                                    <h1>
-                                        Javascript-based React SPA Authentication Sample
-                                    </h1>
-                                </div>
-                                <div className="content">
-                                    <div className="home-image">
-                                        <img src={ JavascriptLogo } alt="js-logo" className="js-logo-image logo"/>
-                                        <span className="logo-plus">+</span>
-                                        <img src={ ReactLogo } alt="react-logo" className="react-logo-image logo"/>
-                                    </div>
-                                    <h3>
-                                        Sample demo to showcase authentication for a Single Page Application <br />
-                                        via the OpenID Connect Authorization Code flow, <br />
-                                        which is integrated using the { " " }
-                                        <a href="https://github.com/asgardeo/asgardeo-auth-spa-sdk"
-                                        target="_blank" rel="noreferrer">Asgardeo SPA Auth SDK</a>.
-                                    </h3>
-                                    <button className="btn primary" onClick={ () => handleLogin() }>Login</button>
-                                </div>
-                            </>
-                        )
-                }
-            </div>
-
-            <img src={ FooterLogo } className="footer-image" alt="footer-logo"/>
-        </>
+    auth.on(
+      Hooks.CustomGrant,
+      (_aa) => {
+        debugger;
+      },
+      "foo"
     );
+
+    auth.on(Hooks.SignIn, (response: BasicUserInfo) => {
+      debugger;
+      auth.requestCustomGrant(TOKEN_EXCHANGE_CONFIG);
+
+      setIsAuth(true);
+      setAuthenticatedUser(response);
+    });
+
+    auth.on(Hooks.SignOut, () => {
+      setIsAuth(false);
+    });
+
+    auth.signIn({
+      fidp: "google-choreo",
+    });
+  }, []);
+
+  /**
+   * Check if the page redirected by the sign-in method with authorization code,
+   * if it is recall sing-in method to continue the sign-in flow
+   */
+  useEffect(() => {
+    if (isAuth) {
+      return;
+    }
+
+    auth.isAuthenticated().then(async (response) => {
+      if (response) {
+        const userInfo = await auth.getBasicUserInfo();
+        setAuthenticatedUser({
+          ...userInfo,
+        });
+
+        setIsAuth(true);
+      }
+    });
+  }, [authenticatedUser, isAuth]);
+
+  /**
+   * Handles login button click event.
+   */
+  const handleLogin = (): void => {
+    auth.signIn();
+  };
+
+  /**
+   * Handles logout button click event.
+   */
+  const handleLogout = async (): Promise<any> => {
+    await auth.httpRequest({
+      url: "https://run.mocky.io/v3/9641a9d1-55dd-4cb7-b6dc-e2d2a9204074",
+      method: "GET",
+    });
+  };
+
+  return (
+    <>
+      {isAuth && authenticatedUser ? (
+        <>
+          <div className="header-title">
+            <h1>Javascript-based React SPA Authentication Sample</h1>
+          </div>
+          <div className="content">
+            <h3>
+              Below are the basic details retrieved from the server on a
+              successful login.
+            </h3>
+            <div>
+              <ul className="details">
+                {authenticatedUser.displayName && (
+                  <li>
+                    <b>Name:</b> {authenticatedUser.displayName}
+                  </li>
+                )}
+                {authenticatedUser.username && (
+                  <li>
+                    <b>Username:</b> {authenticatedUser.username}
+                  </li>
+                )}
+                {authenticatedUser.email && authenticatedUser.email !== "null" && (
+                  <li>
+                    <b>Email:</b> {authenticatedUser.email}
+                  </li>
+                )}
+              </ul>
+            </div>
+            <button className="btn primary" onClick={() => handleLogout()}>
+              API Call
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="header-title">
+          <h1>Authenticating ....</h1>
+        </div>
+      )}
+    </>
+  );
 };
