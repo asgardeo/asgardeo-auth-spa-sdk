@@ -33,6 +33,7 @@ import {
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
+    CUSTOM_GRANT_CONFIG,
     ERROR,
     ERROR_DESCRIPTION,
     PROMPT_NONE_IFRAME,
@@ -485,7 +486,9 @@ export const MainThreadClient = async (
                 }
             }
         }
-
+        if(config.shouldReplayAfterRefresh) {
+            _dataLayer.setTemporaryDataParameter(CUSTOM_GRANT_CONFIG, JSON.stringify(config));
+        }
         if (useDefaultEndpoint || matches) {
             return _authenticationClient
                 .requestCustomGrant(config)
@@ -518,9 +521,13 @@ export const MainThreadClient = async (
 
     const refreshAccessToken = (): Promise<BasicUserInfo> => {
         return _authenticationClient
-            .refreshAccessToken() // tmkasun: note
+            .refreshAccessToken()
             .then(() => {
-                // do the exchange
+                getCustomGrantConfigData().then((customGrantConfig) => {
+                    if(customGrantConfig) {
+                        requestCustomGrant(customGrantConfig)
+                    }
+                })
                 _spaHelper.refreshAccessTokenAutomatically();
 
                 return _authenticationClient.getBasicUserInfo();
@@ -703,6 +710,15 @@ export const MainThreadClient = async (
             _sessionManagementHelper.reset();
 
             checkSession();
+        }
+    };
+
+    const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
+        const configString =  await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
+        if(configString) {
+            return JSON.parse(configString as string);
+        } else {
+            return null
         }
     };
 

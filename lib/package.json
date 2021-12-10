@@ -16,7 +16,7 @@
         "lint": "eslint --ext .js,.ts .",
         "fix-lint": "eslint --ext .js,.ts . --fix",
         "build": "cross-env NODE_ENV=production rimraf dist && rimraf umd && npm run type-check && rollup -c",
-        "build:dev": "cross-env NODE_ENV=development rimraf dist && rimraf umd && npm run type-check && rollup -m -c",
+        "build:dev": "rimraf dist && rimraf umd && npm run type-check && cross-env NODE_ENV=development rollup -m -c --watch --environment BUILD:development",
         "type-check": "tsc",
         "type-check:watch": "npm run type-check -- --watch",
         "clean": "rimraf dist && rimraf umd && rimraf node_modules",
