@@ -357,6 +357,7 @@ export const WebWorkerCore = async (
         return _authenticationClient
             .refreshAccessToken()
             .then(() => {
+                // tmkasun: note get custom grant configs from data layer and invoke custom grant here too 
                 _spaHelper.refreshAccessTokenAutomatically();
 
                 return _authenticationClient.getBasicUserInfo();

@@ -142,7 +142,7 @@ export const MainThreadClient = async (
                         // Try to refresh the token
                         let refreshTokenResponse;
                         try {
-                            refreshTokenResponse = await _authenticationClient.refreshAccessToken();
+                            refreshTokenResponse = await refreshAccessToken();
                         } catch (refreshError: any) {
                             if (_isHttpHandlerEnabled) {
                                 if (typeof _httpErrorCallback === "function") {
@@ -518,8 +518,9 @@ export const MainThreadClient = async (
 
     const refreshAccessToken = (): Promise<BasicUserInfo> => {
         return _authenticationClient
-            .refreshAccessToken()
+            .refreshAccessToken() // tmkasun: note
             .then(() => {
+                // do the exchange
                 _spaHelper.refreshAccessTokenAutomatically();
 
                 return _authenticationClient.getBasicUserInfo();
