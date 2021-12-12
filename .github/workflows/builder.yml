@@ -47,4 +47,4 @@ jobs:
     - name: Build
       run: |
         yarn install --frozen-lockfile
-        yarn build --if-present
+        yarn build
