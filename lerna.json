@@ -4,9 +4,7 @@
             "message": "[Asgardeo Release] [GitHub Actions] [Release %s] Bump version"
         }
     },
-    "packages": [
-        "lib",
-        "samples/*"
-    ],
+    "npmClient": "yarn",
+    "packages": ["lib", "samples/*"],
     "version": "0.2.14"
 }
