@@ -5,6 +5,9 @@
         }
     },
     "npmClient": "yarn",
-    "packages": ["lib", "samples/*"],
-    "version": "0.2.14"
+    "packages": [
+        "lib",
+        "samples/*"
+    ],
+    "version": "0.2.15"
 }
