@@ -519,22 +519,19 @@ export const MainThreadClient = async (
         }
     };
 
-    const refreshAccessToken = (): Promise<BasicUserInfo> => {
-        return _authenticationClient
-            .refreshAccessToken()
-            .then(() => {
-                getCustomGrantConfigData().then((customGrantConfig) => {
-                    if(customGrantConfig) {
-                        requestCustomGrant(customGrantConfig)
-                    }
-                })
-                _spaHelper.refreshAccessTokenAutomatically();
+    const refreshAccessToken = async (): Promise<BasicUserInfo> => {
+        try {
+            await _authenticationClient.refreshAccessToken();
+            const customGrantConfig = await getCustomGrantConfigData();
+            if (customGrantConfig) {
+                await requestCustomGrant(customGrantConfig);
+            }
+            _spaHelper.refreshAccessTokenAutomatically();
 
-                return _authenticationClient.getBasicUserInfo();
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+            return _authenticationClient.getBasicUserInfo();
+        } catch (error) {
+            return Promise.reject(error);
+        }
     };
 
     const revokeAccessToken = (): Promise<boolean> => {

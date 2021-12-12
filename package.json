@@ -5,14 +5,14 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "lerna run build --stream",
-        "prebuild": "npm run bootstrap",
-        "bootstrap": "npm install && lerna bootstrap",
+        "prebuild": "yarn bootstrap",
+        "bootstrap": "yarn install && lerna bootstrap",
         "remove-node-modules": "npx lerna exec -- rimraf -rf node_modules && rimraf -rf node_modules",
-        "remove-package-lock": "npx lerna exec -- rimraf -rf package-lock.json && rimraf -rf package-lock.json",
+        "remove-package-lock": "npx lerna exec -- rimraf -rf yarn.lock && rimraf -rf yarn.lock",
         "lint": "lerna run lint",
         "fix-lint": "lerna run fix-lint",
         "clean": "lerna run clean --stream",
-        "clean-all": "npm run remove-package-lock && npm run remove-node-modules",
+        "clean-all": "yarn remove-package-lock && yarn remove-node-modules",
         "bump-patch-version": "lerna version patch --yes",
         "bump-minor-version": "lerna version minor --yes",
         "bump-major-version": "lerna version major --yes"

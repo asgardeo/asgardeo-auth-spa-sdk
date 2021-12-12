@@ -1,6 +1,6 @@
 {
     "name": "@asgardeo/auth-spa",
-    "version": "0.2.14",
+    "version": "0.2.18",
     "description": "Asgardeo Auth SPA SDK to be used in Single-Page Applications.",
     "keywords": [
         "Asgardeo",
@@ -15,17 +15,17 @@
     "scripts": {
         "lint": "eslint --ext .js,.ts .",
         "fix-lint": "eslint --ext .js,.ts . --fix",
-        "build": "cross-env NODE_ENV=production rimraf dist && rimraf umd && npm run type-check && rollup -c",
-        "build:dev": "rimraf dist && rimraf umd && npm run type-check && cross-env NODE_ENV=development rollup -m -c --watch --environment BUILD:development",
+        "build": "cross-env NODE_ENV=production rimraf dist && rimraf umd && yarn type-check && rollup -c",
+        "build:dev": "rimraf dist && rimraf umd && yarn type-check && cross-env NODE_ENV=development rollup -m -c --watch --environment BUILD:development",
         "type-check": "tsc",
-        "type-check:watch": "npm run type-check -- --watch",
+        "type-check:watch": "yarn type-check -- --watch",
         "clean": "rimraf dist && rimraf umd && rimraf node_modules",
-        "prepublish": "npm run build"
+        "prepublish": "yarn build"
     },
     "author": "Asgardeo",
     "license": "Apache-2.0",
     "dependencies": {
-        "@asgardeo/auth-js": "^0.2.19",
+        "@asgardeo/auth-js": "0.2.20",
         "@babel/runtime-corejs3": "^7.11.2",
         "await-semaphore": "^0.1.3",
         "axios": "^0.21.0",
