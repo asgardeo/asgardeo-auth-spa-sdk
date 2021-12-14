@@ -522,11 +522,10 @@ export const MainThreadClient = async (
     const refreshAccessToken = async (): Promise<BasicUserInfo> => {
         try {
             await _authenticationClient.refreshAccessToken();
-            await getCustomGrantConfigData().then((customGrantConfig) => {
+            const customGrantConfig = await getCustomGrantConfigData();
             if (customGrantConfig) {
-                requestCustomGrant(customGrantConfig);
+                await requestCustomGrant(customGrantConfig);
             }
-            });
             _spaHelper.refreshAccessTokenAutomatically();
 
             return _authenticationClient.getBasicUserInfo();
