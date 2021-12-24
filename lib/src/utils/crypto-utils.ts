@@ -39,7 +39,7 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string, KeyLike> {
     }
 
     public hashSha256(data: string): string | Buffer {
-        return sha256(new TextEncoder().encode(data)).toString();
+        return Buffer.from(sha256(new TextEncoder().encode(data)));
     }
 
     public generateRandomBytes(length: number): string | Buffer {
