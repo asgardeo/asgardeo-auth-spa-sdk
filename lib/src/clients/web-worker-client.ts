@@ -76,6 +76,7 @@ import {
     WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "../models";
+import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { SPAUtils } from "../utils";
 
 export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>): WebWorkerClientInterface => {
@@ -88,6 +89,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      */
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
     let _isHttpHandlerEnabled: boolean = true;
+    let _getSignOutURLFromSessionStorage: boolean = false;
 
     const _sessionManagementHelper = SessionManagementHelper(
         async () => {
@@ -154,7 +156,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * @returns {Promise<HttpResponse|boolean>} A promise that resolves with a boolean value or the request
      * response if the the `returnResponse` attribute in the `requestParams` object is set to `true`.
      */
-    const requestCustomGrant = (requestParams: CustomGrantConfig): Promise<HttpResponse | BasicUserInfo> => {
+    const requestCustomGrant = (requestParams: SPACustomGrantConfig): Promise<HttpResponse | BasicUserInfo> => {
         const message: Message<CustomGrantConfig> = {
             data: requestParams,
             type: REQUEST_CUSTOM_GRANT
@@ -162,6 +164,10 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         return communicate<CustomGrantConfig, HttpResponse | BasicUserInfo>(message)
             .then((response) => {
+                if (requestParams.preventSignOutURLUpdate) {
+                    _getSignOutURLFromSessionStorage = true;
+                }
+
                 return Promise.resolve(response);
             })
             .catch((error) => {
@@ -596,7 +602,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const signOut = (): Promise<boolean> => {
         return isAuthenticated()
             .then(async (response: boolean) => {
-                if (response) {
+                if (response && !_getSignOutURLFromSessionStorage) {
                     const message: Message<null> = {
                         type: SIGN_OUT
                     };
