@@ -53,6 +53,7 @@ import {
     MainThreadClientInterface,
     Message
 } from "../models";
+import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
 
@@ -85,6 +86,8 @@ export const MainThreadClient = async (
         config.storage ?? Storage.SessionStorage,
         (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
     );
+
+    let _getSignOutURLFromSessionStorage: boolean = false;
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
     let _isHttpHandlerEnabled: boolean = true;
@@ -455,10 +458,13 @@ export const MainThreadClient = async (
     };
 
     const signOut = async (): Promise<boolean> => {
-        if (await _authenticationClient.isAuthenticated()) {
+        if (await _authenticationClient.isAuthenticated() && !_getSignOutURLFromSessionStorage) {
             location.href = await _authenticationClient.signOut();
         } else {
             location.href = SPAUtils.getSignOutURL();
+            await _dataLayer.removeOIDCProviderMetaData();
+            await _dataLayer.removeTemporaryData();
+            await _dataLayer.removeSessionData();
         }
 
         _spaHelper.clearRefreshTokenTimeout();
@@ -468,7 +474,7 @@ export const MainThreadClient = async (
         return true;
     };
 
-    const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
         const clientConfig = await _dataLayer.getConfigData();
@@ -493,6 +499,10 @@ export const MainThreadClient = async (
             return _authenticationClient
                 .requestCustomGrant(config)
                 .then(async (response: HttpResponse | TokenResponse) => {
+                    if (config.preventSignOutURLUpdate) {
+                        _getSignOutURLFromSessionStorage = true;
+                    }
+
                     if (config.returnsSession) {
                         _spaHelper.refreshAccessTokenAutomatically();
 
@@ -561,9 +571,11 @@ export const MainThreadClient = async (
         return _authenticationClient
             .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
             .then(async () => {
-                if (config.storage === Storage.BrowserMemory) {
+                // Disable this temporarily
+                /* if (config.storage === Storage.BrowserMemory) {
                     SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-                }
+                } */
+                SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
 
                 _spaHelper.clearRefreshTokenTimeout();
                 _spaHelper.refreshAccessTokenAutomatically();
