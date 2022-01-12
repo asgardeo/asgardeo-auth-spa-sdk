@@ -18,6 +18,9 @@
 
 import { CustomGrantConfig } from "@asgardeo/auth-js";
 
+/**
+ * SPA Custom Request Grant config model
+ */
 export interface SPACustomGrantConfig extends CustomGrantConfig {
     preventSignOutURLUpdate?: boolean;
 }
