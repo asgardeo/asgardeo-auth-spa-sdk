@@ -22,6 +22,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     GetAuthURLConfig,
     OIDCEndpoints,
     OIDCProviderMetaData,
@@ -114,7 +115,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const communicate = <T, R>(message: Message<T>): Promise<R> => {
         const channel = new MessageChannel();
 
-        worker.postMessage(message, [channel.port2]);
+        worker.postMessage(message, [ channel.port2 ]);
 
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
@@ -125,13 +126,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         "communicate",
                         "Operation timed out.",
                         "No response was received from the web worker for " +
-                            _requestTimeout / 1000 +
-                            " since dispatching the request"
+                        _requestTimeout / 1000 +
+                        " since dispatching the request"
                     )
                 );
             }, _requestTimeout);
 
-            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string> }) => {
+            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string>; }) => {
                 clearTimeout(timer);
 
                 if (data?.success) {
@@ -156,13 +157,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * @returns {Promise<HttpResponse|boolean>} A promise that resolves with a boolean value or the request
      * response if the the `returnResponse` attribute in the `requestParams` object is set to `true`.
      */
-    const requestCustomGrant = (requestParams: SPACustomGrantConfig): Promise<HttpResponse | BasicUserInfo> => {
+    const requestCustomGrant = (requestParams: SPACustomGrantConfig): Promise<FetchResponse | BasicUserInfo> => {
         const message: Message<CustomGrantConfig> = {
             data: requestParams,
             type: REQUEST_CUSTOM_GRANT
         };
 
-        return communicate<CustomGrantConfig, HttpResponse | BasicUserInfo>(message)
+        return communicate<CustomGrantConfig, FetchResponse | BasicUserInfo>(message)
             .then((response) => {
                 if (requestParams.preventSignOutURLUpdate) {
                     _getSignOutURLFromSessionStorage = true;

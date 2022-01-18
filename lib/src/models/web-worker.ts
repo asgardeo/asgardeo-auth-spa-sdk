@@ -22,6 +22,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     OIDCEndpoints
 } from "@asgardeo/auth-js";
 import { HttpRequestConfig, HttpResponse, Message } from ".";
@@ -47,7 +48,7 @@ export interface WebWorkerCoreInterface {
     requestAccessToken(authorizationCode?: string, sessionState?: string, pkce?: string): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<string>;
     getSignOutURL(signOutRedirectURL?: string): Promise<string>;
-    requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse>;
+    requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse>;
     refreshAccessToken(): Promise<BasicUserInfo>;
     revokeAccessToken(): Promise<boolean>;
     getBasicUserInfo(): Promise<BasicUserInfo>;

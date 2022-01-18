@@ -21,6 +21,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     OIDCEndpoints
 } from "@asgardeo/auth-js";
 import { MainThreadClient, WebWorkerClient } from "./clients";
@@ -514,7 +515,9 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async requestCustomGrant(config: CustomGrantConfig): Promise<HttpResponse<any> | BasicUserInfo | undefined> {
+    public async requestCustomGrant(
+        config: CustomGrantConfig
+    ): Promise<FetchResponse<any> | BasicUserInfo | undefined> {
         if (config.signInRequired) {
             await this._validateMethod();
         } else {
@@ -565,7 +568,7 @@ export class AsgardeoSPAClient {
         await this._validateMethod();
 
         const revokeAccessToken = await this._client?.revokeAccessToken();
-        this._onEndUserSession && await this._onEndUserSession(revokeAccessToken);
+        this._onEndUserSession && (await this._onEndUserSession(revokeAccessToken));
 
         return revokeAccessToken;
     }
@@ -627,7 +630,7 @@ export class AsgardeoSPAClient {
             "getHttpClient",
             "The SDK is not initialized.",
             "The SDK has not been initialized yet. Initialize the SDK suing the initialize method " +
-                "before calling this method."
+            "before calling this method."
         );
     }
 
@@ -704,7 +707,7 @@ export class AsgardeoSPAClient {
     public async getAccessToken(): Promise<string> {
         await this._validateMethod();
 
-        if (this._storage && [(Storage.WebWorker, Storage.BrowserMemory)].includes(this._storage)) {
+        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoSPAException(
                     "AUTH_CLIENT-GAT-IV01",

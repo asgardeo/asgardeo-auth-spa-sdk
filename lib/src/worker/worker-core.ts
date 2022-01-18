@@ -23,6 +23,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     OIDCEndpoints,
     SESSION_STATE,
     Store,
@@ -306,7 +307,7 @@ export const WebWorkerCore = async (
         return await _authenticationClient.getSignOutURL();
     };
 
-    const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+    const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
         const clientConfig = await _dataLayer.getConfigData();
@@ -331,13 +332,13 @@ export const WebWorkerCore = async (
         if (useDefaultEndpoint || matches) {
             return _authenticationClient
                 .requestCustomGrant(config)
-                .then(async (response: HttpResponse | TokenResponse) => {
+                .then(async (response: FetchResponse | TokenResponse) => {
                     if (config.returnsSession) {
                         _spaHelper.refreshAccessTokenAutomatically();
 
                         return _authenticationClient.getBasicUserInfo();
                     } else {
-                        return response as HttpResponse;
+                        return response as FetchResponse;
                     }
                 })
                 .catch((error) => {

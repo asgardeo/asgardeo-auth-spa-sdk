@@ -33,7 +33,7 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
 
 export {
     AxiosResponse as HttpResponse,
-    Method,
+    Method as HttpMethod,
     AxiosTransformer as HttpTransformer,
     AxiosAdapter as HttpAdapter,
     AxiosBasicCredentials as HttpBasicCredentials,

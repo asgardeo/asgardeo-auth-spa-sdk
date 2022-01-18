@@ -23,6 +23,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     GetAuthURLConfig,
     OIDCEndpoints,
     ResponseMode,
@@ -477,7 +478,7 @@ export const MainThreadClient = async (
         return true;
     };
 
-    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
         const clientConfig = await _dataLayer.getConfigData();
@@ -501,7 +502,7 @@ export const MainThreadClient = async (
         if (useDefaultEndpoint || matches) {
             return _authenticationClient
                 .requestCustomGrant(config)
-                .then(async (response: HttpResponse | TokenResponse) => {
+                .then(async (response: FetchResponse | TokenResponse) => {
                     if (config.preventSignOutURLUpdate) {
                         _getSignOutURLFromSessionStorage = true;
                     }
@@ -511,7 +512,7 @@ export const MainThreadClient = async (
 
                         return _authenticationClient.getBasicUserInfo();
                     } else {
-                        return response as HttpResponse;
+                        return response as FetchResponse;
                     }
                 })
                 .catch((error) => {

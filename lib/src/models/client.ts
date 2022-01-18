@@ -21,6 +21,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     OIDCEndpoints,
     OIDCProviderMetaData
 } from "@asgardeo/auth-js";
@@ -51,7 +52,7 @@ export interface MainThreadClientInterface {
         signInRedirectURL?: string
     ): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<boolean>;
-    requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | HttpResponse>;
+    requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse>;
     refreshAccessToken(): Promise<BasicUserInfo>;
     revokeAccessToken(): Promise<boolean>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
@@ -65,7 +66,7 @@ export interface MainThreadClientInterface {
 }
 
 export interface WebWorkerClientInterface {
-    requestCustomGrant(requestParams: CustomGrantConfig): Promise<HttpResponse | BasicUserInfo>;
+    requestCustomGrant(requestParams: CustomGrantConfig): Promise<FetchResponse | BasicUserInfo>;
     httpRequest<T = any>(config: HttpRequestConfig): Promise<HttpResponse<T>>;
     httpRequestAll<T = any>(configs: HttpRequestConfig[]): Promise<HttpResponse<T>[]>;
     enableHttpHandler(): Promise<boolean>;
