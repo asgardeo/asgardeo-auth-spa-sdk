@@ -629,7 +629,7 @@ export class AsgardeoSPAClient {
             "client",
             "getHttpClient",
             "The SDK is not initialized.",
-            "The SDK has not been initialized yet. Initialize the SDK suing the initialize method " +
+            "The SDK has not been initialized yet. Initialize the SDK using the initialize method " +
             "before calling this method."
         );
     }
