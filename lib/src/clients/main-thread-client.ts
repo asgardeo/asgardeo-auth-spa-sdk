@@ -23,6 +23,7 @@ import {
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
+    FetchResponse,
     GetAuthURLConfig,
     OIDCEndpoints,
     ResponseMode,
@@ -31,6 +32,7 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import {
+    ACCESS_TOKEN_INVALID,
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
     CUSTOM_GRANT_CONFIG,
@@ -56,6 +58,7 @@ import {
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
+import { SPACryptoUtils } from "../utils/crypto-utils";
 
 const initiateStore = (store: Storage | undefined): Store => {
     switch (store) {
@@ -74,7 +77,8 @@ export const MainThreadClient = async (
     config: AuthClientConfig<MainThreadClientConfig>
 ): Promise<MainThreadClientInterface> => {
     const _store: Store = initiateStore(config.storage);
-    const _authenticationClient = new AsgardeoAuthClient<MainThreadClientConfig>(_store);
+    const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
+    const _authenticationClient = new AsgardeoAuthClient<MainThreadClientConfig>(_store, _cryptoUtils);
     await _authenticationClient.initialize(config);
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
@@ -150,7 +154,7 @@ export const MainThreadClient = async (
                         } catch (refreshError: any) {
                             if (_isHttpHandlerEnabled) {
                                 if (typeof _httpErrorCallback === "function") {
-                                    await _httpErrorCallback(error);
+                                    await _httpErrorCallback({ ...error, code: ACCESS_TOKEN_INVALID });
                                 }
                                 if (typeof _httpFinishCallback === "function") {
                                     _httpFinishCallback();
@@ -259,7 +263,7 @@ export const MainThreadClient = async (
                             } catch (refreshError: any) {
                                 if (_isHttpHandlerEnabled) {
                                     if (typeof _httpErrorCallback === "function") {
-                                        await _httpErrorCallback(error);
+                                        await _httpErrorCallback({ ...error, code: ACCESS_TOKEN_INVALID });
                                     }
                                     if (typeof _httpFinishCallback === "function") {
                                         _httpFinishCallback();
@@ -474,7 +478,7 @@ export const MainThreadClient = async (
         return true;
     };
 
-    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | HttpResponse> => {
+    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
         const clientConfig = await _dataLayer.getConfigData();
@@ -498,7 +502,7 @@ export const MainThreadClient = async (
         if (useDefaultEndpoint || matches) {
             return _authenticationClient
                 .requestCustomGrant(config)
-                .then(async (response: HttpResponse | TokenResponse) => {
+                .then(async (response: FetchResponse | TokenResponse) => {
                     if (config.preventSignOutURLUpdate) {
                         _getSignOutURLFromSessionStorage = true;
                     }
@@ -508,7 +512,7 @@ export const MainThreadClient = async (
 
                         return _authenticationClient.getBasicUserInfo();
                     } else {
-                        return response as HttpResponse;
+                        return response as FetchResponse;
                     }
                 })
                 .catch((error) => {

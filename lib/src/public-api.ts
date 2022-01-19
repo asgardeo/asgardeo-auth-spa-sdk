@@ -26,6 +26,7 @@ export * from "./models";
 export * from "./utils/spa-utils"
 
 // Constants
-export * from "@asgardeo/auth-js";
 export * from "./constants/storage";
 export * from "./constants/hooks";
+
+export * from "@asgardeo/auth-js";

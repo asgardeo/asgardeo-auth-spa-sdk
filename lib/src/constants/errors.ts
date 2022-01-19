@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.com) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,9 +16,4 @@
  * under the License.
  */
 
-export * from "./messages-types";
-export * from "./storage";
-export * from "./hooks";
-export * from "./session-management";
-export * from "./parameters";
-export * from "./errors";
+export const ACCESS_TOKEN_INVALID = "Access token is invalid";
