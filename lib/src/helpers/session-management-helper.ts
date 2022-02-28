@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { SESSION_STATE } from "@asgardeo/auth-js";
+import { GetAuthURLConfig, SESSION_STATE } from "@asgardeo/auth-js";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
@@ -38,14 +38,13 @@ export const SessionManagementHelper = (() => {
     let _sessionState: () => Promise<string>;
     let _interval: number;
     let _redirectURL: string;
-    let _authorizationEndpoint: string;
     let _sessionRefreshInterval: number;
     let _signOut: () => Promise<string>;
     let _sessionRefreshIntervalTimeout: number;
     let _checkSessionIntervalTimeout: number;
     let _storage: Storage;
     let _setSessionState: (sessionState: string) => void;
-    let _isPKCEEnabled: boolean;
+    let _getAuthorizationURL: (params?: GetAuthURLConfig) => Promise<string>;
 
     const initialize = (
         clientID: string,
@@ -54,17 +53,15 @@ export const SessionManagementHelper = (() => {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string,
-        isPKCEEnabled: boolean
+        getAuthorizationURL: (params?: GetAuthURLConfig) => Promise<string>
     ): void => {
         _clientID = clientID;
         _checkSessionEndpoint = checkSessionEndpoint;
         _sessionState = getSessionState;
         _interval = interval;
         _redirectURL = redirectURL;
-        _authorizationEndpoint = authorizationEndpoint;
         _sessionRefreshInterval = sessionRefreshInterval;
-        _isPKCEEnabled = isPKCEEnabled;
+        _getAuthorizationURL = getAuthorizationURL;
 
         if (_interval > -1) {
             initiateCheckSession();
@@ -115,17 +112,6 @@ export const SessionManagementHelper = (() => {
         clearInterval(_sessionRefreshIntervalTimeout);
     }
 
-    const getRandomPKCEChallenge = (): string => {
-        const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz-_";
-        const stringLength = 43;
-        let randomString = "";
-        for (let i = 0; i < stringLength; i++) {
-            const rnum = Math.floor(Math.random() * chars.length);
-            randomString += chars.substring(rnum, rnum + 1);
-        }
-        return randomString;
-    };
-
     const listenToResponseFromOPIFrame = (): void => {
         async function receiveMessage(e: MessageEvent) {
             const targetOrigin = _checkSessionEndpoint;
@@ -149,7 +135,7 @@ export const SessionManagementHelper = (() => {
         window?.addEventListener("message", receiveMessage, false);
     };
 
-    const sendPromptNoneRequest = () => {
+    const sendPromptNoneRequest = async () => {
         const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
         const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
@@ -170,20 +156,12 @@ export const SessionManagementHelper = (() => {
                 window?.addEventListener("message", receiveMessageListener);
             }
 
-            const promptNoneURL = new URL(_authorizationEndpoint);
-            promptNoneURL.searchParams.set("response_type", "code");
-            promptNoneURL.searchParams.set("client_id", _clientID);
-            promptNoneURL.searchParams.set("scope", "openid");
-            promptNoneURL.searchParams.set("redirect_uri", _redirectURL);
-            promptNoneURL.searchParams.set("state", STATE);
-            promptNoneURL.searchParams.set("prompt", "none");
+            const promptNoneURL: string = await _getAuthorizationURL({
+                prompt: "none",
+                state: STATE
+            });
 
-            if(_isPKCEEnabled){
-                promptNoneURL.searchParams.set("code_challenge_method", "S256");
-                promptNoneURL.searchParams.set("code_challenge", getRandomPKCEChallenge());
-            }
-
-            promptNoneIFrame.src = promptNoneURL.toString();
+            promptNoneIFrame.src = promptNoneURL;
         }
     };
 
@@ -209,7 +187,8 @@ export const SessionManagementHelper = (() => {
                     const message: Message<AuthorizationInfo> = {
                         data: {
                             code,
-                            sessionState: sessionState ?? ""
+                            sessionState: sessionState ?? "",
+                            state
                         },
                         type: CHECK_SESSION_SIGNED_IN
                     };
