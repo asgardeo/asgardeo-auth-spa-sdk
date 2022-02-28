@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { AsgardeoAuthClient, SIGN_OUT_URL } from "@asgardeo/auth-js";
 import {
     ERROR,
     INITIALIZED_SILENT_SIGN_IN,
@@ -34,12 +34,12 @@ export class SPAUtils {
         history.pushState({}, document.title, url.replace(/\?code=.*$/, ""));
     }
 
-    public static getPKCE(): string {
-        return sessionStorage.getItem(PKCE_CODE_VERIFIER) ?? "";
+    public static getPKCE(pkceKey: string): string {
+        return sessionStorage.getItem(pkceKey) ?? "";
     }
 
-    public static setPKCE(pkce: string): void {
-        sessionStorage.setItem(PKCE_CODE_VERIFIER, pkce);
+    public static setPKCE(pkceKey: string, pkce: string): void {
+        sessionStorage.setItem(pkceKey, pkce);
     }
 
     public static setSignOutURL(url: string): void {
@@ -50,8 +50,8 @@ export class SPAUtils {
         return sessionStorage.getItem(SIGN_OUT_URL) ?? "";
     }
 
-    public static removePKCE(): void {
-        sessionStorage.removeItem(PKCE_CODE_VERIFIER);
+    public static removePKCE(pkceKey: string): void {
+        sessionStorage.removeItem(pkceKey);
     }
 
     /**
