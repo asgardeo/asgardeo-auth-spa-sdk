@@ -265,7 +265,8 @@ export const WebWorkerCore = async (
     const requestAccessToken = async (
         authorizationCode?: string,
         sessionState?: string,
-        pkce?: string
+        pkce?: string,
+        state?: string
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
@@ -275,7 +276,7 @@ export const WebWorkerCore = async (
 
         if (authorizationCode) {
             return _authenticationClient
-                .requestAccessToken(authorizationCode, sessionState ?? "")
+                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "'")
                 .then(() => {
                     _spaHelper.refreshAccessTokenAutomatically();
 
