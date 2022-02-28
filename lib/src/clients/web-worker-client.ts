@@ -19,6 +19,7 @@
 import {
     AUTHORIZATION_CODE,
     AuthClientConfig,
+    AuthenticationUtils,
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
@@ -27,7 +28,8 @@ import {
     OIDCEndpoints,
     OIDCProviderMetaData,
     ResponseMode,
-    SESSION_STATE
+    SESSION_STATE,
+    STATE
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
@@ -115,7 +117,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const communicate = <T, R>(message: Message<T>): Promise<R> => {
         const channel = new MessageChannel();
 
-        worker.postMessage(message, [ channel.port2 ]);
+        worker.postMessage(message, [channel.port2]);
 
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
@@ -126,13 +128,13 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                         "communicate",
                         "Operation timed out.",
                         "No response was received from the web worker for " +
-                        _requestTimeout / 1000 +
-                        " since dispatching the request"
+                            _requestTimeout / 1000 +
+                            " since dispatching the request"
                     )
                 );
             }, _requestTimeout);
 
-            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string>; }) => {
+            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string> }) => {
                 clearTimeout(timer);
 
                 if (data?.success) {
@@ -346,8 +348,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            config.enablePKCE
+            async (params?: GetAuthURLConfig): Promise<string> => (await getAuthorizationURL(params)).authorizationURL
         );
     };
 
@@ -394,7 +395,11 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         try {
             const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
 
-            response.pkce && config.enablePKCE && SPAUtils.setPKCE(response.pkce);
+            const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(
+                new URL(response.authorizationURL).searchParams.get(STATE) ?? ""
+            );
+
+            response.pkce && config.enablePKCE && SPAUtils.setPKCE(pkceKey, response.pkce);
 
             const urlString: string = response.authorizationURL;
 
@@ -423,7 +428,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data?.data?.code, data?.data?.sessionState)
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.state)
                         .then((response: BasicUserInfo) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
                             resolve(response);
@@ -442,22 +447,52 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
         });
     };
 
+    /**
+     * Generates an authorization URL.
+     *
+     * @param {GetAuthURLConfig} params Authorization URL params.
+     * @returns {Promise<string>} Authorization URL.
+     */
+    const getAuthorizationURL = async (params?: GetAuthURLConfig): Promise<AuthorizationResponse> => {
+        const message: Message<GetAuthURLConfig> = {
+            data: params,
+            type: GET_AUTH_URL
+        };
+
+        return communicate<GetAuthURLConfig, AuthorizationResponse>(message).then(
+            async (response: AuthorizationResponse) => {
+                if (response.pkce && config.enablePKCE) {
+                    const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(
+                        new URL(response.authorizationURL).searchParams.get(STATE) ?? "");
+
+                    SPAUtils.setPKCE(pkceKey, response.pkce);
+                }
+
+                return Promise.resolve(response);
+        });
+    };
+
     const requestAccessToken = async (
         resolvedAuthorizationCode: string,
-        resolvedSessionState: string
+        resolvedSessionState: string,
+        resolvedState: string
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+        const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
 
         const message: Message<AuthorizationInfo> = {
             data: {
                 code: resolvedAuthorizationCode,
-                pkce: config.enablePKCE ? SPAUtils.getPKCE() : undefined,
-                sessionState: resolvedSessionState
+                pkce: config.enablePKCE
+                    ? SPAUtils.getPKCE(pkceKey)
+                    : undefined,
+                sessionState: resolvedSessionState,
+                state: resolvedState
             },
             type: REQUEST_ACCESS_TOKEN
         };
 
-        config.enablePKCE && SPAUtils.removePKCE();
+        config.enablePKCE && SPAUtils.removePKCE(pkceKey);
 
         return communicate<AuthorizationInfo, BasicUserInfo>(message)
             .then((response) => {
@@ -495,7 +530,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     const signIn = async (
         params?: GetAuthURLConfig,
         authorizationCode?: string,
-        sessionState?: string
+        sessionState?: string,
+        state?: string
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
@@ -551,30 +587,25 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
 
         let resolvedAuthorizationCode: string;
         let resolvedSessionState: string;
+        let resolvedState: string;
 
         if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
             resolvedAuthorizationCode = authorizationCode;
             resolvedSessionState = sessionState ?? "";
+            resolvedState = state ?? "";
         } else {
             resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
             resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
+            resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
+
             SPAUtils.removeAuthorizationCode();
         }
 
         if (resolvedAuthorizationCode) {
-            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
         }
 
-        const message: Message<GetAuthURLConfig> = {
-            data: params,
-            type: GET_AUTH_URL
-        };
-
-        return communicate<GetAuthURLConfig, AuthorizationResponse>(message)
-            .then(async (response) => {
-                if (response.pkce && config.enablePKCE) {
-                    SPAUtils.setPKCE(response.pkce);
-                }
+        return getAuthorizationURL(params).then(async (response: AuthorizationResponse)=>{
 
                 location.href = response.authorizationURL;
 
