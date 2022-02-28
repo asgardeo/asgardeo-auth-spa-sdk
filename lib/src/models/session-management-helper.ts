@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import { GetAuthURLConfig } from "..";
+
 export interface SessionManagementHelperInterface {
     initialize(
         clientID: string,
@@ -24,8 +26,7 @@ export interface SessionManagementHelperInterface {
         interval: number,
         sessionRefreshInterval: number,
         redirectURL: string,
-        authorizationEndpoint: string,
-        isPKCEEnabled?: boolean
+        getAuthorizationURL: (params?: GetAuthURLConfig) => Promise<string>
     ): void;
     receivePromptNoneResponse(
         setSessionState?: (sessionState: string | null) => Promise<void>
