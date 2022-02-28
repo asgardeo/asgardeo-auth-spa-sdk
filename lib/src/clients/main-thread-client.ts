@@ -20,6 +20,7 @@ import {
     AUTHORIZATION_CODE,
     AsgardeoAuthClient,
     AuthClientConfig,
+    AuthenticationUtils,
     BasicUserInfo,
     CustomGrantConfig,
     DecodedIDTokenPayload,
@@ -28,6 +29,7 @@ import {
     OIDCEndpoints,
     ResponseMode,
     SESSION_STATE,
+    STATE,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
@@ -360,15 +362,15 @@ export const MainThreadClient = async (
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            oidcEndpoints.authorizationEndpoint ?? "",
-            config.enablePKCE
+            async (params?: GetAuthURLConfig): Promise<string> =>  _authenticationClient.getAuthorizationURL(params)
         );
     };
 
     const signIn = async (
         signInConfig?: GetAuthURLConfig,
         authorizationCode?: string,
-        sessionState?: string
+        sessionState?: string,
+        state?: string
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
@@ -405,18 +407,22 @@ export const MainThreadClient = async (
 
         let resolvedAuthorizationCode: string;
         let resolvedSessionState: string;
+        let resolvedState: string;
 
         if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
             resolvedAuthorizationCode = authorizationCode;
             resolvedSessionState = sessionState ?? "";
+            resolvedState = state ?? "";
         } else {
             resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
             resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
+            resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
+
             SPAUtils.removeAuthorizationCode();
         }
 
         if (resolvedAuthorizationCode) {
-            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState);
+            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
         }
 
         const error = new URL(window.location.href).searchParams.get(ERROR);
@@ -442,7 +448,9 @@ export const MainThreadClient = async (
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
+                const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
+
+                SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode()) as string);
             }
 
             location.href = url;
@@ -562,18 +570,21 @@ export const MainThreadClient = async (
 
     const requestAccessToken = async (
         resolvedAuthorizationCode: string,
-        resolvedSessionState: string
+        resolvedSessionState: string,
+        resolvedState: string
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
         if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-            const pkce = SPAUtils.getPKCE();
+            const pkce = SPAUtils.getPKCE(AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState));
 
-            await _authenticationClient.setPKCECode(pkce);
+            await _authenticationClient.setPKCECode(
+                AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState),
+                pkce);
         }
 
         return _authenticationClient
-            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState)
+            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState)
             .then(async () => {
                 // Disable this temporarily
                 /* if (config.storage === Storage.BrowserMemory) {
@@ -638,7 +649,9 @@ export const MainThreadClient = async (
             const url: string = urlObject.toString();
 
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-                SPAUtils.setPKCE((await _authenticationClient.getPKCECode()) as string);
+                SPAUtils.setPKCE(
+                    AuthenticationUtils.extractPKCEKeyFromStateParam(urlObject.searchParams.get(STATE) ?? ""),
+                    (await _authenticationClient.getPKCECode()) as string);
             }
 
             promptNoneIFrame.src = url;
@@ -661,7 +674,7 @@ export const MainThreadClient = async (
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data.data.code, data?.data?.sessionState)
+                    requestAccessToken(data.data.code, data?.data?.sessionState, data?.data?.state)
                         .then((response: BasicUserInfo) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
                             resolve(response);
