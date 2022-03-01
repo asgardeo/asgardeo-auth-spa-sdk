@@ -178,12 +178,12 @@ export const SessionManagementHelper = (() => {
         const sessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
         const parent = window.parent.parent;
 
-        if (state !== null && (state === STATE || state === SILENT_SIGN_IN_STATE)) {
+        if (state !== null && (state.includes(STATE) || state.includes(SILENT_SIGN_IN_STATE))) {
             // Prompt none response.
             const code = new URL(window.location.href).searchParams.get("code");
 
             if (code !== null && code.length !== 0) {
-                if (state === SILENT_SIGN_IN_STATE) {
+                if (state.includes(SILENT_SIGN_IN_STATE)) {
                     const message: Message<AuthorizationInfo> = {
                         data: {
                             code,
@@ -207,7 +207,7 @@ export const SessionManagementHelper = (() => {
                 const newSessionState = new URL(window.location.href).searchParams.get("session_state");
 
                 if (_storage === Storage.LocalStorage || _storage === Storage.SessionStorage) {
-                    setSessionState && await setSessionState(newSessionState);
+                    setSessionState && (await setSessionState(newSessionState));
                 } else {
                     const message: Message<string> = {
                         data: newSessionState ?? "",
@@ -225,7 +225,7 @@ export const SessionManagementHelper = (() => {
 
                 return true;
             } else {
-                if (state === SILENT_SIGN_IN_STATE) {
+                if (state.includes(SILENT_SIGN_IN_STATE)) {
                     const message: Message<null> = {
                         type: CHECK_SESSION_SIGNED_OUT
                     };

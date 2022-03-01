@@ -129,7 +129,7 @@ export class SPAUtils {
     public static isSilentStatePresentInURL(): boolean {
         const state = new URL(window.location.href).searchParams.get("state");
 
-        return state === SILENT_SIGN_IN_STATE;
+        return state?.includes(SILENT_SIGN_IN_STATE) ?? false;
     }
 
     /**
