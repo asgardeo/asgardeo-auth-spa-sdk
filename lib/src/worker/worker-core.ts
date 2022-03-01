@@ -26,6 +26,7 @@ import {
     FetchResponse,
     OIDCEndpoints,
     SESSION_STATE,
+    STATE,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
@@ -250,7 +251,11 @@ export const WebWorkerCore = async (
         return _authenticationClient
             .getAuthorizationURL(params)
             .then(async (url: string) => {
-                return { authorizationURL: url, pkce: (await _authenticationClient.getPKCECode()) as string };
+                const urlObject: URL = new URL(url);
+                const state: string = urlObject.searchParams.get(STATE) ?? "";
+                const pkce: string = await _authenticationClient.getPKCECode(state);
+
+                return { authorizationURL: url, pkce: pkce };
             })
             .catch((error) => Promise.reject(error));
     };
@@ -271,7 +276,7 @@ export const WebWorkerCore = async (
         const config = await _dataLayer.getConfigData();
 
         if (pkce && config.enablePKCE) {
-            await _authenticationClient.setPKCECode(pkce);
+            await _authenticationClient.setPKCECode(pkce, state ?? "");
         }
 
         if (authorizationCode) {

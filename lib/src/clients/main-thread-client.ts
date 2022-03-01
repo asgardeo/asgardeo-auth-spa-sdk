@@ -450,7 +450,7 @@ export const MainThreadClient = async (
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
                 const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
 
-                SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode()) as string);
+                SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
             }
 
             location.href = url;
@@ -649,9 +649,11 @@ export const MainThreadClient = async (
             const url: string = urlObject.toString();
 
             if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                const state = urlObject.searchParams.get(STATE);
+
                 SPAUtils.setPKCE(
-                    AuthenticationUtils.extractPKCEKeyFromStateParam(urlObject.searchParams.get(STATE) ?? ""),
-                    (await _authenticationClient.getPKCECode()) as string);
+                    AuthenticationUtils.extractPKCEKeyFromStateParam( state ?? ""),
+                    (await _authenticationClient.getPKCECode(state ?? "")) as string);
             }
 
             promptNoneIFrame.src = url;
