@@ -103,7 +103,7 @@ ctx.onmessage = async ({ data, ports }) => {
             break;
         case REQUEST_ACCESS_TOKEN:
             webWorker
-                .requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.pkce)
+                .requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.pkce, data?.data?.state)
                 .then((response: BasicUserInfo) => {
                     port.postMessage(MessageUtils.generateSuccessMessage(response));
                 })
