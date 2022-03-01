@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { Buffer } from "buffer";
 import { CryptoUtils, JWKInterface } from "@asgardeo/auth-js";
 import base64url from "base64url";
 import sha256 from "fast-sha256";
@@ -23,6 +24,7 @@ import sha256 from "fast-sha256";
 import randombytes from "randombytes";
 import parseJwk from "../../node_modules/jose/dist/browser/jwk/parse";
 import jwtVerify, { KeyLike } from "../../node_modules/jose/dist/browser/jwt/verify";
+
 
 export class SPACryptoUtils implements CryptoUtils<Buffer | string, KeyLike> {
     /**
