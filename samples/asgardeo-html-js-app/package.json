@@ -23,6 +23,6 @@
         "start": "http-server -p 5000 -S -o -a localhost"
     },
     "devDependencies": {
-        "http-server": "^0.12.3"
+        "http-server": "^14.1.0"
     }
 }
