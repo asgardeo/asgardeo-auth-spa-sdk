@@ -95,11 +95,11 @@ export class AsgardeoSPAClient {
         let iterationToWait = 0;
 
         const sleep = (): Promise<any> => {
-            return new Promise((resolve) => setTimeout(resolve, 1000));
+            return new Promise((resolve) => setTimeout(resolve, 1));
         };
 
         while (!this._initialized) {
-            if (iterationToWait === 10) {
+            if (iterationToWait === 1e4) {
                 // eslint-disable-next-line no-console
                 console.warn("It is taking longer than usual for the object to be initialized");
             }
