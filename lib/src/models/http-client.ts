@@ -34,7 +34,8 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
 export {
     AxiosResponse as HttpResponse,
     Method as HttpMethod,
-    AxiosTransformer as HttpTransformer,
+    AxiosRequestTransformer as HttpRequestTransformer,
+    AxiosResponseTransformer as HttpResponseTransformer,
     AxiosAdapter as HttpAdapter,
     AxiosBasicCredentials as HttpBasicCredentials,
     ResponseType,
