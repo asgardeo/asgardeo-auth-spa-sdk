@@ -22,7 +22,7 @@
     "license": "Apache-2.0",
     "private": false,
     "scripts": {
-        "start": "webpack-dev-server --mode development --inline --hot --open"
+        "start": "webpack-dev-server --mode development --hot --open"
     },
     "dependencies": {
         "@asgardeo/auth-spa": "^0.2.19",
