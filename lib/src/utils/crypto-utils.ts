@@ -51,14 +51,7 @@ export class SPACryptoUtils
     public parseJwk(key: Partial<JWKInterface>): Promise<GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>> {
         return Promise.resolve(
             createLocalJWKSet({
-                keys: [
-                    {
-                        alg: key.alg,
-                        e: key.e,
-                        kty: key.kty,
-                        n: key.n
-                    }
-                ]
+                keys: [ key ]
             })
         );
     }
