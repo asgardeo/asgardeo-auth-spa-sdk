@@ -56,10 +56,6 @@ export const WebWorkerCore = async (
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
 
-    let _onHttpRequestStart: () => void;
-    let _onHttpRequestSuccess: (response: HttpResponse) => void;
-    let _onHttpRequestFinish: () => void;
-    let _onHttpRequestError: (error: HttpError) => void;
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
