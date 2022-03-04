@@ -16,12 +16,13 @@
  * under the License.
  */
 
-import { AsgardeoAuthClient, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { AsgardeoAuthClient, SIGN_OUT_SUCCESS_PARAM, SIGN_OUT_URL } from "@asgardeo/auth-js";
 import {
     ERROR,
     INITIALIZED_SILENT_SIGN_IN,
     PROMPT_NONE_REQUEST_SENT,
-    SILENT_SIGN_IN_STATE
+    SILENT_SIGN_IN_STATE,
+    STATE_QUERY
 } from "../constants";
 
 export class SPAUtils {
@@ -121,6 +122,17 @@ export class SPAUtils {
         return false;
     }
 
+    public static didSignOutFail(): boolean {
+        if (AsgardeoAuthClient.didSignOutFail(window.location.href)) {
+            const newUrl = window.location.href.split("?")[0];
+            history.pushState({}, document.title, newUrl);
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Checks if the URL the user agent is redirected to after an authorization request has the state parameter.
      *
@@ -153,7 +165,9 @@ export class SPAUtils {
      * @returns {boolean} - True if the URL contains an error.
      */
     public static hasErrorInURL(url: string = window.location.href): boolean {
-        return !!new URL(url).searchParams.get(ERROR);
+        const urlObject: URL = new URL(url);
+        return !!urlObject.searchParams.get(ERROR)
+            && urlObject.searchParams.get(STATE_QUERY) !== SIGN_OUT_SUCCESS_PARAM;
     }
 
     /**
