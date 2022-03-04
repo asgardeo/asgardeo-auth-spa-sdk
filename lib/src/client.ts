@@ -832,6 +832,12 @@ export class AsgardeoSPAClient {
                 case Hooks.CustomGrant:
                     id && this._onCustomGrant.set(id, callback);
                     break;
+                case Hooks.SignOutFailed:
+                    this._onSignOutCallback = callback;
+                    if (SPAUtils.didSignOutFail()) {
+                        this._onSignOutCallback();
+                    }
+                    break;
                 default:
                     throw new AsgardeoSPAException(
                         "AUTH_CLIENT-ON-IV01",
