@@ -36,6 +36,7 @@ import {
     MainThreadClientConfig,
     MainThreadClientInterface,
     SignInConfig,
+    SignOutError,
     WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "./models";
@@ -68,6 +69,7 @@ export class AsgardeoSPAClient {
     private _startedInitialize: boolean = false;
     private _onSignInCallback: (response: BasicUserInfo) => void = () => null;
     private _onSignOutCallback: () => void = () => null;
+    private _onSignOutFailedCallback: (error: SignOutError) => void = () => null;
     private _onEndUserSession: (response: any) => void = () => null;
     private _onInitialize: (response: boolean) => void = () => null;
     private _onCustomGrant: Map<string, (response: any) => void> = new Map();
@@ -95,11 +97,11 @@ export class AsgardeoSPAClient {
         let iterationToWait = 0;
 
         const sleep = (): Promise<any> => {
-            return new Promise((resolve) => setTimeout(resolve, 1000));
+            return new Promise((resolve) => setTimeout(resolve, 1));
         };
 
         while (!this._initialized) {
-            if (iterationToWait === 10) {
+            if (iterationToWait === 1e4) {
                 // eslint-disable-next-line no-console
                 console.warn("It is taking longer than usual for the object to be initialized");
             }
@@ -210,7 +212,7 @@ export class AsgardeoSPAClient {
         } else {
             if (!this._client) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
-                this._client = WebWorkerClient({
+                this._client = await WebWorkerClient({
                     ...DefaultConfig,
                     ...webWorkerClientConfig
                 }) as WebWorkerClientInterface;
@@ -832,6 +834,15 @@ export class AsgardeoSPAClient {
                 case Hooks.CustomGrant:
                     id && this._onCustomGrant.set(id, callback);
                     break;
+                case Hooks.SignOutFailed: {
+                    this._onSignOutFailedCallback = callback;
+                    const signOutFail: boolean | SignOutError = SPAUtils.didSignOutFail();
+
+                    if (signOutFail) {
+                        this._onSignOutFailedCallback(signOutFail as SignOutError);
+                    }
+                    break;
+                }
                 default:
                     throw new AsgardeoSPAException(
                         "AUTH_CLIENT-ON-IV01",

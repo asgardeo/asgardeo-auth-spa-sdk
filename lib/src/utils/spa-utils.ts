@@ -16,12 +16,15 @@
  * under the License.
  */
 
-import { AsgardeoAuthClient, PKCE_CODE_VERIFIER, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { AsgardeoAuthClient, SIGN_OUT_SUCCESS_PARAM, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { SignOutError } from "..";
 import {
     ERROR,
+    ERROR_DESCRIPTION,
     INITIALIZED_SILENT_SIGN_IN,
     PROMPT_NONE_REQUEST_SENT,
-    SILENT_SIGN_IN_STATE
+    SILENT_SIGN_IN_STATE,
+    STATE_QUERY
 } from "../constants";
 
 export class SPAUtils {
@@ -34,12 +37,12 @@ export class SPAUtils {
         history.pushState({}, document.title, url.replace(/\?code=.*$/, ""));
     }
 
-    public static getPKCE(): string {
-        return sessionStorage.getItem(PKCE_CODE_VERIFIER) ?? "";
+    public static getPKCE(pkceKey: string): string {
+        return sessionStorage.getItem(pkceKey) ?? "";
     }
 
-    public static setPKCE(pkce: string): void {
-        sessionStorage.setItem(PKCE_CODE_VERIFIER, pkce);
+    public static setPKCE(pkceKey: string, pkce: string): void {
+        sessionStorage.setItem(pkceKey, pkce);
     }
 
     public static setSignOutURL(url: string): void {
@@ -50,8 +53,8 @@ export class SPAUtils {
         return sessionStorage.getItem(SIGN_OUT_URL) ?? "";
     }
 
-    public static removePKCE(): void {
-        sessionStorage.removeItem(PKCE_CODE_VERIFIER);
+    public static removePKCE(pkceKey: string): void {
+        sessionStorage.removeItem(pkceKey);
     }
 
     /**
@@ -121,6 +124,23 @@ export class SPAUtils {
         return false;
     }
 
+    public static didSignOutFail(): boolean | SignOutError {
+        if (AsgardeoAuthClient.didSignOutFail(window.location.href)) {
+            const url: URL = new URL(window.location.href);
+            const error: string | null = url.searchParams.get(ERROR);
+            const description: string | null = url.searchParams.get(ERROR_DESCRIPTION);
+            const newUrl = window.location.href.split("?")[0];
+            history.pushState({}, document.title, newUrl);
+
+            return {
+                description: description ?? "",
+                error: error ?? ""
+            };
+        }
+
+        return false;
+    }
+
     /**
      * Checks if the URL the user agent is redirected to after an authorization request has the state parameter.
      *
@@ -129,7 +149,7 @@ export class SPAUtils {
     public static isSilentStatePresentInURL(): boolean {
         const state = new URL(window.location.href).searchParams.get("state");
 
-        return state === SILENT_SIGN_IN_STATE;
+        return state?.includes(SILENT_SIGN_IN_STATE) ?? false;
     }
 
     /**
@@ -153,7 +173,10 @@ export class SPAUtils {
      * @returns {boolean} - True if the URL contains an error.
      */
     public static hasErrorInURL(url: string = window.location.href): boolean {
-        return !!new URL(url).searchParams.get(ERROR);
+        const urlObject: URL = new URL(url);
+        return (
+            !!urlObject.searchParams.get(ERROR) && urlObject.searchParams.get(STATE_QUERY) !== SIGN_OUT_SUCCESS_PARAM
+        );
     }
 
     /**

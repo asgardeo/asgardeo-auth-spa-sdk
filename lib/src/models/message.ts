@@ -66,6 +66,7 @@ export interface AuthorizationInfo {
     code: string;
     sessionState: string;
     pkce?: string;
+    state: string;
 }
 
 export type MessageType =

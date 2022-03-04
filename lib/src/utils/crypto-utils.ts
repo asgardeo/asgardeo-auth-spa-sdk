@@ -16,15 +16,17 @@
  * under the License.
  */
 
+import { Buffer } from "buffer";
 import { CryptoUtils, JWKInterface } from "@asgardeo/auth-js";
 import base64url from "base64url";
 import sha256 from "fast-sha256";
-// Importing from node_modules since rollup doesn't support export attribute of `package.json` yet.
+import { createLocalJWKSet, jwtVerify } from "jose";
+import { FlattenedJWSInput, GetKeyFunction, JWSHeaderParameters } from "jose/dist/types/types";
 import randombytes from "randombytes";
-import parseJwk from "../../node_modules/jose/dist/browser/jwk/parse";
-import jwtVerify, { KeyLike } from "../../node_modules/jose/dist/browser/jwt/verify";
 
-export class SPACryptoUtils implements CryptoUtils<Buffer | string, KeyLike> {
+export class SPACryptoUtils
+    implements CryptoUtils<Buffer | string, GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>>
+{
     /**
      * Get URL encoded string.
      *
@@ -46,18 +48,17 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string, KeyLike> {
         return randombytes(length);
     }
 
-    public parseJwk(key: Partial<JWKInterface>): Promise<KeyLike> {
-        return parseJwk({
-            alg: key.alg,
-            e: key.e,
-            kty: key.kty,
-            n: key.n
-        });
+    public parseJwk(key: Partial<JWKInterface>): Promise<GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>> {
+        return Promise.resolve(
+            createLocalJWKSet({
+                keys: [ key ]
+            })
+        );
     }
 
     public verifyJwt(
         idToken: string,
-        jwk: KeyLike,
+        jwk: GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>,
         algorithms: string[],
         clientID: string,
         issuer: string,

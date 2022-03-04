@@ -126,28 +126,23 @@ const App = () => {
 
         authClient.initialize(authConfig.default);
 
-        // Check if the page redirected by the sign-in method with authorization code, if it is recall sign-in method to
-        // continue the sign-in flow
-        if ( JSON.parse(sessionStorage.getItem("initialized-sign-in")) ) {
-            authClient.signIn({ callOnlyOnRedirect: true });
-        }
-        else {
-            authClient.isAuthenticated().then((isAuthenticated) => {
-                if (isAuthenticated) {
-                    authClient.getIDToken().then((idToken) => {
-                        setAuthenticateState({
-                            ...authenticateState,
-                            authenticateResponse: JSON.parse(sessionStorage.getItem("authenticateResponse")),
-                            idToken: parseIdToken(idToken)
-                        });
+        authClient.signIn({ callOnlyOnRedirect: true });
 
-                        setIsAuth(true);
+        authClient.isAuthenticated().then((isAuthenticated) => {
+            if (isAuthenticated) {
+                authClient.getIDToken().then((idToken) => {
+                    setAuthenticateState({
+                        ...authenticateState,
+                        authenticateResponse: JSON.parse(sessionStorage.getItem("authenticateResponse")),
+                        idToken: parseIdToken(idToken)
                     });
-                }
 
-                setIsLoading(false);
-            });
-        }
+                    setIsAuth(true);
+                });
+            }
+
+            setIsLoading(false);
+        });
 
     }, []);
 

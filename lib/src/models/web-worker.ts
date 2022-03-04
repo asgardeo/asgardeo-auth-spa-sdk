@@ -45,7 +45,12 @@ export interface WebWorkerCoreInterface {
     enableHttpHandler(): void;
     disableHttpHandler(): void;
     getAuthorizationURL(params?: AuthorizationURLParams, signInRedirectURL?: string): Promise<AuthorizationResponse>;
-    requestAccessToken(authorizationCode?: string, sessionState?: string, pkce?: string): Promise<BasicUserInfo>;
+    requestAccessToken(
+        authorizationCode?: string,
+        sessionState?: string,
+        pkce?: string,
+        state?: string
+    ): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<string>;
     getSignOutURL(signOutRedirectURL?: string): Promise<string>;
     requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse>;

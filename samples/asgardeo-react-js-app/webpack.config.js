@@ -21,14 +21,13 @@ const path = require("path");
 
 module.exports = {
     devServer: {
-        contentBase: path.resolve(__dirname, "dist"),
+        static: path.resolve(__dirname, "dist"),
         historyApiFallback: true,
         host: "localhost",
         https: true,
-        inline: true,
         port: 5000
-    },   
-    devtool: "source-map", 
+    },
+    devtool: "source-map",
     entry: ["./src/app.js"],
     module: {
         rules: [

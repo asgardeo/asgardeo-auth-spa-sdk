@@ -26,6 +26,7 @@ import {
     FetchResponse,
     OIDCEndpoints,
     SESSION_STATE,
+    STATE,
     Store,
     TokenResponse
 } from "@asgardeo/auth-js";
@@ -55,10 +56,6 @@ export const WebWorkerCore = async (
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
 
-    let _onHttpRequestStart: () => void;
-    let _onHttpRequestSuccess: (response: HttpResponse) => void;
-    let _onHttpRequestFinish: () => void;
-    let _onHttpRequestError: (error: HttpError) => void;
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
@@ -250,7 +247,11 @@ export const WebWorkerCore = async (
         return _authenticationClient
             .getAuthorizationURL(params)
             .then(async (url: string) => {
-                return { authorizationURL: url, pkce: (await _authenticationClient.getPKCECode()) as string };
+                const urlObject: URL = new URL(url);
+                const state: string = urlObject.searchParams.get(STATE) ?? "";
+                const pkce: string = await _authenticationClient.getPKCECode(state);
+
+                return { authorizationURL: url, pkce: pkce };
             })
             .catch((error) => Promise.reject(error));
     };
@@ -265,17 +266,18 @@ export const WebWorkerCore = async (
     const requestAccessToken = async (
         authorizationCode?: string,
         sessionState?: string,
-        pkce?: string
+        pkce?: string,
+        state?: string
     ): Promise<BasicUserInfo> => {
         const config = await _dataLayer.getConfigData();
 
         if (pkce && config.enablePKCE) {
-            await _authenticationClient.setPKCECode(pkce);
+            await _authenticationClient.setPKCECode(pkce, state ?? "");
         }
 
         if (authorizationCode) {
             return _authenticationClient
-                .requestAccessToken(authorizationCode, sessionState ?? "")
+                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "'")
                 .then(() => {
                     _spaHelper.refreshAccessTokenAutomatically();
 

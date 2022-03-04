@@ -25,5 +25,6 @@ export enum Hooks {
     HttpRequestError = "http-request-error",
     HttpRequestSuccess = "http-request-success",
     RevokeAccessToken = "revoke-access-token",
-    CustomGrant = "custom-grant"
+    CustomGrant = "custom-grant",
+    SignOutFailed = "sign-out-failed"
 }
