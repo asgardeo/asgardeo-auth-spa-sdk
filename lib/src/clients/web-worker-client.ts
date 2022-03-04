@@ -454,6 +454,8 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
      * @returns {Promise<string>} Authorization URL.
      */
     const getAuthorizationURL = async (params?: GetAuthURLConfig): Promise<AuthorizationResponse> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+
         const message: Message<GetAuthURLConfig> = {
             data: params,
             type: GET_AUTH_URL
