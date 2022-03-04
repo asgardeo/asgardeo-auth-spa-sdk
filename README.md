@@ -725,7 +725,8 @@ If you are using TypeScript, you may want to use the `Hooks` enum that consists 
 | `"http-request-success"` | `httpRequest()` (Called when an http requests returns a response successfully)   |
 | `"revoke-access-token"`  | `revokeAccessToken()`                                                            | A boolean value indicating if the process was successful or not                         |
 | `"custom-grant"`         | `customGrant()`                                                                  | Returns the response from the custom grant request.                                     |
-| `sign-out-failed`        | `signOut()` (Called when sign out fails)                                        |                                                                                         |
+| `sign-out-failed`        | `signOut()` (Called when sign out fails)        | An object of type [`SignOutError`](#SignOutError).|
+
 **When the user signs out, the user is taken to the Asgardeo's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
 
 #### Example
@@ -1015,6 +1016,12 @@ This extends the `AxiosRequestConfig` by providing an additional attribute that 
 |Attribute | Type | Description|
 |--|--|--|
 |attachToken| `boolean`| Specifies if the access token should be attached to the header of the request.|
+
+### SignOutError
+| Attribute             | Type                   | Description                                    |
+| ------------------ | ---------------------- | ---------------------------------------------- |
+| error                 | `string`               | The error message.                              |
+| error_description     | `string`               | The error description.                          |
 
 ## Develop
 

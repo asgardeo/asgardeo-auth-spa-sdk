@@ -36,6 +36,7 @@ import {
     MainThreadClientConfig,
     MainThreadClientInterface,
     SignInConfig,
+    SignOutError,
     WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "./models";
@@ -68,6 +69,7 @@ export class AsgardeoSPAClient {
     private _startedInitialize: boolean = false;
     private _onSignInCallback: (response: BasicUserInfo) => void = () => null;
     private _onSignOutCallback: () => void = () => null;
+    private _onSignOutFailedCallback: (error: SignOutError) => void = () => null;
     private _onEndUserSession: (response: any) => void = () => null;
     private _onInitialize: (response: boolean) => void = () => null;
     private _onCustomGrant: Map<string, (response: any) => void> = new Map();
@@ -832,12 +834,15 @@ export class AsgardeoSPAClient {
                 case Hooks.CustomGrant:
                     id && this._onCustomGrant.set(id, callback);
                     break;
-                case Hooks.SignOutFailed:
-                    this._onSignOutCallback = callback;
-                    if (SPAUtils.didSignOutFail()) {
-                        this._onSignOutCallback();
+                case Hooks.SignOutFailed: {
+                    this._onSignOutFailedCallback = callback;
+                    const signOutFail: boolean | SignOutError = SPAUtils.didSignOutFail();
+
+                    if (signOutFail) {
+                        this._onSignOutFailedCallback(signOutFail as SignOutError);
                     }
                     break;
+                }
                 default:
                     throw new AsgardeoSPAException(
                         "AUTH_CLIENT-ON-IV01",
