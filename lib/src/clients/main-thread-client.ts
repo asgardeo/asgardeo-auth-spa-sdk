@@ -85,7 +85,7 @@ export const MainThreadClient = async (
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
-    const _sessionManagementHelper = SessionManagementHelper(
+    const _sessionManagementHelper = await SessionManagementHelper(
         async () => {
             return _authenticationClient.signOut();
         },

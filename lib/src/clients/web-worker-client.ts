@@ -82,7 +82,8 @@ import {
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { SPAUtils } from "../utils";
 
-export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>): WebWorkerClientInterface => {
+export const WebWorkerClient = async (
+    config: AuthClientConfig<WebWorkerClientConfig>): Promise<WebWorkerClientInterface> => {
     /**
      * HttpClient handlers
      */
@@ -94,7 +95,7 @@ export const WebWorkerClient = (config: AuthClientConfig<WebWorkerClientConfig>)
     let _isHttpHandlerEnabled: boolean = true;
     let _getSignOutURLFromSessionStorage: boolean = false;
 
-    const _sessionManagementHelper = SessionManagementHelper(
+    const _sessionManagementHelper = await SessionManagementHelper(
         async () => {
             const message: Message<string> = {
                 type: SIGN_OUT
