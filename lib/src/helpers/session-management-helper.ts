@@ -255,15 +255,16 @@ export const SessionManagementHelper = (() => {
         return false;
     };
 
-    return (
+    return async (
         signOut: () => Promise<string>,
         storage: Storage,
         setSessionState: (sessionState: string) => void
-    ): SessionManagementHelperInterface => {
+    ): Promise<SessionManagementHelperInterface> => {
         let rpIFrame = document.createElement("iframe");
         rpIFrame.setAttribute("id", RP_IFRAME);
         rpIFrame.style.display = "none";
 
+        let rpIframeLoaded: boolean = false;
         rpIFrame.onload = () => {
             rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
 
@@ -283,6 +284,8 @@ export const SessionManagementHelper = (() => {
 
             opIFrame && rpIFrame?.contentDocument?.body?.appendChild(opIFrame);
             promptNoneIFrame && rpIFrame?.contentDocument?.body?.appendChild(promptNoneIFrame);
+
+            rpIframeLoaded = true;
         }
 
         document?.body?.appendChild(rpIFrame);
@@ -291,6 +294,14 @@ export const SessionManagementHelper = (() => {
 
         _storage = storage;
         _setSessionState = setSessionState;
+
+        const sleep = (): Promise<any> => {
+            return new Promise((resolve) => setTimeout(resolve, 1));
+        };
+
+        while (rpIframeLoaded === false) {
+            await sleep();
+        }
 
         return {
             initialize,
