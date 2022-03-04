@@ -212,7 +212,7 @@ export class AsgardeoSPAClient {
         } else {
             if (!this._client) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
-                this._client = WebWorkerClient({
+                this._client = await WebWorkerClient({
                     ...DefaultConfig,
                     ...webWorkerClientConfig
                 }) as WebWorkerClientInterface;
