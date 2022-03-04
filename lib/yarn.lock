@@ -9,10 +9,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.0"
 
-"@asgardeo/auth-js@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@asgardeo/auth-js/-/auth-js-1.0.4.tgz#ea40337c1f4d111b260977aa83571124d0e52e94"
-  integrity sha512-1xDeTJ+lxPPjw0Dzz9PzTwH+dXOZ62MwfsWnpULdHLh2kQzK4KD1vP8eDKumiMjke0v8YgVAPa1+CiGucaFH7Q==
+"@asgardeo/auth-js@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@asgardeo/auth-js/-/auth-js-1.0.5.tgz#e2eb0ca1be18bfea5c665849746cd70be1dc7d49"
+  integrity sha512-qDjYLml9xtzx2vHdVGkB4lSUnAukPnNIToe6CR+6dziYT7syjHGHC/WgDSaBD6msRtq2OMK9ITqpyUQm4CI/oA==
 
 "@babel/cli@^7.17.6":
   version "7.17.6"
