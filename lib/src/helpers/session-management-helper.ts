@@ -27,6 +27,7 @@ import {
     SET_SESSION_STATE_FROM_IFRAME,
     SILENT_SIGN_IN_STATE,
     STATE,
+    STATE_QUERY,
     Storage
 } from "../constants";
 import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
@@ -174,7 +175,7 @@ export const SessionManagementHelper = (() => {
     const receivePromptNoneResponse = async (
         setSessionState?: (sessionState: string | null) => Promise<void>
     ): Promise<boolean> => {
-        const state = new URL(window.location.href).searchParams.get("state");
+        const state = new URL(window.location.href).searchParams.get(STATE_QUERY);
         const sessionState = new URL(window.location.href).searchParams.get(SESSION_STATE);
         const parent = window.parent.parent;
 
