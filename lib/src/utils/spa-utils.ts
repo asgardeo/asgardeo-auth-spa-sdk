@@ -17,8 +17,10 @@
  */
 
 import { AsgardeoAuthClient, SIGN_OUT_SUCCESS_PARAM, SIGN_OUT_URL } from "@asgardeo/auth-js";
+import { SignOutError } from "..";
 import {
     ERROR,
+    ERROR_DESCRIPTION,
     INITIALIZED_SILENT_SIGN_IN,
     PROMPT_NONE_REQUEST_SENT,
     SILENT_SIGN_IN_STATE,
@@ -122,12 +124,18 @@ export class SPAUtils {
         return false;
     }
 
-    public static didSignOutFail(): boolean {
+    public static didSignOutFail(): boolean | SignOutError {
         if (AsgardeoAuthClient.didSignOutFail(window.location.href)) {
+            const url: URL = new URL(window.location.href);
+            const error: string | null = url.searchParams.get(ERROR);
+            const description: string | null = url.searchParams.get(ERROR_DESCRIPTION);
             const newUrl = window.location.href.split("?")[0];
             history.pushState({}, document.title, newUrl);
 
-            return true;
+            return {
+                description: description ?? "",
+                error: error ?? ""
+            };
         }
 
         return false;
@@ -166,8 +174,9 @@ export class SPAUtils {
      */
     public static hasErrorInURL(url: string = window.location.href): boolean {
         const urlObject: URL = new URL(url);
-        return !!urlObject.searchParams.get(ERROR)
-            && urlObject.searchParams.get(STATE_QUERY) !== SIGN_OUT_SUCCESS_PARAM;
+        return (
+            !!urlObject.searchParams.get(ERROR) && urlObject.searchParams.get(STATE_QUERY) !== SIGN_OUT_SUCCESS_PARAM
+        );
     }
 
     /**
