@@ -789,15 +789,7 @@ export class AsgardeoSPAClient {
      */
     public async on(hook: Hooks.CustomGrant, callback: (response?: any) => void, id: string): Promise<void>;
     public async on(
-        hook:
-            | Hooks.RevokeAccessToken
-            | Hooks.HttpRequestError
-            | Hooks.HttpRequestFinish
-            | Hooks.HttpRequestStart
-            | Hooks.HttpRequestSuccess
-            | Hooks.Initialize
-            | Hooks.SignIn
-            | Hooks.SignOut,
+        hook: Omit<Hooks, Hooks.CustomGrant>,
         callback: (response?: any) => void
     ): Promise<void>;
     public async on(hook: Hooks, callback: (response?: any) => void | Promise<void>, id?: string): Promise<void> {
