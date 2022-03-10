@@ -212,10 +212,10 @@ export class AsgardeoSPAClient {
         } else {
             if (!this._client) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
-                this._client = await WebWorkerClient({
+                this._client = (await WebWorkerClient({
                     ...DefaultConfig,
                     ...webWorkerClientConfig
-                }) as WebWorkerClientInterface;
+                })) as WebWorkerClientInterface;
 
                 return this._client
                     .initialize()
@@ -281,6 +281,9 @@ export class AsgardeoSPAClient {
      *  2. forceInit: Specifies if the OIDC Provider Meta Data should be loaded again from the `well-known`
      * endpoint.
      *  3. Any other parameters that should be appended to the authorization request.
+     * @param {string} authorizationCode - The authorization code. (Optional)
+     * @param {string} sessionState - The session state. (Optional)
+     * @param {string} state - The state. (Optional)
      *
      * @return {Promise<BasicUserInfo>} - A promise that resolves with the user information.
      *
@@ -298,7 +301,8 @@ export class AsgardeoSPAClient {
     public async signIn(
         config?: SignInConfig,
         authorizationCode?: string,
-        sessionState?: string
+        sessionState?: string,
+        state?: string
     ): Promise<BasicUserInfo | undefined> {
         await this._isInitialized();
 
@@ -310,7 +314,7 @@ export class AsgardeoSPAClient {
 
         delete config?.callOnlyOnRedirect;
 
-        return this._client?.signIn(config, authorizationCode, sessionState).then((response: BasicUserInfo) => {
+        return this._client?.signIn(config, authorizationCode, sessionState, state).then((response: BasicUserInfo) => {
             if (this._onSignInCallback) {
                 if (response.allowedScopes || response.displayName || response.email || response.username) {
                     this._onSignInCallback(response);
@@ -632,7 +636,7 @@ export class AsgardeoSPAClient {
             "getHttpClient",
             "The SDK is not initialized.",
             "The SDK has not been initialized yet. Initialize the SDK using the initialize method " +
-            "before calling this method."
+                "before calling this method."
         );
     }
 
@@ -709,7 +713,7 @@ export class AsgardeoSPAClient {
     public async getAccessToken(): Promise<string> {
         await this._validateMethod();
 
-        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
+        if (this._storage && [(Storage.WebWorker, Storage.BrowserMemory)].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoSPAException(
                     "AUTH_CLIENT-GAT-IV01",
@@ -788,10 +792,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async on(hook: Hooks.CustomGrant, callback: (response?: any) => void, id: string): Promise<void>;
-    public async on(
-        hook: Exclude<Hooks, Hooks.CustomGrant>,
-        callback: (response?: any) => void
-    ): Promise<void>;
+    public async on(hook: Exclude<Hooks, Hooks.CustomGrant>, callback: (response?: any) => void): Promise<void>;
     public async on(hook: Hooks, callback: (response?: any) => void | Promise<void>, id?: string): Promise<void> {
         await this._isInitialized();
         if (callback && typeof callback === "function") {
