@@ -16,6 +16,8 @@
  * under the License.
  */
 
+let isLoading = true;
+
 /**
  * SDK Client instance.
  */
@@ -145,10 +147,16 @@ function updateView() {
         loggedOutView.style.display = "none";
     } else {
         loggedInView.style.display = "none";
-        loggedOutView.style.display = "block";
+
+        if (!isLoading) {
+            loggedOutView.style.display = "block";
+        }
     }
 
-    document.getElementById("loading").style.display = "none";
+    if (!isLoading) {
+        document.getElementById("loading").style.display = "none";
+    }
+
     document.getElementById("error").style.display = "none";
 }
 
@@ -182,14 +190,17 @@ function handleLogout() {
     authClient.signOut();
 }
 
+
 if (authConfig.clientID === "") {
     document.getElementById("missing-config").style.display = "block";
 } else {
     // Check if the page redirected by the sign-in method with authorization code, if it is recall sing-in method to
     // continue the sign-in flow
-    authClient.signIn({ callOnlyOnRedirect: true }).catch((error) => {
-        document.getElementById("loading").style.display = "none";
+    authClient.signIn({ callOnlyOnRedirect: true }).catch(() => {
         document.getElementById("error").style.display = "block";
+    }).finally(() => {
+        isLoading = false;
+        updateView();
     });
 
     authClient.isAuthenticated().then(function (isAuthenticated) {
