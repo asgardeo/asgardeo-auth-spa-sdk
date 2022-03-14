@@ -636,7 +636,7 @@ export class AsgardeoSPAClient {
             "getHttpClient",
             "The SDK is not initialized.",
             "The SDK has not been initialized yet. Initialize the SDK using the initialize method " +
-                "before calling this method."
+            "before calling this method."
         );
     }
 
@@ -713,7 +713,7 @@ export class AsgardeoSPAClient {
     public async getAccessToken(): Promise<string> {
         await this._validateMethod();
 
-        if (this._storage && [(Storage.WebWorker, Storage.BrowserMemory)].includes(this._storage)) {
+        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoSPAException(
                     "AUTH_CLIENT-GAT-IV01",
