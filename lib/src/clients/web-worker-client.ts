@@ -604,7 +604,7 @@ export const WebWorkerClient = async (
             SPAUtils.removeAuthorizationCode();
         }
 
-        if (resolvedAuthorizationCode) {
+        if (resolvedAuthorizationCode && resolvedState) {
             return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
         }
 
