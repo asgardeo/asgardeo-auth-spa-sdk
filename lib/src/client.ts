@@ -17,6 +17,7 @@
  */
 
 import {
+    AsgardeoAuthException,
     AuthClientConfig,
     BasicUserInfo,
     CustomGrantConfig,
@@ -26,7 +27,6 @@ import {
 } from "@asgardeo/auth-js";
 import { MainThreadClient, WebWorkerClient } from "./clients";
 import { Hooks, Storage } from "./constants";
-import { AsgardeoSPAException } from "./exception";
 import { HttpClientInstance } from "./http-client";
 import {
     AuthSPAClientConfig,
@@ -532,10 +532,8 @@ export class AsgardeoSPAClient {
 
         if (!config.id) {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "AUTH_CLIENT-RCG-NF01",
-                    "client",
-                    "requestCustomGrant",
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-RCG-NF01",
                     "The custom grant request id not found.",
                     "The id attribute of the custom grant config object passed as an argument should have a value."
                 )
@@ -621,19 +619,15 @@ export class AsgardeoSPAClient {
                 return mainThreadClient.getHttpClient();
             }
 
-            throw new AsgardeoSPAException(
-                "AUTH_CLIENT-GHC-IV01",
-                "client",
-                "getHttpClient",
+            throw new AsgardeoAuthException(
+                "SPA-AUTH_CLIENT-GHC-IV01",
                 "Http client cannot be returned.",
                 "The http client cannot be returned when the storage type is set to webWorker."
             );
         }
 
-        throw new AsgardeoSPAException(
-            "AUTH_CLIENT-GHC-NF02",
-            "client",
-            "getHttpClient",
+        throw new AsgardeoAuthException(
+            "SPA-AUTH_CLIENT-GHC-NF02",
             "The SDK is not initialized.",
             "The SDK has not been initialized yet. Initialize the SDK using the initialize method " +
             "before calling this method."
@@ -715,10 +709,8 @@ export class AsgardeoSPAClient {
 
         if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "AUTH_CLIENT-GAT-IV01",
-                    "client",
-                    "getAccessToken",
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-GAT-IV01",
                     "The access token cannot be returned.",
                     "The access token cannot be returned when the storage type is set to webWorker or browserMemory."
                 )
@@ -837,19 +829,15 @@ export class AsgardeoSPAClient {
                     break;
                 }
                 default:
-                    throw new AsgardeoSPAException(
-                        "AUTH_CLIENT-ON-IV01",
-                        "client",
-                        "on",
+                    throw new AsgardeoAuthException(
+                        "SPA-AUTH_CLIENT-ON-IV01",
                         "Invalid hook.",
                         "The provided hook is invalid."
                     );
             }
         } else {
-            throw new AsgardeoSPAException(
-                "AUTH_CLIENT-ON-IV02",
-                "client",
-                "on",
+            throw new AsgardeoAuthException(
+                "SPA-AUTH_CLIENT-ON-IV02",
                 "Invalid callback function.",
                 "The provided callback function is invalid."
             );
