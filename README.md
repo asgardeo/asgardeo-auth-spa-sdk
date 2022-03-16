@@ -54,6 +54,7 @@
 -   [Develop](#develop)
     -   [Prerequisites](#prerequisites)
     -   [Installing Dependencies](#installing-dependencies)
+-   [Error Codes](#error-codes)
 -   [Contribute](#contribute)
 -   [License](#license)
 
@@ -341,7 +342,9 @@ The `sign-in` hook is used to fire a callback function after signing in is succe
 ```typeScript
 auth.signIn();
 ```
+
 ---
+
 ### trySignInSilently
 
 ```typescript
@@ -361,13 +364,13 @@ This returns a promise that resolves with a `[BasicUserInfo](#BasicUserInfo)` ob
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
-> :warning: ***Since this method uses an iFrame, this method will not work if third-party cookies are blocked in the browser.***
+> :warning: **_Since this method uses an iFrame, this method will not work if third-party cookies are blocked in the browser._**
 
 #### Example
 
 ```typescript
-auth.trySignInSilently().then((response)=>{
-    if(response) {
+auth.trySignInSilently().then((response) => {
+    if (response) {
         // The user is signed in.
         // handle basic user info
     }
@@ -409,10 +412,10 @@ httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
 1. config: `[HttpRequestConfig](#httpRequestConfig)`
    A config object with the settings necessary to send http requests. This object is similar to the `AxiosRequestConfig` but provides these additional attributes:
 
-   |Attribute|Type|Default|Description|
-   |--|--|--|--|
-   |`attachToken`|`boolean`|`true`|If set to `true`, the token will be attached to the request header.|
-   |`shouldEncodeToFormData`|`boolean`|`false`|If set to `true`, the request body will be encoded to `FormData`. The body (specified by the `data` attribute) should be a Javascript object. |
+    | Attribute                | Type      | Default | Description                                                                                                                                   |
+    | ------------------------ | --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `attachToken`            | `boolean` | `true`  | If set to `true`, the token will be attached to the request header.                                                                           |
+    | `shouldEncodeToFormData` | `boolean` | `false` | If set to `true`, the request body will be encoded to `FormData`. The body (specified by the `data` attribute) should be a Javascript object. |
 
 #### Returns
 
@@ -725,7 +728,7 @@ If you are using TypeScript, you may want to use the `Hooks` enum that consists 
 | `"http-request-success"` | `httpRequest()` (Called when an http requests returns a response successfully)   |
 | `"revoke-access-token"`  | `revokeAccessToken()`                                                            | A boolean value indicating if the process was successful or not                         |
 | `"custom-grant"`         | `customGrant()`                                                                  | Returns the response from the custom grant request.                                     |
-| `sign-out-failed`        | `signOut()` (Called when sign out fails)        | An object of type [`SignOutError`](#SignOutError).|
+| `sign-out-failed`        | `signOut()` (Called when sign out fails)                                         | An object of type [`SignOutError`](#SignOutError).                                      |
 
 **When the user signs out, the user is taken to the Asgardeo's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
 
@@ -922,7 +925,7 @@ This table shows the extended attributes provided by the `Config` interface.
 #### The AuthClientConfig Interface
 
 | Attribute                    | Required/Optional | Type            | Default Value                                                           | Description                                                                                          |
-| ---------------------------- | ----------------- | --------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ---------------------------- | ----------------- | --------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `signInRedirectURL`          | Required          | `string`        | ""                                                                      | The URL to redirect to after the user authorizes the client app. eg: `https//localhost:3000/sign-in` |
 | `signOutRedirectURL`         | Optional          | `string`        | The `signInRedirectURL` URL will be used if this value is not provided. | The URL to redirect to after the user                                                                | signs out. eg: `http://localhost:3000/dashboard`                                                                                                            |
 | `clientHost`                 | Optional          | `string`        | The origin of the client app obtained using `window.origin`             | The hostname of the client app. eg: `https://localhost:3000`                                         |
@@ -932,7 +935,7 @@ This table shows the extended attributes provided by the `Config` interface.
 | `prompt`                     | Optional          | `string`        | ""                                                                      | Specifies the prompt type of an OIDC request                                                         |
 | `responseMode`               | Optional          | `ResponseMode`  | `"query"`                                                               | Specifies the response mode. The value can either be `query` or `form_post`                          |
 | `scope`                      | Optional          | `string[]`      | `["openid"]`                                                            | Specifies the requested scopes.                                                                      |
-| `serverOrigin`               | Required          | `string`        | ""                                                                      | The origin of the Identity Provider. eg: `https://api.asgardeo.io/t/<org_name>`                                   |
+| `serverOrigin`               | Required          | `string`        | ""                                                                      | The origin of the Identity Provider. eg: `https://api.asgardeo.io/t/<org_name>`                      |
 | `endpoints`                  | Optional          | `OIDCEndpoints` | [OIDC Endpoints Default Values](#oidc-endpoints)                        | The OIDC endpoint URLs. The SDK will try to obtain the endpoint URLS                                 | using the `.well-known` endpoint. If this fails, the SDK will use these endpoint URLs. If this attribute is not set, then the default endpoint URLs will be | used. However, if the `overrideWellEndpointConfig` is set to `true`, then this will override the endpoints obtained from the `.well-known` endpoint. |
 | `overrideWellEndpointConfig` | Optional          | `boolean`       | `false`                                                                 | If this option is set to `true`, then the `endpoints` object will override endpoints obtained        | from the `.well-known` endpoint. If this is set to `false`, then this will be used as a fallback if the request to the `.well-known` endpoint fails.        |
 | `wellKnownEndpoint`          | Optional          | `string`        | `"/oauth2/token/.well-known/openid-configuration"`                      | The URL of the `.well-known` endpoint.                                                               |
@@ -1002,7 +1005,7 @@ Session information can be attached to the body of a custom-grant request using 
 
 ### DecodedIDTokenPayload
 
-| Attribute             | Type                   | Description                                    |
+| Attribute          | Type                   | Description                                    |
 | ------------------ | ---------------------- | ---------------------------------------------- |
 | aud                | `string` \| `string[]` | The audience.                                  |
 | sub                | `string`               | The subject. This is the username of the user. |
@@ -1012,31 +1015,51 @@ Session information can be attached to the body of a custom-grant request using 
 | tenant_domain      | `string`               | The tenant domain to which the user belongs.   |
 
 ### HTTPRequestConfig
+
 This extends the `AxiosRequestConfig` by providing an additional attribute that is used to specify if the access token should be attached to the request or not.
 |Attribute | Type | Description|
 |--|--|--|
 |attachToken| `boolean`| Specifies if the access token should be attached to the header of the request.|
 
 ### SignOutError
-| Attribute             | Type                   | Description                                    |
-| ------------------ | ---------------------- | ---------------------------------------------- |
-| error                 | `string`               | The error message.                              |
-| error_description     | `string`               | The error description.                          |
+
+| Attribute         | Type     | Description            |
+| ----------------- | -------- | ---------------------- |
+| error             | `string` | The error message.     |
+| error_description | `string` | The error description. |
 
 ## Develop
 
 ### Prerequisites
 
 -   `Node.js` (version 10 or above).
--   `npm` package manager.
+-   `yarn` package manager.
 
 ### Installing Dependencies
 
 The repository is a mono repository. The SDK repository is found in the [lib]() directory. You can install the dependencies by running the following command at the root.
 
 ```
-npm run build
+yarn build
 ```
+
+## Error Codes
+
+Error code consist of four parts separated by a `-`.
+
+-   The first part refers to the SDK. Example: `JS` refers to this SDK.
+-   The second part refers to the code file. Example: `MAIN_THREAD_CLIENT` refers to the `main-thread-client.ts` file.
+-   The third part is the abbreviation of the name of the method/function that threw the error. If there are more than one method/function with the same abbreviation, then a number based on the order of declaration is appended to the abbreviation. Example: `HR` refers to the `httpRequest` method.
+-   The fourth part refers to the type of error and is position. Example: `IV02` refers to an invalid argument error and the fact that this is the second error in the method/function. The following error types are available:
+
+    | Error Code | Description   |
+    | :--------- | :------------ |
+    | `NE`       | Network Error |
+    | `HE`       | Http Error    |
+    | `IV`       | Invalid       |
+    | `NF`       | Not Found     |
+    | `TO`       | Timeout       |
+    | `SE`       | Server Error  |
 
 ## Contribute
 
