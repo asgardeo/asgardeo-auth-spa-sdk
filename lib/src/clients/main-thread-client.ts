@@ -19,6 +19,7 @@
 import {
     AUTHORIZATION_CODE,
     AsgardeoAuthClient,
+    AsgardeoAuthException,
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
@@ -45,7 +46,6 @@ import {
     SILENT_SIGN_IN_STATE,
     Storage
 } from "../constants";
-import { AsgardeoSPAException } from "../exception";
 import { SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -105,7 +105,7 @@ export const MainThreadClient = async (
         if (requestConfig.attachToken) {
             request.headers = {
                 ...request.headers,
-                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
             };
         }
     };
@@ -133,7 +133,7 @@ export const MainThreadClient = async (
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [...((await config?.resourceServerURLs) ?? []), config?.serverOrigin]) {
+        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
             if (requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
@@ -163,15 +163,12 @@ export const MainThreadClient = async (
                                 }
                             }
 
-                            return Promise.reject(
-                                new AsgardeoSPAException(
-                                    "MAIN_THREAD_CLIENT-HR-ES01",
-                                    "main-thread-client",
-                                    "httpRequest",
-                                    "",
-                                    "",
-                                    refreshError
-                                )
+                            throw new AsgardeoAuthException(
+                                "SPA-MAIN_THREAD_CLIENT-HR-SE01",
+                                refreshError?.name ?? "Refresh token request failed.",
+                                refreshError?.message ??
+                                "An error occurred while trying to refresh the " +
+                                "access token following a 401 response from the server."
                             );
                         }
 
@@ -207,16 +204,12 @@ export const MainThreadClient = async (
                     return Promise.reject(error);
                 });
         } else {
-            return Promise.reject(
-                new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-HR-IV02",
-                    "main-thread-client",
-                    "httpRequest",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
-                )
+            throw new AsgardeoAuthException(
+                "SPA-MAIN_THREAD_CLIENT-HR-IV02",
+                "Request to the provided endpoint is prohibited.",
+                "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                " attribute while initializing the SDK. The specified endpoint in this request " +
+                "cannot be found among the `resourceServerURLs`"
             );
         }
     };
@@ -228,7 +221,7 @@ export const MainThreadClient = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [...((await config)?.resourceServerURLs ?? []), config?.serverOrigin]) {
+            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
                 if (requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
@@ -259,7 +252,7 @@ export const MainThreadClient = async (
                     })
                     .catch(async (error: HttpError) => {
                         if (error?.response?.status === 401 || !error?.response) {
-                            let refreshTokenResponse;
+                            let refreshTokenResponse: TokenResponse;
                             try {
                                 refreshTokenResponse = await _authenticationClient.refreshAccessToken();
                             } catch (refreshError: any) {
@@ -272,20 +265,18 @@ export const MainThreadClient = async (
                                     }
                                 }
 
-                                return Promise.reject(
-                                    new AsgardeoSPAException(
-                                        "MAIN_THREAD_CLIENT-HRA-ES01",
-                                        "main-thread-client",
-                                        "httpRequestAll",
-                                        "",
-                                        "",
-                                        refreshError
-                                    )
+                                throw new AsgardeoAuthException(
+                                    "SPA-MAIN_THREAD_CLIENT-HRA-SE01",
+                                    refreshError?.name ?? "Refresh token request failed.",
+                                    refreshError?.message ??
+                                    "An error occurred while trying to refresh the " +
+                                    "access token following a 401 response from the server."
                                 );
                             }
 
                             if (refreshTokenResponse) {
-                                return _httpClient.all &&
+                                return (
+                                    _httpClient.all &&
                                     _httpClient
                                         .all(requests)
                                         .then((response) => {
@@ -302,7 +293,8 @@ export const MainThreadClient = async (
                                             }
 
                                             return Promise.reject(error);
-                                        });
+                                        })
+                                );
                             }
                         }
 
@@ -319,16 +311,12 @@ export const MainThreadClient = async (
                     })
             );
         } else {
-            return Promise.reject(
-                new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-HRA-IV02",
-                    "main-thread-client",
-                    "httpRequest",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
-                )
+            throw new AsgardeoAuthException(
+                "SPA-MAIN_THREAD_CLIENT-HRA-IV02",
+                "Request to the provided endpoint is prohibited.",
+                "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
+                " attribute while initializing the SDK. The specified endpoint in this request " +
+                "cannot be found among the `resourceServerURLs`"
             );
         }
     };
@@ -362,7 +350,7 @@ export const MainThreadClient = async (
             config.checkSessionInterval ?? 3,
             config.sessionRefreshInterval ?? 300,
             config.signInRedirectURL,
-            async (params?: GetAuthURLConfig): Promise<string> =>  _authenticationClient.getAuthorizationURL(params)
+            async (params?: GetAuthURLConfig): Promise<string> => _authenticationClient.getAuthorizationURL(params)
         );
     };
 
@@ -435,15 +423,7 @@ export const MainThreadClient = async (
 
             history.pushState(null, document.title, url.toString());
 
-            return Promise.reject(
-                new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-SI-BE",
-                    "main-thread-client",
-                    "signIn",
-                    error,
-                    errorDescription ?? ""
-                )
-            );
+            throw new AsgardeoAuthException("SPA-MAIN_THREAD_CLIENT-SI-SE01", error, errorDescription ?? "");
         }
 
         return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -470,7 +450,7 @@ export const MainThreadClient = async (
     };
 
     const signOut = async (): Promise<boolean> => {
-        if (await _authenticationClient.isAuthenticated() && !_getSignOutURLFromSessionStorage) {
+        if ((await _authenticationClient.isAuthenticated()) && !_getSignOutURLFromSessionStorage) {
             location.href = await _authenticationClient.signOut();
         } else {
             location.href = SPAUtils.getSignOutURL();
@@ -504,7 +484,7 @@ export const MainThreadClient = async (
                 }
             }
         }
-        if(config.shouldReplayAfterRefresh) {
+        if (config.shouldReplayAfterRefresh) {
             _dataLayer.setTemporaryDataParameter(CUSTOM_GRANT_CONFIG, JSON.stringify(config));
         }
         if (useDefaultEndpoint || matches) {
@@ -528,14 +508,12 @@ export const MainThreadClient = async (
                 });
         } else {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "MAIN_THREAD_CLIENT-RCG-IV01",
-                    "main-thread-client",
-                    "requestCustomGrant",
+                new AsgardeoAuthException(
+                    "SPA-MAIN_THREAD_CLIENT-RCG-IV01",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified token endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified token endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -580,7 +558,8 @@ export const MainThreadClient = async (
 
             await _authenticationClient.setPKCECode(
                 AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState),
-                pkce);
+                pkce
+            );
         }
 
         return _authenticationClient
@@ -652,8 +631,9 @@ export const MainThreadClient = async (
                 const state = urlObject.searchParams.get(STATE);
 
                 SPAUtils.setPKCE(
-                    AuthenticationUtils.extractPKCEKeyFromStateParam( state ?? ""),
-                    (await _authenticationClient.getPKCECode(state ?? "")) as string);
+                    AuthenticationUtils.extractPKCEKeyFromStateParam(state ?? ""),
+                    (await _authenticationClient.getPKCECode(state ?? "")) as string
+                );
             }
 
             promptNoneIFrame.src = url;
@@ -742,11 +722,11 @@ export const MainThreadClient = async (
     };
 
     const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
-        const configString =  await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
-        if(configString) {
+        const configString = await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
+        if (configString) {
             return JSON.parse(configString as string);
         } else {
-            return null
+            return null;
         }
     };
 
