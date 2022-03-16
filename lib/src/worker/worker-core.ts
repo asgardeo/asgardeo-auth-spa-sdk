@@ -18,6 +18,7 @@
 
 import {
     AsgardeoAuthClient,
+    AsgardeoAuthException,
     AuthClientConfig,
     AuthorizationURLParams,
     BasicUserInfo,
@@ -31,7 +32,6 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import { CUSTOM_GRANT_CONFIG } from "../constants";
-import { AsgardeoSPAException } from "../exception";
 import { SPAHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -63,7 +63,7 @@ export const WebWorkerCore = async (
         if (requestConfig.attachToken) {
             request.headers = {
                 ...request.headers,
-                Authorization: `Bearer ${await _authenticationClient.getAccessToken()}`
+                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
             };
         }
     };
@@ -103,45 +103,43 @@ export const WebWorkerCore = async (
                 .then((response: HttpResponse) => {
                     return Promise.resolve(response);
                 })
-                .catch((error: HttpError) => {
+                .catch(async (error: HttpError) => {
                     if (error?.response?.status === 401 || !error?.response) {
-                        return refreshAccessToken()
-                            .then(() => {
-                                return _httpClient
-                                    .request(requestConfig)
-                                    .then((response) => {
-                                        return Promise.resolve(response);
-                                    })
-                                    .catch((error) => {
-                                        return Promise.reject(error);
-                                    });
-                            })
-                            .catch((refreshError) => {
-                                return Promise.reject(
-                                    new AsgardeoSPAException(
-                                        "WORKER_CORE-HR-ES01",
-                                        "worker-core",
-                                        "httpRequest",
-                                        "",
-                                        "",
-                                        refreshError
-                                    )
-                                );
-                            });
+                        let refreshAccessTokenResponse: BasicUserInfo;
+                        try {
+                            refreshAccessTokenResponse = await refreshAccessToken();
+                        } catch (refreshError: any) {
+                            throw new AsgardeoAuthException(
+                                "SPA-WORKER_CORE-HR-SE01",
+                                refreshError?.name ?? "Refresh token request failed.",
+                                refreshError?.message ??
+                                "An error occurred while trying to refresh the " +
+                                "access token following a 401 response from the server."
+                            );
+                        }
+
+                        if (refreshAccessTokenResponse) {
+                            return _httpClient
+                                .request(requestConfig)
+                                .then((response) => {
+                                    return Promise.resolve(response);
+                                })
+                                .catch((error) => {
+                                    return Promise.reject(error);
+                                });
+                        }
                     }
 
                     return Promise.reject(error);
                 });
         } else {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "WORKER_CORE-HR-IV02",
-                    "worker-core",
-                    "httpRequest",
+                new AsgardeoAuthException(
+                    "SPA-WORKER_CORE-HR-IV02",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -186,35 +184,34 @@ export const WebWorkerCore = async (
                     .then((responses: HttpResponse[]) => {
                         return Promise.resolve(responses);
                     })
-                    .catch((error: HttpError) => {
+                    .catch(async (error: HttpError) => {
                         if (error?.response?.status === 401) {
-                            return _authenticationClient
-                                .refreshAccessToken()
-                                .then(() => {
-                                    return (
-                                        _httpClient.all &&
-                                        _httpClient
-                                            .all(requests)
-                                            .then((response) => {
-                                                return Promise.resolve(response);
-                                            })
-                                            .catch((error) => {
-                                                return Promise.reject(error);
-                                            })
-                                    );
-                                })
-                                .catch((refreshError) => {
-                                    return Promise.reject(
-                                        new AsgardeoSPAException(
-                                            "WORKER_CORE-HRA-ES01",
-                                            "worker-core",
-                                            "httpRequestAll",
-                                            "",
-                                            "",
-                                            refreshError
-                                        )
-                                    );
-                                });
+                            let refreshAccessTokenResponse: BasicUserInfo;
+                            try {
+                                refreshAccessTokenResponse = await refreshAccessToken();
+                            } catch (refreshError: any) {
+                                throw new AsgardeoAuthException(
+                                    "SPA-WORKER_CORE-HRA-SE01",
+                                    refreshError?.name ?? "Refresh token request failed.",
+                                    refreshError?.message ??
+                                    "An error occurred while trying to refresh the " +
+                                    "access token following a 401 response from the server."
+                                );
+                            }
+
+                            if (refreshAccessTokenResponse) {
+                                return (
+                                    _httpClient.all &&
+                                    _httpClient
+                                        .all(requests)
+                                        .then((response) => {
+                                            return Promise.resolve(response);
+                                        })
+                                        .catch((error) => {
+                                            return Promise.reject(error);
+                                        })
+                                );
+                            }
                         }
 
                         return Promise.reject(error);
@@ -222,14 +219,12 @@ export const WebWorkerCore = async (
             );
         } else {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "WORKER_CORE-HRA-IV02",
-                    "worker-core",
-                    "httpRequest",
+                new AsgardeoAuthException(
+                    "SPA-WORKER_CORE-HRA-IV02",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -289,10 +284,8 @@ export const WebWorkerCore = async (
         }
 
         return Promise.reject(
-            new AsgardeoSPAException(
-                "WORKER_CORE-RAT1-NF01",
-                "worker-core",
-                "requestAccessToken",
+            new AsgardeoAuthException(
+                "SPA-WORKER_CORE-RAT1-NF01",
                 "No authorization code.",
                 "No authorization code was found."
             )
@@ -328,7 +321,7 @@ export const WebWorkerCore = async (
             }
         }
 
-        if(config.shouldReplayAfterRefresh) {
+        if (config.shouldReplayAfterRefresh) {
             _dataLayer.setTemporaryDataParameter(CUSTOM_GRANT_CONFIG, JSON.stringify(config));
         }
         if (useDefaultEndpoint || matches) {
@@ -348,14 +341,12 @@ export const WebWorkerCore = async (
                 });
         } else {
             return Promise.reject(
-                new AsgardeoSPAException(
-                    "WORKER_CORE-RCG-IV01",
-                    "worker-core",
-                    "requestCustomGrant",
+                new AsgardeoAuthException(
+                    "SPA-WORKER_CORE-RCG-IV01",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                        " attribute while initializing the SDK. The specified token endpoint in this request " +
-                        "cannot be found among the `resourceServerURLs`"
+                    " attribute while initializing the SDK. The specified token endpoint in this request " +
+                    "cannot be found among the `resourceServerURLs`"
                 )
             );
         }
@@ -427,11 +418,11 @@ export const WebWorkerCore = async (
     };
 
     const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
-        const configString =  await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
-        if(configString) {
+        const configString = await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
+        if (configString) {
             return JSON.parse(configString as string);
         } else {
-            return null
+            return null;
         }
     };
 
