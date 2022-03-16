@@ -18,6 +18,7 @@
 
 import {
     AUTHORIZATION_CODE,
+    AsgardeoAuthException,
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
@@ -65,7 +66,6 @@ import {
     START_AUTO_REFRESH_TOKEN,
     UPDATE_CONFIG
 } from "../constants";
-import { AsgardeoSPAException } from "../exception";
 import { SessionManagementHelper } from "../helpers";
 import {
     AuthorizationInfo,
@@ -83,7 +83,8 @@ import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { SPAUtils } from "../utils";
 
 export const WebWorkerClient = async (
-    config: AuthClientConfig<WebWorkerClientConfig>): Promise<WebWorkerClientInterface> => {
+    config: AuthClientConfig<WebWorkerClientConfig>
+): Promise<WebWorkerClientInterface> => {
     /**
      * HttpClient handlers
      */
@@ -118,24 +119,22 @@ export const WebWorkerClient = async (
     const communicate = <T, R>(message: Message<T>): Promise<R> => {
         const channel = new MessageChannel();
 
-        worker.postMessage(message, [channel.port2]);
+        worker.postMessage(message, [ channel.port2 ]);
 
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 reject(
-                    new AsgardeoSPAException(
-                        "WEB_WORKER_CLIENT-COM-TO-01",
-                        "web-worker-client",
-                        "communicate",
+                    new AsgardeoAuthException(
+                        "SPA-WEB_WORKER_CLIENT-COM-TO01",
                         "Operation timed out.",
                         "No response was received from the web worker for " +
-                            _requestTimeout / 1000 +
-                            " since dispatching the request"
+                        _requestTimeout / 1000 +
+                        " since dispatching the request"
                     )
                 );
             }, _requestTimeout);
 
-            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string> }) => {
+            return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string>; }) => {
                 clearTimeout(timer);
 
                 if (data?.success) {
@@ -466,13 +465,15 @@ export const WebWorkerClient = async (
             async (response: AuthorizationResponse) => {
                 if (response.pkce && config.enablePKCE) {
                     const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(
-                        new URL(response.authorizationURL).searchParams.get(STATE) ?? "");
+                        new URL(response.authorizationURL).searchParams.get(STATE) ?? ""
+                    );
 
                     SPAUtils.setPKCE(pkceKey, response.pkce);
                 }
 
                 return Promise.resolve(response);
-        });
+            }
+        );
     };
 
     const requestAccessToken = async (
@@ -486,9 +487,7 @@ export const WebWorkerClient = async (
         const message: Message<AuthorizationInfo> = {
             data: {
                 code: resolvedAuthorizationCode,
-                pkce: config.enablePKCE
-                    ? SPAUtils.getPKCE(pkceKey)
-                    : undefined,
+                pkce: config.enablePKCE ? SPAUtils.getPKCE(pkceKey) : undefined,
                 sessionState: resolvedSessionState,
                 state: resolvedState
             },
@@ -566,15 +565,7 @@ export const WebWorkerClient = async (
 
             history.pushState(null, document.title, url.toString());
 
-            return Promise.reject(
-                new AsgardeoSPAException(
-                    "WEB_WORKER_CLIENT-SI-BE",
-                    "web-worker-client",
-                    "signIn",
-                    error,
-                    errorDescription ?? ""
-                )
-            );
+            throw new AsgardeoAuthException("SPA-WEB_WORKER_CLIENT-SI-SE01", error, errorDescription ?? "");
         }
 
         if (await isAuthenticated()) {
@@ -608,8 +599,8 @@ export const WebWorkerClient = async (
             return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
         }
 
-        return getAuthorizationURL(params).then(async (response: AuthorizationResponse)=>{
-
+        return getAuthorizationURL(params)
+            .then(async (response: AuthorizationResponse) => {
                 location.href = response.authorizationURL;
 
                 await SPAUtils.waitTillPageRedirect();
