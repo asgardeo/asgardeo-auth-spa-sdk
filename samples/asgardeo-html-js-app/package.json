@@ -20,7 +20,7 @@
     "license": "Apache-2.0",
     "private": false,
     "scripts": {
-        "start": "http-server -p 5000 -S -o -a localhost"
+        "start": "http-server -p 3000 -S -o -a localhost"
     },
     "devDependencies": {
         "http-server": "^14.1.0"

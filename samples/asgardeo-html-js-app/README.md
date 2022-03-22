@@ -6,7 +6,7 @@
 
 Follow the instructions in the [Try Out the Sample Apps](../../README.md#try-out-the-sample-apps) section to register an application.
 
-Make sure to add `https://localhost:5000` as a Redirect URL and also add it under allowed origins.
+Make sure to add `https://localhost:3000` as a Redirect URL and also add it under allowed origins.
 
 ### Configuring the Sample
 
@@ -48,7 +48,7 @@ npm install
 npm start
 ```
 
-The app should open at `https://localhost:5000`. If the browser doesn't open the app and throws an invalid-certificate error, just type `thisisunsafe` to continue.
+The app should open at `https://localhost:3000`. If the browser doesn't open the app and throws an invalid-certificate error, just type `thisisunsafe` to continue.
 
 ## License
 

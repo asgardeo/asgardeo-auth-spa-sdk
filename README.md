@@ -153,7 +153,7 @@ Before trying out the sample apps, you need to create an application in **Asgard
 
 4. Click on Register. You will be navigated to management page of the **sample** application.
 
-5. Add `https://localhost:5000` to **Allowed Origins** under **Access** tab and check **Public client** option.
+5. Add `https://localhost:3000` to **Allowed Origins** under **Access** tab and check **Public client** option.
 
 6. Click on **Update** at the bottom.
 
@@ -167,19 +167,19 @@ npm run build
 
 #### 1. HTML JavaScript Sample
 
-The _Callback URL_ of this app is `http://localhost:5000`.
+The _Callback URL_ of this app is `http://localhost:3000`.
 
 You can try out the HTML JavaScript Sample App from the [samples/asgardeo-html-js-app](/samples/asgardeo-html-js-app/). The instructions to run the app can be found [here](/samples/asgardeo-html-js-app/README.md)
 
 #### 2. React JavaScript Sample
 
-The _Callback URL_ of this app is `http://localhost:5000`.
+The _Callback URL_ of this app is `http://localhost:3000`.
 
 You can try out the React JS Sample App from the [samples/asgardeo-react-js-app](/samples/asgardeo-react-js-app). The instructions to run the app can be found [here](/samples/asgardeo-react-js-app/README.md)
 
 #### 3. React Typescript Sample
 
-The _Callback URL_ of this app is `http://localhost:5000`.
+The _Callback URL_ of this app is `http://localhost:3000`.
 
 You can try out the React Typescript Sample App from the [samples/asgardeo-react-ts-app](/samples/asgardeo-react-ts-app). The instructions to run the app can be found [here](/samples/asgardeo-react-ts-app/README.md)
 
