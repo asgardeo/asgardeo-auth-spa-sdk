@@ -87,32 +87,40 @@ const App = () => {
         return idTokenObject;
     };
 
-    authClient.on(Hooks.SignIn, (response) => {
-        const username = response?.username?.split("/");
+    useEffect(() => {
+        authClient.on(Hooks.SignOutFailed, (error) => {
+            if (error.description === "End User denied the logout request") {
+                authClient.trySignInSilently();
+            }
+        });
 
-        if (username.length >= 2) {
-            username.shift();
-            response.username = username.join("/");
-        }
+        authClient.on(Hooks.SignIn, (response) => {
+            const username = response?.username?.split("/");
 
-        authClient.getIDToken().then((idToken) => {
-            sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
+            if (username.length >= 2) {
+                username.shift();
+                response.username = username.join("/");
+            }
 
-            setAuthenticateState({
-                ...authenticateState,
-                authenticateResponse: response,
-                idToken: parseIdToken(idToken)
+            authClient.getIDToken().then((idToken) => {
+                sessionStorage.setItem("authenticateResponse", JSON.stringify(response));
+
+                setAuthenticateState({
+                    ...authenticateState,
+                    authenticateResponse: response,
+                    idToken: parseIdToken(idToken)
+                });
+
+                setIsAuth(true);
+                setIsLoading(false);
             });
+        });
 
-            setIsAuth(true);
+        authClient.on(Hooks.SignOut, () => {
+            setIsAuth(false);
             setIsLoading(false);
         });
-    });
-
-    authClient.on(Hooks.SignOut, () => {
-        setIsAuth(false);
-        setIsLoading(false);
-    });
+    }, [authClient.on]);
 
     const handleLogin = () => {
         authClient.signIn();
