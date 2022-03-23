@@ -60,6 +60,16 @@ authClient.on("sign-out", function (response) {
     updateView();
 });
 
+/* 
+*   handles the error occurs when the logout consent page is enabled
+*   and the user clicks 'NO' at the logout consent page
+*/
+authClient.on("sign-out-failed", (error) => {
+    if (error.description === "End User denied the logout request") {
+        authClient.trySignInSilently();
+    }
+});
+
 /**
  * Method to split ID token.
  */
