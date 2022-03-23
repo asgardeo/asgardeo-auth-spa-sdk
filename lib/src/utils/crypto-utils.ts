@@ -21,11 +21,9 @@ import { CryptoUtils, JWKInterface } from "@asgardeo/auth-js";
 import base64url from "base64url";
 import sha256 from "fast-sha256";
 import { createLocalJWKSet, jwtVerify } from "jose";
-import { FlattenedJWSInput, GetKeyFunction, JWSHeaderParameters } from "jose/dist/types/types";
 import randombytes from "randombytes";
 
-export class SPACryptoUtils
-    implements CryptoUtils<Buffer | string, GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>>
+export class SPACryptoUtils implements CryptoUtils<Buffer | string>
 {
     /**
      * Get URL encoded string.
@@ -48,30 +46,28 @@ export class SPACryptoUtils
         return randombytes(length);
     }
 
-    public parseJwk(key: Partial<JWKInterface>): Promise<GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>> {
-        return Promise.resolve(
-            createLocalJWKSet({
-                keys: [ key ]
-            })
-        );
-    }
-
     public verifyJwt(
         idToken: string,
-        jwk: GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput>,
+        jwk: Partial<JWKInterface>,
         algorithms: string[],
         clientID: string,
         issuer: string,
         subject: string,
         clockTolerance?: number
     ): Promise<boolean> {
-        return jwtVerify(idToken, jwk, {
-            algorithms: algorithms,
-            audience: clientID,
-            clockTolerance: clockTolerance,
-            issuer: issuer,
-            subject: subject
-        }).then(() => {
+        return jwtVerify(
+            idToken,
+            createLocalJWKSet({
+                keys: [jwk]
+            }),
+            {
+                algorithms: algorithms,
+                audience: clientID,
+                clockTolerance: clockTolerance,
+                issuer: issuer,
+                subject: subject
+            }
+        ).then(() => {
             return Promise.resolve(true);
         });
     }

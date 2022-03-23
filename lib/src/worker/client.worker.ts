@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { AuthClientConfig, BasicUserInfo } from "@asgardeo/auth-js";
+import { AsgardeoAuthException, AuthClientConfig, BasicUserInfo } from "@asgardeo/auth-js";
 import { WebWorkerCore } from "./worker-core";
 import {
     DISABLE_HTTP_HANDLER,
@@ -44,7 +44,6 @@ import {
     START_AUTO_REFRESH_TOKEN,
     UPDATE_CONFIG
 } from "../constants";
-import { AsgardeoSPAException } from "../exception";
 import {
     AuthorizationResponse,
     HttpResponse,
@@ -63,10 +62,8 @@ ctx.onmessage = async ({ data, ports }) => {
     if (data.type !== INIT && !webWorker) {
         port.postMessage(
             MessageUtils.generateFailureMessage(
-                new AsgardeoSPAException(
-                    "CLIENT_WORKER-ONMSG-NF01",
-                    "client.worker",
-                    data.type,
+                new AsgardeoAuthException(
+                    "SPA-CLIENT_WORKER-ONMSG-NF01",
                     "The web worker has not been initialized yet.",
                     "The initialize method needs to be called before the specified operation can be carried out."
                 )
@@ -264,10 +261,8 @@ ctx.onmessage = async ({ data, ports }) => {
         default:
             port?.postMessage(
                 MessageUtils.generateFailureMessage(
-                    new AsgardeoSPAException(
-                        "CLIENT_WORKER-ONMSG-IV02",
-                        "client.worker",
-                        "onmessage",
+                    new AsgardeoAuthException(
+                        "SPA-CLIENT_WORKER-ONMSG-IV02",
                         "The message type is invalid.",
                         `The message type provided, ${data.type}, is invalid.`
                     )
