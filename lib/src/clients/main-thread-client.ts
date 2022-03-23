@@ -133,8 +133,8 @@ export const MainThreadClient = async (
         let matches = false;
         const config = await _dataLayer.getConfigData();
 
-        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), config?.serverOrigin ]) {
-            if (requestConfig?.url?.startsWith(baseUrl)) {
+        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), await _spaHelper.getServerOrigin() ]) {
+            if (baseUrl && requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
 
                 break;
@@ -221,8 +221,11 @@ export const MainThreadClient = async (
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
-            for (const baseUrl of [ ...((await config)?.resourceServerURLs ?? []), config?.serverOrigin ]) {
-                if (requestConfig.url?.startsWith(baseUrl)) {
+            for (const baseUrl of [
+                ...((await config)?.resourceServerURLs ?? []),
+                await _spaHelper.getServerOrigin()
+            ]) {
+                if (baseUrl && requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
 
                     break;
@@ -469,16 +472,15 @@ export const MainThreadClient = async (
     const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
-        const clientConfig = await _dataLayer.getConfigData();
 
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
             useDefaultEndpoint = false;
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                clientConfig?.serverOrigin
+                await _spaHelper.getServerOrigin()
             ]) {
-                if (config.tokenEndpoint?.startsWith(baseUrl)) {
+                if (baseUrl && config.tokenEndpoint?.startsWith(baseUrl)) {
                     matches = true;
                     break;
                 }
