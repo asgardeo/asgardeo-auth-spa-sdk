@@ -88,6 +88,10 @@ const App = () => {
     };
 
     useEffect(() => {
+        /* 
+        *   handles the error occurs when the logout consent page is enabled
+        *   and the user clicks 'NO' at the logout consent page
+        */
         authClient.on(Hooks.SignOutFailed, (error) => {
             if (error.description === "End User denied the logout request") {
                 authClient.trySignInSilently();
