@@ -22,8 +22,7 @@ import {
     CustomGrantConfig,
     DecodedIDTokenPayload,
     FetchResponse,
-    OIDCEndpoints,
-    OIDCProviderMetaData
+    OIDCEndpoints
 } from "@asgardeo/auth-js";
 import {
     HttpError,
@@ -80,7 +79,7 @@ export interface WebWorkerClientInterface {
     ): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<boolean>;
     revokeAccessToken(): Promise<boolean>;
-    getOIDCServiceEndpoints(): Promise<OIDCProviderMetaData>;
+    getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
     getIDToken(): Promise<string>;
