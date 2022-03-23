@@ -27,7 +27,6 @@ import {
     FetchResponse,
     GetAuthURLConfig,
     OIDCEndpoints,
-    OIDCProviderMetaData,
     ResponseMode,
     SESSION_STATE,
     STATE
@@ -677,12 +676,12 @@ export const WebWorkerClient = async (
             });
     };
 
-    const getOIDCServiceEndpoints = (): Promise<OIDCProviderMetaData> => {
+    const getOIDCServiceEndpoints = (): Promise<OIDCEndpoints> => {
         const message: Message<null> = {
             type: GET_OIDC_SERVICE_ENDPOINTS
         };
 
-        return communicate<null, OIDCProviderMetaData>(message)
+        return communicate<null, OIDCEndpoints>(message)
             .then((response) => {
                 return Promise.resolve(response);
             })
