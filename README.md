@@ -413,7 +413,7 @@ httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
    A config object with the settings necessary to send http requests. This object is similar to the `AxiosRequestConfig` but provides these additional attributes:
 
     | Attribute                | Type      | Default | Description                                                                                                                                   |
-    | ------------------------ | --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+    |--------------------------|-----------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------|
     | `attachToken`            | `boolean` | `true`  | If set to `true`, the token will be attached to the request header.                                                                           |
     | `shouldEncodeToFormData` | `boolean` | `false` | If set to `true`, the request body will be encoded to `FormData`. The body (specified by the `data` attribute) should be a Javascript object. |
 
@@ -569,7 +569,7 @@ A Promise that resolves with an object containing the endpoints. To learn more a
 This method returns a promise that resolves with an object containing the OIDC endpoints obtained from the `.well-known` endpoint. The object contains the following attributes.
 
 | Attribute             | Description                                                                        |
-| --------------------- | ---------------------------------------------------------------------------------- |
+|-----------------------|------------------------------------------------------------------------------------|
 | `"authorize"`         | The endpoint to which the authorization request should be sent.                    |
 | `"jwks"`              | The endpoint from which JSON Web Key Set can be obtained.                          |
 | `"oidcSessionIFrame"` | The URL of the page that should be loaded in an IFrame to get session information. |
@@ -677,14 +677,14 @@ A Promise that resolves with the [`BasicUserInfo`](#BasicUserInfo) object.
 This refreshes the access token and stores the refreshed session information in either the session or local storage as per your configuration. Note that this method cannot be used when the storage type is set to `webWorker` since the web worker automatically refreshes the token and there is no need for the developer to do it.
 
 This method also returns a Promise that resolves with an object containing the attributes mentioned in the table below.
-|Attribute|Description|
-|--|--|
-`"accessToken"`| The new access token |
-`"expiresIn"`| The expiry time in seconds|
-`"idToken"`| The ID token|
-`"refreshToken"`| The refresh token|
-`"scope"`| The scope of the access token|
-`"tokenType"`| The type of the token. E.g.: Bearer|
+| Attribute        | Description                         |
+|------------------|-------------------------------------|
+| `"accessToken"`  | The new access token                |
+| `"expiresIn"`    | The expiry time in seconds          |
+| `"idToken"`      | The ID token                        |
+| `"refreshToken"` | The refresh token                   |
+| `"scope"`        | The scope of the access token       |
+| `"tokenType"`    | The type of the token. E.g.: Bearer |
 
 #### Example
 
@@ -718,14 +718,14 @@ The `on` method is used to hook callback functions to authentication methods. Th
 If you are using TypeScript, you may want to use the `Hooks` enum that consists of the following string literals instead of directly inputting the string value.
 
 | Hook                     | Method to which the callback function is attached                                | Returned Response                                                                       |
-| :----------------------- | :------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- |
+|:-------------------------|:---------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------|
 | `"sign-in"`              | `signIn()`                                                                       | The user information. See [getUserInfo()](#getuserinfo)'s return type for more details. |
 | `"sign-out"`             | `signOut()`                                                                      |                                                                                         |
 | `"initialize"`           | `initialize()`                                                                   | A boolean value indicating if the initialization was successful or not.                 |
-| `"http-request-start"`   | `httpRequest()` (Called before an http request is sent)                          |
-| `"http-request-finish"`  | `httpRequest()` (Called after an http request is sent and response is received.) |
-| `"http-request-error"`   | `httpRequest()` (Called when an http request returns an error)                   |
-| `"http-request-success"` | `httpRequest()` (Called when an http requests returns a response successfully)   |
+| `"http-request-start"`   | `httpRequest()` (Called before an http request is sent)                          |                                                                                         |
+| `"http-request-finish"`  | `httpRequest()` (Called after an http request is sent and response is received.) |                                                                                         |
+| `"http-request-error"`   | `httpRequest()` (Called when an http request returns an error)                   |                                                                                         |
+| `"http-request-success"` | `httpRequest()` (Called when an http requests returns a response successfully)   |                                                                                         |
 | `"revoke-access-token"`  | `revokeAccessToken()`                                                            | A boolean value indicating if the process was successful or not                         |
 | `"custom-grant"`         | `customGrant()`                                                                  | Returns the response from the custom grant request.                                     |
 | `sign-out-failed`        | `signOut()` (Called when sign out fails)                                         | An object of type [`SignOutError`](#SignOutError).                                      |
@@ -913,21 +913,21 @@ auth.initialize(config);
 The `AuthClientConfig<Config>` interface extends the `AuthClientConfig<T>` interface provided by the `Asgardeo JavaScript Auth SDK` with the `Config` interface. This table lists the attributes that the `AuthClientConfig<T>` interface takes.
 
 This table shows the extended attributes provided by the `Config` interface.
-| Attribute | Required/Optional | Type | Default Value | Description |
-|:----|:----|:----|:----|:----|
-| [`storage`](#storage) | Optional | `"sessionStorage"`, `"webWorker"`, `"localStorage"` | `"sessionStorage"` | The storage medium where the session information such as the access token should be stored.| |
-| `resourceServerURLs` |Required if the `storage` is set to `webWorker` | `string[]` | `[]` | The URLs of the API endpoints. This is needed only if the storage method is set to `webWorker`. When API calls are made through the [`httpRequest`](#httprequest) or the [`httpRequestAll`](#httprequestall) method, only the calls to the endpoints specified in the `baseURL` attribute will be allowed. Everything else will be denied. | |
-|`requestTimeout` | Optional | `number`| 60000 (seconds) | Specifies in seconds how long a request to the web worker should wait before being timed out. |
-|`sessionRefreshInterval`|Optional|`number`| 300 (seconds)|Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.|
-|`checkSessionInterval` |Optional|`number`|3 (seconds)| Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout. |
-|`enableOIDCSessionManagement` |Optional|`boolean`| false | Flag to enable OIDC Session Management |
+| Attribute                     | Required/Optional                               | Type                                                | Default Value      | Description                                                                                                                                                                                                                                                                                                                                |
+|:------------------------------|:------------------------------------------------|:----------------------------------------------------|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`storage`](#storage)         | Optional                                        | `"sessionStorage"`, `"webWorker"`, `"localStorage"` | `"sessionStorage"` | The storage medium where the session information such as the access token should be stored.                                                                                                                                                                                                                                                |
+| `resourceServerURLs`          | Required if the `storage` is set to `webWorker` | `string[]`                                          | `[]`               | The URLs of the API endpoints. This is needed only if the storage method is set to `webWorker`. When API calls are made through the [`httpRequest`](#httprequest) or the [`httpRequestAll`](#httprequestall) method, only the calls to the endpoints specified in the `baseURL` attribute will be allowed. Everything else will be denied. |
+| `requestTimeout`              | Optional                                        | `number`                                            | 60000 (seconds)    | Specifies in seconds how long a request to the web worker should wait before being timed out.                                                                                                                                                                                                                                              |
+| `sessionRefreshInterval`      | Optional                                        | `number`                                            | 300 (seconds)      | Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.                                                                                                                                                               |
+| `checkSessionInterval`        | Optional                                        | `number`                                            | 3 (seconds)        | Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout.                                                                                                                                                                                                          |
+| `enableOIDCSessionManagement` | Optional                                        | `boolean`                                           | false              | Flag to enable OIDC Session Management                                                                                                                                                                                                                                                                                                     |
 
 #### The AuthClientConfig Interface
 
 | Attribute                    | Required/Optional | Type            | Default Value                                                           | Description                                                                                          |
-| ---------------------------- | ----------------- | --------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------------------|-------------------|-----------------|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | `signInRedirectURL`          | Required          | `string`        | ""                                                                      | The URL to redirect to after the user authorizes the client app. eg: `https//localhost:3000/sign-in` |
-| `signOutRedirectURL`         | Optional          | `string`        | The `signInRedirectURL` URL will be used if this value is not provided. | The URL to redirect to after the user                                                                | signs out. eg: `http://localhost:3000/dashboard`                                                                                                            |
+| `signOutRedirectURL`         | Optional          | `string`        | The `signInRedirectURL` URL will be used if this value is not provided. | The URL to redirect to after the user                                                                |
 | `clientHost`                 | Optional          | `string`        | The origin of the client app obtained using `window.origin`             | The hostname of the client app. eg: `https://localhost:3000`                                         |
 | `clientID`                   | Required          | `string`        | ""                                                                      | The client ID of the OIDC application hosted in the Asgardeo.                                        |
 | `clientSecret`               | Optional          | `string`        | ""                                                                      | The client secret of the OIDC application                                                            |
@@ -945,7 +945,7 @@ This table shows the extended attributes provided by the `Config` interface.
 ### BasicUserInfo
 
 | Attribute       | Type     | Description                                                                                        |
-| :-------------- | :------- | :------------------------------------------------------------------------------------------------- |
+|:----------------|:---------|:---------------------------------------------------------------------------------------------------|
 | `email`         | `string` | The email address of the user.                                                                     |
 | `username`      | `string` | The username of the user.                                                                          |
 | `displayName`   | `string` | The display name of the user. It is the `preferred_username` in the id token payload or the `sub`. |
@@ -957,7 +957,7 @@ This table shows the extended attributes provided by the `Config` interface.
 ### SignInConfig
 
 | Method               | Required/Optional | Type                  | Default Value | Description                                                                                                                                                                                            |
-| -------------------- | ----------------- | --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|----------------------|-------------------|-----------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `callOnlyOnRedirect` | Optional          | `boolean`             | `false`       | Makes sure that this function is executed only after being redirected from the Single-Sign-On page. This will be useful to send a token request after the user authenticates themself with the server. |
 | `fidp`               | Optional          | `string`              | ""            | The `fidp` parameter that can be used to redirect a user directly to an IdP's sign-in page.                                                                                                            |
 | `forceInit`          | Optional          | `boolean`             | `false`       | Forces obtaining the OIDC endpoints from the `.well-known` endpoint. A request to this endpoint is not sent if a request has already been sent. This forces a request.                                 |
@@ -966,7 +966,7 @@ This table shows the extended attributes provided by the `Config` interface.
 ### OIDCEndpoints
 
 | Method                  | Type     | Default Value                                      | Description                                                               |
-| ----------------------- | -------- | -------------------------------------------------- | ------------------------------------------------------------------------- |
+|-------------------------|----------|----------------------------------------------------|---------------------------------------------------------------------------|
 | `authorizationEndpoint` | `string` | `"/oauth2/authorize"`                              | The authorization endpoint.                                               |
 | `tokenEndpoint`         | `string` | `"/oauth2/token"`                                  | The token endpoint.                                                       |
 | `userinfoEndpoint`      | `string` | ""                                                 | The user-info endpoint.                                                   |
@@ -981,7 +981,7 @@ This table shows the extended attributes provided by the `Config` interface.
 ### CustomGrantConfig
 
 | Attribute        | Required/Optional | Type      | Default Value | Description                                                                                                                                                                                                                   |
-| ---------------- | ----------------- | --------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------|-------------------|-----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `id`             | Required          | `string`  | ""            | Every custom-grant request should have an id. This attributes takes that id.                                                                                                                                                  |
 | `data`           | Required          | `any`     | `null`        | The data that should be sent in the body of the custom-grant request. You can use template tags to send session information. Refer to the [Custom Grant Template Tags](#custom-grant-template-tags) section for more details. |
 | `signInRequired` | Required          | `boolean` | `false`       | Specifies if the user should be sign-in or not to dispatch this custom-grant request.                                                                                                                                         |
@@ -992,20 +992,20 @@ This table shows the extended attributes provided by the `Config` interface.
 #### Custom Grant Template Tags
 
 Session information can be attached to the body of a custom-grant request using template tags. This is useful when the session information is not exposed outside the SDK but you want such information to be used in custom-grant requests. The following table lists the available template tags.
-|Tag|Data|
-|--|--|
-|"{{token}}" | The access token.|
-|{{username}}" | The username.|
-|"{{scope}}" | The scope.|
-|{{clientID}}" | The client ID.|
-|"{{clientSecret}}" | The client secret.|
+| Tag                | Data               |
+|--------------------|--------------------|
+| "{{token}}"        | The access token.  |
+| {{username}}"      | The username.      |
+| "{{scope}}"        | The scope.         |
+| {{clientID}}"      | The client ID.     |
+| "{{clientSecret}}" | The client secret. |
 
 #### The data attribute
 
 ### DecodedIDTokenPayload
 
 | Attribute          | Type                   | Description                                    |
-| ------------------ | ---------------------- | ---------------------------------------------- |
+|--------------------|------------------------|------------------------------------------------|
 | aud                | `string` \| `string[]` | The audience.                                  |
 | sub                | `string`               | The subject. This is the username of the user. |
 | iss                | `string`               | The token issuer.                              |
@@ -1016,14 +1016,14 @@ Session information can be attached to the body of a custom-grant request using 
 ### HTTPRequestConfig
 
 This extends the `AxiosRequestConfig` by providing an additional attribute that is used to specify if the access token should be attached to the request or not.
-|Attribute | Type | Description|
-|--|--|--|
-|attachToken| `boolean`| Specifies if the access token should be attached to the header of the request.|
+| Attribute   | Type      | Description                                                                    |
+|-------------|-----------|--------------------------------------------------------------------------------|
+| attachToken | `boolean` | Specifies if the access token should be attached to the header of the request. |
 
 ### SignOutError
 
 | Attribute         | Type     | Description            |
-| ----------------- | -------- | ---------------------- |
+|-------------------|----------|------------------------|
 | error             | `string` | The error message.     |
 | error_description | `string` | The error description. |
 
@@ -1052,7 +1052,7 @@ Error code consist of four parts separated by a `-`.
 -   The fourth part refers to the type of error and is position. Example: `IV02` refers to an invalid argument error and the fact that this is the second error in the method/function. The following error types are available:
 
     | Error Code | Description   |
-    | :--------- | :------------ |
+    |:-----------|:--------------|
     | `NE`       | Network Error |
     | `HE`       | Http Error    |
     | `IV`       | Invalid       |
