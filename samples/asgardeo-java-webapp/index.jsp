@@ -107,8 +107,8 @@
                 // After login callback URL - We have use app root as this is a SPA
                 // (Add it in application OIDC settings "Callback Url")
                 signInRedirectURL: origin,
-                // Asgardeo URL
-                serverOrigin: "",
+                // Asgardeo Organization / Tenant
+                organization: "",
                 responseMode: "form_post",
                 scope: ["profile"]
             };
