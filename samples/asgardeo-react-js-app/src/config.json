@@ -1,6 +1,6 @@
 {
-    "clientID": "Tf07OObpX7sQaJJ7ccwNsVPBusEa",
+    "clientID": "",
     "signInRedirectURL": "https://localhost:5000",
-    "baseUrl": "https://api.asgardeo.io/t/yathindra",
+    "baseUrl": "",
     "scope": ["profile"]
 }
