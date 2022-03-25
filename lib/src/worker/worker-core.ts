@@ -87,7 +87,7 @@ export const WebWorkerCore = async (
 
         for (const baseUrl of [
             ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-            await _spaHelper.getServerOrigin()
+            (config as any).baseUrl
         ]) {
             if (baseUrl && requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
@@ -152,7 +152,7 @@ export const WebWorkerCore = async (
 
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                await _spaHelper.getServerOrigin()
+                (config as any).baseUrl
             ]) {
                 if (baseUrl && requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
@@ -309,7 +309,7 @@ export const WebWorkerCore = async (
             useDefaultEndpoint = false;
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                await _spaHelper.getServerOrigin()
+                (config as any).baseUrl
             ]) {
                 if (baseUrl && config.tokenEndpoint?.startsWith(baseUrl)) {
                     matches = true;
