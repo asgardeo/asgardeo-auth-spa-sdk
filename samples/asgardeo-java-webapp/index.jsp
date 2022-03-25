@@ -108,7 +108,7 @@
                 // (Add it in application OIDC settings "Callback Url")
                 signInRedirectURL: origin,
                 // Asgardeo Organization / Tenant
-                organization: "",
+                baseUrl: "",
                 responseMode: "form_post",
                 scope: ["profile"]
             };
