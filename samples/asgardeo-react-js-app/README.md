@@ -19,7 +19,7 @@ Read more about the SDK configurations [here](../../README.md#initialize) .
 ```json
 {
     "clientID": "<ADD_CLIENT_ID_HERE>",
-    "serverOrigin": "<ADD_SERVER_ORIGIN_HERE>",
+    "baseUrl": "<ADD_BASE_URL_HERE>",
     "signInRedirectURL": "https://localhost:5000"
 }
 ```

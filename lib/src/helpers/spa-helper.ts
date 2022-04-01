@@ -52,14 +52,4 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
             clearTimeout(oldTimer);
         }
     }
-
-    public async getServerOrigin(): Promise<string | undefined> {
-        const config = await this._dataLayer.getConfigData();
-
-        if (!("organization" in config)) {
-            return;
-        }
-
-        return AuthenticationUtils.constructServerEndpoint(config.environment ?? "", config.organization);
-    }
 }

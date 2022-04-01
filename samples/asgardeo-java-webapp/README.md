@@ -14,7 +14,7 @@ Replace the `"client-host"` value of the `clientHost` attribute with the applica
 auth.initialize({
     signInRedirectURL: origin,
     clientID: "client-id",
-    serverOrigin: serverOrigin,
+    baseUrl: baseUrl,
     responseMode:"form_post"
 });
 ```

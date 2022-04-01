@@ -24,7 +24,7 @@ const authConfig = {
     // (Add it in application OIDC settings "Callback Url")
     signInRedirectURL: origin,
     // Asgardeo URL
-    serverOrigin: "<ADD_SERVER_ORIGIN_HERE>",
+    baseUrl: "<ADD_BASE_URL_HERE>",
 };
 ```
 
