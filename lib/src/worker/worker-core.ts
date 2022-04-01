@@ -84,6 +84,7 @@ export const WebWorkerCore = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
+        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
         const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
@@ -153,6 +154,7 @@ export const WebWorkerCore = async (
 
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
+            const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
@@ -307,6 +309,7 @@ export const WebWorkerCore = async (
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
+        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
         const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
