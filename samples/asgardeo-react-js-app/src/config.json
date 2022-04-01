@@ -1,6 +1,6 @@
 {
-    "clientID": "",
+    "clientID": "8DWXwR0LL3hfxT51QWXwZv6o3Z4a",
     "signInRedirectURL": "https://localhost:5000",
-    "baseUrl": "",
+    "wellKnownEndpoint": "https://api.asgardeo.io/t/yathindra/oauth2/token/.well-known/openid-configuration",
     "scope": ["profile"]
 }
