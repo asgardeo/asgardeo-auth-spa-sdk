@@ -148,9 +148,10 @@ export const WebWorkerCore = async (
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
         let matches = true;
 
+        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
+
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
-            const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),

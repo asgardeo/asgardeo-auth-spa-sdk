@@ -219,9 +219,10 @@ export const MainThreadClient = async (
         let matches = true;
         const config = await _dataLayer.getConfigData();
 
+        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
+
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
-            const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
             for (const baseUrl of [
                 ...((await config)?.resourceServerURLs ?? []),
@@ -475,10 +476,11 @@ export const MainThreadClient = async (
         let useDefaultEndpoint = true;
         let matches = false;
 
+        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
+
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
             useDefaultEndpoint = false;
-            const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
