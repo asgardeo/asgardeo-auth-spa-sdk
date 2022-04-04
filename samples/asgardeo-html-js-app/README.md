@@ -50,6 +50,16 @@ npm start
 
 The app should open at `https://localhost:3000`. If the browser doesn't open the app and throws an invalid-certificate error, just type `thisisunsafe` to continue.
 
+### Change the Application's Development Server Port
+
+By default, the development server runs on port `3000`. Incase if you wish to change this to something else, follow the steps below.
+
+1. Update the `PORT` in [.env](.env) file in the app root.
+2. Update the `signInRedirectURL` & `signOutRedirectURL` in `authConfig` object in [index.html](./index.html).
+3. Go to the Asgardeo Console and navigate to the protocol tab of your application:
+    - Update the Authorized Redirect URL.
+    - Update the Allowed Origins.
+
 ## License
 
 Licenses this source under the Apache License, Version 2.0 ([LICENSE](../../LICENSE)), You may not use this file except in compliance with the License.
