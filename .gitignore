@@ -28,6 +28,7 @@ lerna-debug.log
 
 # Environment variables files
 .env
+!samples/asgardeo-html-js-app/.env
 
 # Misc
 .classpath
