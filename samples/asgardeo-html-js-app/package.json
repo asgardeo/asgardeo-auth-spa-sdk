@@ -20,9 +20,12 @@
     "license": "Apache-2.0",
     "private": false,
     "scripts": {
-        "start": "http-server -p 5000 -S -o -a localhost"
+        "start": "node scripts/start.js"
     },
     "devDependencies": {
+        "chalk": "^4.1.2",
+        "dev-server-ports": "^1.0.0",
+        "dotenv": "^16.0.0",
         "http-server": "^14.1.0"
     }
 }

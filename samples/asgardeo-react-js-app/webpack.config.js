@@ -25,7 +25,7 @@ module.exports = {
         historyApiFallback: true,
         host: "localhost",
         https: true,
-        port: 5000
+        port: 3000
     },
     devtool: "source-map",
     entry: ["./src/app.js"],
