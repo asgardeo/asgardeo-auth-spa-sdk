@@ -84,11 +84,10 @@ export const WebWorkerCore = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         let matches = false;
-        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
         for (const baseUrl of [
             ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-            serverOrigin
+            (config as any).baseUrl
         ]) {
             if (baseUrl && requestConfig?.url?.startsWith(baseUrl)) {
                 matches = true;
@@ -148,14 +147,12 @@ export const WebWorkerCore = async (
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
         let matches = true;
 
-        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
-
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
 
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                serverOrigin
+                (config as any).baseUrl
             ]) {
                 if (baseUrl && requestConfig.url?.startsWith(baseUrl)) {
                     urlMatches = true;
@@ -306,14 +303,13 @@ export const WebWorkerCore = async (
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
         let useDefaultEndpoint = true;
         let matches = false;
-        const serverOrigin = (config as any).baseUrl || (config as any).serverOrigin;
 
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
             useDefaultEndpoint = false;
             for (const baseUrl of [
                 ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                serverOrigin
+                (config as any).baseUrl
             ]) {
                 if (baseUrl && config.tokenEndpoint?.startsWith(baseUrl)) {
                     matches = true;
