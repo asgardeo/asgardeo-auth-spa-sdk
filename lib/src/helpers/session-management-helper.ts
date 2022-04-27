@@ -159,7 +159,8 @@ export const SessionManagementHelper = (() => {
 
             const promptNoneURL: string = await _getAuthorizationURL({
                 prompt: "none",
-                state: STATE
+                state: STATE,
+                responseMode: "query"
             });
 
             promptNoneIFrame.src = promptNoneURL;
