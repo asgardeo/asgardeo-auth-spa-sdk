@@ -386,8 +386,10 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async signOut(): Promise<boolean> {
-        await this._validateMethod();
+    public async signOut(force?: boolean): Promise<boolean> {
+        if(!force) {
+            await this._validateMethod();
+        }
 
         const signOutResponse = (await this._client?.signOut()) ?? false;
 
