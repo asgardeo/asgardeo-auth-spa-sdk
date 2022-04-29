@@ -396,8 +396,14 @@ The `sign-out` hook is used to fire a callback function after signing out is suc
 #### Example
 
 ```TypeScript
-auth.signOut();
+auth.signOut(force?: boolean);
 ```
+
+
+#### Arguments
+
+1. force: `boolean` (optional)
+   If set to `true`, `signOut()` will avoid validation of the authentication status.
 
 ---
 
