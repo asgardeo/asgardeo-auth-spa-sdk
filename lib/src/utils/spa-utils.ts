@@ -113,14 +113,15 @@ export class SPAUtils {
         return Boolean(isSilentSignInInitialized);
     }
 
-    public static isSignOutSuccessful(): boolean {
+    public static async isSignOutSuccessful(): Promise<boolean> {
         if (AsgardeoAuthClient.isSignOutSuccessful(window.location.href)) {
             const newUrl = window.location.href.split("?")[0];
             history.pushState({}, document.title, newUrl);
 
+            await AsgardeoAuthClient.clearUserSessionData();
+
             return true;
         }
-
         return false;
     }
 

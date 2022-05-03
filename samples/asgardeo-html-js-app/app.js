@@ -37,6 +37,15 @@ var state = {
     idToken: null
 };
 
+let hasError = false;
+
+const urlParams = new URLSearchParams(window.location.search);
+const stateParam = urlParams.get('state');
+const errorParam = urlParams.get('error');
+
+if(stateParam && errorParam) {
+    hasError = true;
+}
 /**
  * Pass the callback function to be called after sign in using the `sign-in` hook.
  */
@@ -57,17 +66,8 @@ authClient.on("sign-in", function (response) {
  */
 authClient.on("sign-out", function (response) {
     state.isAuth = false;
+    hasError = false;
     updateView();
-});
-
-/* 
-*   handles the error occurs when the logout consent page is enabled
-*   and the user clicks 'NO' at the logout consent page
-*/
-authClient.on("sign-out-failed", (error) => {
-    if (error.description === "End User denied the logout request") {
-        authClient.trySignInSilently();
-    }
 });
 
 /**
@@ -134,6 +134,7 @@ function updateView() {
     var idTokenPayloadViewBox = document.getElementById("id-token-payload");
     var loggedInView = document.getElementById("logged-in-view");
     var loggedOutView = document.getElementById("logged-out-view");
+    var userDeniedLogoutView = document.getElementById("user-denied-logout-view");
 
     if (state.isAuth) {
 
@@ -155,8 +156,14 @@ function updateView() {
 
         loggedInView.style.display = "block";
         loggedOutView.style.display = "none";
+        userDeniedLogoutView.style.display = "none";
+    } else if(hasError) {
+        loggedInView.style.display = "none";
+        loggedOutView.style.display = "none";
+        userDeniedLogoutView.style.display = "block";
     } else {
         loggedInView.style.display = "none";
+        userDeniedLogoutView.style.display = "none";
 
         if (!isLoading) {
             loggedOutView.style.display = "block";
@@ -190,6 +197,7 @@ function setAuthenticatedState(response) {
  * Handles login button click event.
  */
 function handleLogin() {
+    hasError = false;
     authClient.signIn();
 }
 
@@ -213,17 +221,19 @@ if (authConfig.clientID === "") {
         updateView();
     });
 
-    authClient.isAuthenticated().then(function (isAuthenticated) {
-        if (isAuthenticated) {
-            authClient.getIDToken().then(function (idToken) {
-                state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
-                state.idToken = parseIdToken(idToken);
-                state.isAuth = true;
-
+    if(!hasError) {
+        authClient.isAuthenticated().then(function (isAuthenticated) {
+            if (isAuthenticated) {
+                authClient.getIDToken().then(function (idToken) {
+                    state.authenticateResponse = JSON.parse(sessionStorage.getItem("authenticateResponse"));
+                    state.idToken = parseIdToken(idToken);
+                    state.isAuth = true;
+    
+                    updateView();
+                });
+            } else {
                 updateView();
-            });
-        } else {
-            updateView();
-        }
-    });
+            }
+        });
+    }
 }
