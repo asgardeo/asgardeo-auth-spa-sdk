@@ -794,7 +794,7 @@ export class AsgardeoSPAClient {
                     break;
                 case Hooks.SignOut:
                     this._onSignOutCallback = callback;
-                    if (SPAUtils.isSignOutSuccessful()) {
+                    if (await SPAUtils.isSignOutSuccessful()) {
                         this._onSignOutCallback();
                     }
                     break;

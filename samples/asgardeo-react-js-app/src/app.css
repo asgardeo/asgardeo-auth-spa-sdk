@@ -53,6 +53,10 @@ a:hover {
     margin-top: 40px !important;
 }
 
+.my-4 {
+    margin: 40px auto 40px auto;
+}
+
 .home-image {
     vertical-align: middle;
     margin-bottom: 50px;
@@ -179,4 +183,8 @@ code {
     padding: .78571429em 1.5em .78571429em;
     margin-top: 30px;
     outline: none;
+}
+
+.pointer {
+    cursor: pointer;
 }
