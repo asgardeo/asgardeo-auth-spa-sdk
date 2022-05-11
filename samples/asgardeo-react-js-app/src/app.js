@@ -34,17 +34,22 @@ const App = () => {
     const [ authenticateState, setAuthenticateState ] = useState({});
     const [ isAuth, setIsAuth ] = useState(false);
     const [ isLoading, setIsLoading ] = useState(true);
-    const [ hasError, setHasError ] = useState();
+    const [ hasLogoutFailureError, setHasLogoutFailureError ] = useState();
+    const [ hasAuthRequiredError, setHasAuthRequiredError ] = useState();
 
     const urlParams = new URLSearchParams(window.location.search);
     const stateParam = urlParams.get('state');
-    const errorParam = urlParams.get('error');
+    const errorDescParam = urlParams.get('error_description');
 
     useEffect(() => {
-        if(stateParam && errorParam) {
-            setHasError(true);
+        if(stateParam && errorDescParam) {
+            if(errorDescParam === "Authentication required") {
+                setHasAuthRequiredError(true);
+            } else if(errorDescParam === "End User denied the logout request") {
+                setHasLogoutFailureError(true);
+            }
         }
-    }, [stateParam, errorParam]);
+    }, [stateParam, errorDescParam]);
 
 
     const parseIdToken = (idToken) => {
@@ -103,7 +108,7 @@ const App = () => {
         authClient.on(Hooks.SignIn, (response) => {
             const username = response?.username?.split("/");
 
-            if (username.length >= 2) {
+            if (username && username.length >= 2) {
                 username.shift();
                 response.username = username.join("/");
             }
@@ -125,12 +130,12 @@ const App = () => {
         authClient.on(Hooks.SignOut, () => {
             setIsAuth(false);
             setIsLoading(false);
-            setHasError(false);
+            setHasLogoutFailureError(false);
         });
     }, [authClient.on]);
 
     const handleLogin = () => {
-        setHasError(false);
+        setHasLogoutFailureError(false);
         setIsLoading(true);
         authClient.signIn();
     };
@@ -182,20 +187,26 @@ const App = () => {
                         <div className="content">
                             { isLoading ?
                                 <div>Loading ...</div>
-                            : hasError ?
-                                <div className="ui visible negative message">
-                                    <h3 className="mt-4 b">End User denied the logout request</h3>
-                                    <p className="my-4">
-                                    <a className="link-button pointer" role="button" onClick={handleLogin}>
-                                        Try Log in again
-                                    </a>
-                                    &nbsp;or&nbsp;
-                                    <a onClick={handleLogout} className="link-button pointer" role="button">
-                                        Log out from the application.
-                                    </a>
-                                    </p>
-                                </div>
-                            :   <>
+                            :   hasLogoutFailureError ?
+                                    <div className="ui visible negative message">
+                                        <h3 className="mt-4 b">End User denied the logout request</h3>
+                                        <p className="my-4">
+                                        <a className="link-button pointer" role="button" onClick={handleLogin}>
+                                            Try Log in again
+                                        </a>
+                                        &nbsp;or&nbsp;
+                                        <a onClick={handleLogout} className="link-button pointer" role="button">
+                                            Log out from the application.
+                                        </a>
+                                        </p>
+                                    </div>
+                            :   hasAuthRequiredError ?
+                                    <div className="ui visible negative message">
+                                        <h3 className="mt-4 b">Something Went Wrong</h3>
+                                        <p className="mt-4">Please check application configuration and try login again!</p>
+                                        <button className="btn primary" onClick={ handleLogin }>Login</button>
+                                    </div>
+                            :   <> 
                                     { isAuth ?
                                         <>
                                             <h2>Authentication response derived by the Asgardeo Auth SPA JS SDK</h2>

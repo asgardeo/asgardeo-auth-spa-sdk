@@ -37,14 +37,19 @@ var state = {
     idToken: null
 };
 
-let hasError = false;
+let hasLogoutFailureError = false;
+let hasAuthRequiredError = false;
 
 const urlParams = new URLSearchParams(window.location.search);
 const stateParam = urlParams.get('state');
-const errorParam = urlParams.get('error');
+const errorDescParam = urlParams.get('error_description');
 
-if(stateParam && errorParam) {
-    hasError = true;
+if(stateParam && errorDescParam) {
+    if(errorDescParam === "Authentication required") {
+        hasAuthRequiredError = true;
+    } else if(errorDescParam === "End User denied the logout request") {
+        hasLogoutFailureError = true;
+    }
 }
 /**
  * Pass the callback function to be called after sign in using the `sign-in` hook.
@@ -66,7 +71,7 @@ authClient.on("sign-in", function (response) {
  */
 authClient.on("sign-out", function (response) {
     state.isAuth = false;
-    hasError = false;
+    hasLogoutFailureError = false;
     updateView();
 });
 
@@ -135,6 +140,7 @@ function updateView() {
     var loggedInView = document.getElementById("logged-in-view");
     var loggedOutView = document.getElementById("logged-out-view");
     var userDeniedLogoutView = document.getElementById("user-denied-logout-view");
+    var errorAuthenticatingView = document.getElementById("error-authenticating-view");
 
     if (state.isAuth) {
 
@@ -157,13 +163,21 @@ function updateView() {
         loggedInView.style.display = "block";
         loggedOutView.style.display = "none";
         userDeniedLogoutView.style.display = "none";
-    } else if(hasError) {
+        errorAuthenticatingView.style.display = "none";
+    } else if(hasLogoutFailureError) {
         loggedInView.style.display = "none";
         loggedOutView.style.display = "none";
         userDeniedLogoutView.style.display = "block";
+        errorAuthenticatingView.style.display = "none";
+    } else if(hasAuthRequiredError) {
+        loggedInView.style.display = "none";
+        loggedOutView.style.display = "none";
+        userDeniedLogoutView.style.display = "none";
+        errorAuthenticatingView.style.display = "block";
     } else {
         loggedInView.style.display = "none";
         userDeniedLogoutView.style.display = "none";
+        errorAuthenticatingView.style.display = "none";
 
         if (!isLoading) {
             loggedOutView.style.display = "block";
@@ -197,7 +211,7 @@ function setAuthenticatedState(response) {
  * Handles login button click event.
  */
 function handleLogin() {
-    hasError = false;
+    hasLogoutFailureError = false;
     authClient.signIn();
 }
 
@@ -221,7 +235,7 @@ if (authConfig.clientID === "") {
         updateView();
     });
 
-    if(!hasError) {
+    if(!hasLogoutFailureError) {
         authClient.isAuthenticated().then(function (isAuthenticated) {
             if (isAuthenticated) {
                 authClient.getIDToken().then(function (idToken) {
