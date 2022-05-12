@@ -179,6 +179,14 @@
                     </a>
                     </p>
                 </div>
+
+                <div id="error-authenticating-view" style="display:none;" className="ui visible negative message">
+                    <h3 className="my-4 b">Something Went Wrong</h3>
+                    <p className="mt-4">Please check application configuration and try login again!</p>
+                    <div className="my-4">
+                        <button class="btn primary" onClick="handleLogin()">Login</button>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -201,7 +209,7 @@
             // After logout redirect URL - We have use app root path, since this is a SPA
             // Asgardeo base url - Contains domain with the tenant
             baseUrl: "",
-            scope: ["profile"]
+            scope: [ "profile" ]
         };
     </script>
 
