@@ -191,13 +191,13 @@ const App = () => {
                                     <div className="ui visible negative message">
                                         <h3 className="mt-4 b">End User denied the logout request</h3>
                                         <p className="my-4">
-                                        <a className="link-button pointer" role="button" onClick={handleLogin}>
-                                            Try Log in again
-                                        </a>
-                                        &nbsp;or&nbsp;
-                                        <a onClick={handleLogout} className="link-button pointer" role="button">
-                                            Log out from the application.
-                                        </a>
+                                            <a className="link-button pointer" role="button" onClick={handleLogin}>
+                                                Try Log in again
+                                            </a>
+                                            &nbsp;or&nbsp;
+                                            <a onClick={handleLogout} className="link-button pointer" role="button">
+                                                Log out from the application.
+                                            </a>
                                         </p>
                                     </div>
                             :   hasAuthRequiredError ?
