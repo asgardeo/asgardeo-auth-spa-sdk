@@ -170,22 +170,24 @@
                 <div id="user-denied-logout-view" style="display:none;" className="ui visible negative message">
                     <h3 className="mt-4 b">End User denied the logout request</h3>
                     <p className="my-4">
-                    <a className="link-button pointer" onClick="handleLogin()" role="button">
-                        Try Log in again
-                    </a>
-                    &nbsp;or&nbsp;
-                    <a className="link-button pointer" onClick="handleLogout()" role="button">
-                        Log out from the application.
-                    </a>
+                        <a className="link-button pointer" onClick="handleLogin()" role="button">
+                            Try Log in again
+                        </a>
+                        &nbsp;or&nbsp;
+                        <a className="link-button pointer" onClick="handleLogout()" role="button">
+                            Log out from the application.
+                        </a>
                     </p>
                 </div>
 
                 <div id="error-authenticating-view" style="display:none;" className="ui visible negative message">
-                    <h3 className="my-4 b">Something Went Wrong</h3>
-                    <p className="mt-4">Please check application configuration and try login again!</p>
-                    <div className="my-4">
-                        <button class="btn primary" onClick="handleLogin()">Login</button>
+                    <div class="segment-form">
+                        <div class="ui visible negative message">
+                            <div class="header"><b>Authentication Error!</b></div>
+                            <p>Please check application configuration and try login again!.</p>
+                        </div>
                     </div>
+                    <button class="btn primary" onClick="handleLogin()">Login</button>
                 </div>
             </div>
 

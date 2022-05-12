@@ -201,11 +201,15 @@ const App = () => {
                                         </p>
                                     </div>
                             :   hasAuthRequiredError ?
-                                    <div className="ui visible negative message">
-                                        <h3 className="mt-4 b">Something Went Wrong</h3>
-                                        <p className="mt-4">Please check application configuration and try login again!</p>
+                                    <>
+                                        <div class="segment-form">
+                                            <div class="ui visible negative message">
+                                                <div class="header"><b>Authentication Error!</b></div>
+                                                <p>Please check application configuration and try login again!.</p>
+                                            </div>
+                                        </div>
                                         <button className="btn primary" onClick={ handleLogin }>Login</button>
-                                    </div>
+                                    </>
                             :   <> 
                                     { isAuth ?
                                         <>
