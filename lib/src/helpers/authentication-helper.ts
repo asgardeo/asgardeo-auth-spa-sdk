@@ -231,7 +231,7 @@ export class AuthenticationHelper<
                             }
                             
                             throw new AsgardeoAuthException(
-                                "SPA-WORKER_CORE-HR-SE01",
+                                "SPA-AUTH_HELPER-HR-SE01",
                                 refreshError?.name ?? "Refresh token request failed.",
                                 refreshError?.message ??
                                 "An error occurred while trying to refresh the " +
@@ -346,7 +346,7 @@ export class AuthenticationHelper<
                                 }
                 
                                 throw new AsgardeoAuthException(
-                                    "SPA-MAIN_THREAD_CLIENT-HRA-SE01",
+                                    "SPA-AUTH_HELPER-HRA-SE01",
                                     refreshError?.name ?? "Refresh token request failed.",
                                     refreshError?.message ??
                                         "An error occurred while trying to refresh the " +
@@ -392,7 +392,7 @@ export class AuthenticationHelper<
             );
         } else {
             throw new AsgardeoAuthException(
-                "SPA-MAIN_THREAD_CLIENT-HRA-IV02",
+                "SPA-AUTH_HELPER-HRA-IV02",
                 "Request to the provided endpoint is prohibited.",
                 "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
                 " attribute while initializing the SDK. The specified endpoint in this request " +
