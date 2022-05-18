@@ -325,39 +325,14 @@ export const MainThreadClient = async (
         resolvedSessionState: string,
         resolvedState: string
     ): Promise<BasicUserInfo> => {
-        const config = await _dataLayer.getConfigData();
-
-        if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-            const pkce = SPAUtils.getPKCE(AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState));
-
-            await _authenticationClient.setPKCECode(
-                AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState),
-                pkce
-            );
-        }
-
-        return _authenticationClient
-            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState)
-            .then(async () => {
-                // Disable this temporarily
-                /* if (config.storage === Storage.BrowserMemory) {
-                    SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-                } */
-                SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-
-                _spaHelper.clearRefreshTokenTimeout();
-                _spaHelper.refreshAccessTokenAutomatically();
-
-                // Enable OIDC Sessions Management only if it is set to true in the config.
-                if (config.enableOIDCSessionManagement) {
-                    checkSession();
-                }
-
-                return _authenticationClient.getBasicUserInfo();
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+        return await _authenticationHelper.requestAccessToken(
+            resolvedAuthorizationCode,
+            resolvedSessionState,
+            checkSession,
+            _spaHelper,
+            undefined,
+            resolvedState
+        );
     };
 
     /**

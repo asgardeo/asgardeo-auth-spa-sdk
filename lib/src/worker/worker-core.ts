@@ -18,7 +18,6 @@
 
 import {
     AsgardeoAuthClient,
-    AsgardeoAuthException,
     AuthClientConfig,
     AuthorizationURLParams,
     BasicUserInfo,
@@ -28,15 +27,12 @@ import {
     OIDCEndpoints,
     SESSION_STATE,
     STATE,
-    Store,
-    TokenResponse
+    Store
 } from "@asgardeo/auth-js";
-import { CUSTOM_GRANT_CONFIG } from "../constants";
 import { AuthenticationHelper, SPAHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
     AuthorizationResponse,
-    HttpError,
     HttpRequestConfig,
     HttpResponse,
     WebWorkerClientConfig,
@@ -127,31 +123,13 @@ export const WebWorkerCore = async (
         pkce?: string,
         state?: string
     ): Promise<BasicUserInfo> => {
-        const config = await _dataLayer.getConfigData();
-
-        if (pkce && config.enablePKCE) {
-            await _authenticationClient.setPKCECode(pkce, state ?? "");
-        }
-
-        if (authorizationCode) {
-            return _authenticationClient
-                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "'")
-                .then(() => {
-                    _spaHelper.refreshAccessTokenAutomatically();
-
-                    return _authenticationClient.getBasicUserInfo();
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
-        }
-
-        return Promise.reject(
-            new AsgardeoAuthException(
-                "SPA-WORKER_CORE-RAT1-NF01",
-                "No authorization code.",
-                "No authorization code was found."
-            )
+        return await _authenticationHelper.requestAccessToken(
+            authorizationCode,
+            sessionState,
+            undefined,
+            _spaHelper,
+            pkce,
+            state
         );
     };
 
@@ -225,15 +203,6 @@ export const WebWorkerCore = async (
 
     const getConfigData = async (): Promise<AuthClientConfig<WebWorkerClientConfig>> => {
         return _dataLayer.getConfigData();
-    };
-
-    const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
-        const configString = await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
-        if (configString) {
-            return JSON.parse(configString as string);
-        } else {
-            return null;
-        }
     };
 
     return {

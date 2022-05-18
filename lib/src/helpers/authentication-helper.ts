@@ -20,6 +20,7 @@ import {
     AsgardeoAuthClient, 
     AsgardeoAuthException, 
     AuthClientConfig, 
+    AuthenticationUtils, 
     BasicUserInfo, 
     CustomGrantConfig, 
     DataLayer, 
@@ -27,7 +28,8 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import { SPAHelper } from "./spa-helper";
-import { ACCESS_TOKEN_INVALID, CUSTOM_GRANT_CONFIG } from "../constants";
+import { SPAUtils } from "..";
+import { ACCESS_TOKEN_INVALID, CUSTOM_GRANT_CONFIG, Storage } from "../constants";
 import {
     HttpClientInstance,
     HttpError,
@@ -400,5 +402,74 @@ export class AuthenticationHelper<
                 "cannot be found among the `resourceServerURLs`"
             );
         }
-      }
+    }
+
+    public requestAccessToken = async (
+        authorizationCode?: string,
+        sessionState?: string,
+        checkSession?: () => Promise<void>,
+        spaHelper?: SPAHelper<WebWorkerClientConfig | MainThreadClientConfig>,
+        pkce?: string,
+        state?: string
+    ): Promise<BasicUserInfo> => {
+        const config = await this._dataLayer.getConfigData();
+
+        if (config.storage === Storage.BrowserMemory && config.enablePKCE && sessionState) {
+            const pkce = SPAUtils.getPKCE(
+                AuthenticationUtils.extractPKCEKeyFromStateParam(sessionState)
+            );
+
+            await this._authenticationClient.setPKCECode(
+                AuthenticationUtils.extractPKCEKeyFromStateParam(sessionState),
+                pkce
+            );
+        } else if (config.storage === Storage.WebWorker && pkce) {
+            await this._authenticationClient.setPKCECode(pkce, state ?? "");
+        }
+
+        if (authorizationCode) {
+            return this._authenticationClient
+                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "")
+                .then(async () => {
+                    // Disable this temporarily
+                    /* if (config.storage === Storage.BrowserMemory) {
+                        SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
+                    } */
+                    if (config.storage !== Storage.WebWorker) {
+                        SPAUtils.setSignOutURL(await this._authenticationClient.getSignOutURL());
+
+                        if (spaHelper) {
+                            spaHelper.clearRefreshTokenTimeout();
+                            spaHelper.refreshAccessTokenAutomatically();
+                        }
+
+                        // Enable OIDC Sessions Management only if it is set to true in the config.
+                        if (
+                            checkSession && 
+                            typeof checkSession === "function" && 
+                            config.enableOIDCSessionManagement
+                        ) {
+                            checkSession();
+                        }
+                    } else {
+                        if (spaHelper) {
+                            spaHelper.refreshAccessTokenAutomatically();
+                        }
+                    }
+
+                    return this._authenticationClient.getBasicUserInfo();
+                })
+                .catch((error) => {
+                    return Promise.reject(error);
+                });
+        }
+
+        return Promise.reject(
+            new AsgardeoAuthException(
+                "SPA-WORKER_CORE-RAT1-NF01",
+                "No authorization code.",
+                "No authorization code was found."
+            )
+        );
+    };
 }

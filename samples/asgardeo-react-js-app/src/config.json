@@ -1,6 +1,7 @@
 {
-    "clientID": "",
+    "clientID": "ABrsP4kpeJomB9uBG5ZZYxduRo8a",
+    "baseUrl": "https://dev.api.asgardeo.io/t/yathindrawso2",
     "signInRedirectURL": "https://localhost:3000",
-    "baseUrl": "",
-    "scope": ["profile"]
+    "signOutRedirectURL": "https://localhost:3000",
+    "scope": ["openid","profile"]
 }
