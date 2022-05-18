@@ -45,9 +45,6 @@ export class AuthenticationHelper<
 > {
     private _authenticationClient: AsgardeoAuthClient<T>;
     private _dataLayer: DataLayer<T>;
-    // private _isHttpHandlerEnabled: boolean;
-    // private _httpErrorCallback: (error: HttpError) => void | Promise<void>;
-    // private _httpFinishCallback: () => void;
     public constructor(authClient: AsgardeoAuthClient<T>) {
         this._authenticationClient = authClient;
         this._dataLayer = this._authenticationClient.getDataLayer();
