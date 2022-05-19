@@ -42,7 +42,7 @@ import {
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
-    MainThreadClientInterface,
+    MainThreadClientInterface
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
@@ -169,30 +169,6 @@ export const MainThreadClient = async (
                 return;
             }
         );
-    }
-
-    const handleAuthorizationURLResponse = (resolvedState: string, params?: GetAuthURLConfig) => {
-        return _authenticationClient.getAuthorizationURL(params).then(async (url: string) => {
-            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-                const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
-
-                SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
-            }
-
-            location.href = url;
-
-            await SPAUtils.waitTillPageRedirect();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
-            });
-        });
     }
 
     const signIn = async (
