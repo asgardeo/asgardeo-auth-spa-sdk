@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { 
+import {
     AsgardeoAuthClient, 
     AsgardeoAuthException, 
     AuthClientConfig, 
@@ -24,13 +24,28 @@ import {
     BasicUserInfo, 
     CustomGrantConfig, 
     DataLayer, 
+    DecodedIDTokenPayload, 
     FetchResponse, 
+    GetAuthURLConfig, 
+    OIDCEndpoints,
     TokenResponse
 } from "@asgardeo/auth-js";
 import { SPAHelper } from "./spa-helper";
-import { SPAUtils } from "..";
-import { ACCESS_TOKEN_INVALID, CUSTOM_GRANT_CONFIG, Storage } from "../constants";
+import { Message, SPAUtils, SessionManagementHelperInterface } from "..";
+import { 
+    ACCESS_TOKEN_INVALID, 
+    CHECK_SESSION_SIGNED_IN, 
+    CHECK_SESSION_SIGNED_OUT, 
+    CUSTOM_GRANT_CONFIG,
+    ERROR,
+    ERROR_DESCRIPTION,
+    PROMPT_NONE_IFRAME,
+    RP_IFRAME,
+    Storage  
+} from "../constants";
+
 import {
+    AuthorizationInfo,
     HttpClientInstance,
     HttpError,
     HttpRequestConfig,
@@ -45,9 +60,15 @@ export class AuthenticationHelper<
 > {
     private _authenticationClient: AsgardeoAuthClient<T>;
     private _dataLayer: DataLayer<T>;
-    public constructor(authClient: AsgardeoAuthClient<T>) {
+    private _spaHelper: SPAHelper<T>;
+
+    public constructor(
+        authClient: AsgardeoAuthClient<T>,
+        spaHelper: SPAHelper<T>
+      ) {
         this._authenticationClient = authClient;
         this._dataLayer = this._authenticationClient.getDataLayer();
+        this._spaHelper = spaHelper;
     }
 
     public async attachToken(request: HttpRequestConfig): Promise<void> {
@@ -84,9 +105,34 @@ export class AuthenticationHelper<
         _httpClient.setHttpRequestFinishCallback(callback);
     }
 
+    public enableHttpHandler(httpClient: HttpClientInstance): void {
+        httpClient?.enableHandler && httpClient.enableHandler();
+    }
+
+    public disableHttpHandler (httpClient: HttpClientInstance): void {
+        httpClient?.disableHandler && httpClient.disableHandler();
+    }
+
+    public initializeSessionManger(
+        config: AuthClientConfig<T>,
+        oidcEndpoints: OIDCEndpoints,
+        getSessionState: () => Promise<string>,
+        getAuthzURL: (params?: GetAuthURLConfig) => Promise<string>,
+        sessionManagementHelper: SessionManagementHelperInterface
+    ): void {
+        sessionManagementHelper.initialize(
+            config.clientID,
+            oidcEndpoints.checkSessionIframe ?? "",
+            getSessionState,
+            config.checkSessionInterval ?? 3,
+            config.sessionRefreshInterval ?? 300,
+            config.signInRedirectURL,
+            getAuthzURL
+        );
+    }
+
     public async requestCustomGrant(
         config: SPACustomGrantConfig,
-        spaHelper: SPAHelper<WebWorkerClientConfig | MainThreadClientConfig>,
         enableRetrievingSignOutURLFromSession?: (config: SPACustomGrantConfig) => void
     ): Promise<BasicUserInfo | FetchResponse> {
         let useDefaultEndpoint = true;
@@ -122,7 +168,7 @@ export class AuthenticationHelper<
                         }
                 
                         if (config.returnsSession) {
-                            spaHelper.refreshAccessTokenAutomatically();
+                            this._spaHelper.refreshAccessTokenAutomatically();
                 
                             return this._authenticationClient.getBasicUserInfo();
                         } else {
@@ -158,7 +204,6 @@ export class AuthenticationHelper<
     }
 
     public async refreshAccessToken(
-        spaHelper: SPAHelper<WebWorkerClientConfig | MainThreadClientConfig>,
         enableRetrievingSignOutURLFromSession?: (config: SPACustomGrantConfig) => void
     ): Promise<BasicUserInfo> {
         try {
@@ -166,12 +211,11 @@ export class AuthenticationHelper<
             const customGrantConfig = await this.getCustomGrantConfigData();
             if (customGrantConfig) {
                 await this.requestCustomGrant(
-                        customGrantConfig, 
-                        spaHelper, 
+                        customGrantConfig,
                         enableRetrievingSignOutURLFromSession
                     );
             }
-            spaHelper.refreshAccessTokenAutomatically();
+            this._spaHelper.refreshAccessTokenAutomatically();
 
             return this._authenticationClient.getBasicUserInfo();
         } catch (error) {
@@ -182,7 +226,6 @@ export class AuthenticationHelper<
     public async httpRequest(
         httpClient: HttpClientInstance,
         requestConfig: HttpRequestConfig,
-        spaHelper: SPAHelper<WebWorkerClientConfig | MainThreadClientConfig>,
         isHttpHandlerEnabled?: boolean,
         httpErrorCallback?: (error: HttpError) => void | Promise<void>,
         httpFinishCallback?: () => void,
@@ -214,7 +257,6 @@ export class AuthenticationHelper<
                         let refreshAccessTokenResponse: BasicUserInfo;
                         try {
                             refreshAccessTokenResponse = await this.refreshAccessToken(
-                                spaHelper, 
                                 enableRetrievingSignOutURLFromSession
                             );
                         } catch (refreshError: any) {
@@ -405,7 +447,6 @@ export class AuthenticationHelper<
         authorizationCode?: string,
         sessionState?: string,
         checkSession?: () => Promise<void>,
-        spaHelper?: SPAHelper<WebWorkerClientConfig | MainThreadClientConfig>,
         pkce?: string,
         state?: string
     ): Promise<BasicUserInfo> => {
@@ -435,9 +476,9 @@ export class AuthenticationHelper<
                     if (config.storage !== Storage.WebWorker) {
                         SPAUtils.setSignOutURL(await this._authenticationClient.getSignOutURL());
 
-                        if (spaHelper) {
-                            spaHelper.clearRefreshTokenTimeout();
-                            spaHelper.refreshAccessTokenAutomatically();
+                        if (this._spaHelper) {
+                            this._spaHelper.clearRefreshTokenTimeout();
+                            this._spaHelper.refreshAccessTokenAutomatically();
                         }
 
                         // Enable OIDC Sessions Management only if it is set to true in the config.
@@ -449,8 +490,8 @@ export class AuthenticationHelper<
                             checkSession();
                         }
                     } else {
-                        if (spaHelper) {
-                            spaHelper.refreshAccessTokenAutomatically();
+                        if (this._spaHelper) {
+                            this._spaHelper.refreshAccessTokenAutomatically();
                         }
                     }
 
@@ -469,4 +510,153 @@ export class AuthenticationHelper<
             )
         );
     };
+
+    public async trySignInSilently(
+        constructSilentSignInUrl: () => Promise<string>,
+        requestAccessToken: (authzCode: string, sessionState: string, state: string) => Promise<BasicUserInfo>,
+        sessionManagementHelper: SessionManagementHelperInterface
+    ): Promise<BasicUserInfo | boolean> {
+
+        // This block is executed by the iFrame when the server redirects with the authorization code.
+        if (SPAUtils.isInitializedSilentSignIn()) {
+            await sessionManagementHelper.receivePromptNoneResponse();
+
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                sub: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        // This gets executed in the main thread and sends the prompt none request.
+        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
+
+        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
+            PROMPT_NONE_IFRAME
+        ) as HTMLIFrameElement;
+
+        try {
+            const url = await constructSilentSignInUrl();
+
+            promptNoneIFrame.src = url;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                resolve(false);
+            }, 10000);
+
+            const listenToPromptNoneIFrame = async (e: MessageEvent) => {
+                const data: Message<AuthorizationInfo | null> = e.data;
+
+                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
+                    window.removeEventListener("message", listenToPromptNoneIFrame);
+                    clearTimeout(timer);
+                    resolve(false);
+                }
+
+                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.state)
+                        .then((response: BasicUserInfo) => {
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
+                            resolve(response);
+                        })
+                        .catch((error) => {
+                            window.removeEventListener("message", listenToPromptNoneIFrame);
+                            reject(error);
+                        })
+                        .finally(() => {
+                            clearTimeout(timer);
+                        });
+                }
+            };
+
+            window.addEventListener("message", listenToPromptNoneIFrame);
+        });
+    }
+
+    public async handleSignIn (
+        shouldStopAuthn: () => Promise<boolean>,
+        checkSession: () => Promise<void>,
+        tryRetrievingUserInfo?: () => Promise<BasicUserInfo | undefined>
+    ): Promise<BasicUserInfo | undefined> {
+        const config = await this._dataLayer.getConfigData();
+
+        if (await shouldStopAuthn()) {
+            return Promise.resolve({
+                allowedScopes: "",
+                displayName: "",
+                email: "",
+                sessionState: "",
+                sub: "",
+                tenantDomain: "",
+                username: ""
+            });
+        }
+
+        if (config.storage !== Storage.WebWorker) {
+            if (await this._authenticationClient.isAuthenticated()) {
+                this._spaHelper.clearRefreshTokenTimeout();
+                this._spaHelper.refreshAccessTokenAutomatically();
+
+                // Enable OIDC Sessions Management only if it is set to true in the config.
+                if (config.enableOIDCSessionManagement) {
+                    checkSession();
+                }
+
+                return Promise.resolve(await this._authenticationClient.getBasicUserInfo());
+            }
+        }
+
+        const error = new URL(window.location.href).searchParams.get(ERROR);
+        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
+
+        if (error) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(ERROR);
+            url.searchParams.delete(ERROR_DESCRIPTION);
+
+            history.pushState(null, document.title, url.toString());
+
+            throw new AsgardeoAuthException("SPA-MAIN_THREAD_CLIENT-SI-SE01", error, errorDescription ?? "");
+        }
+
+        if (config.storage === Storage.WebWorker && tryRetrievingUserInfo) {
+            const basicUserInfo = await tryRetrievingUserInfo();
+
+            if (basicUserInfo) {
+                return basicUserInfo;
+            }
+        }
+    }
+
+    public async getBasicUserInfo(): Promise<BasicUserInfo> {
+        return this._authenticationClient.getBasicUserInfo();
+    }
+
+    public async getDecodedIDToken(): Promise<DecodedIDTokenPayload> {
+        return this._authenticationClient.getDecodedIDToken();
+    }
+
+    public async getIDToken(): Promise<string> {
+        return this._authenticationClient.getIDToken();
+    }
+
+    public async getOIDCServiceEndpoints(): Promise<OIDCEndpoints> {
+        return this._authenticationClient.getOIDCServiceEndpoints();
+    }
+
+    public async getAccessToken(): Promise<string> {
+        return this._authenticationClient.getAccessToken();
+    }
+
+    public async isAuthenticated(): Promise<boolean> {
+        return this._authenticationClient.isAuthenticated();
+    }
 }

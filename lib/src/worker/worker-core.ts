@@ -50,7 +50,12 @@ export const WebWorkerCore = async (
     await _authenticationClient.initialize(config);
 
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
-    const _authenticationHelper = new AuthenticationHelper<WebWorkerClientConfig>(_authenticationClient);
+
+    const _authenticationHelper = new AuthenticationHelper<WebWorkerClientConfig>(
+        _authenticationClient, 
+        _spaHelper
+    );
+
     const _dataLayer = _authenticationClient.getDataLayer();
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
@@ -77,8 +82,7 @@ export const WebWorkerCore = async (
     ): Promise<HttpResponse> => {
         return await _authenticationHelper.httpRequest(
           _httpClient,
-          requestConfig,
-          _spaHelper
+          requestConfig
         );
     };
 
@@ -90,11 +94,11 @@ export const WebWorkerCore = async (
     };
 
     const enableHttpHandler = (): void => {
-        _httpClient.enableHandler && _httpClient.enableHandler();
+        _authenticationHelper.enableHttpHandler(_httpClient);
     };
 
     const disableHttpHandler = (): void => {
-        _httpClient.disableHandler && _httpClient.disableHandler();
+        _authenticationHelper.disableHttpHandler(_httpClient);
     };
 
     const getAuthorizationURL = async (params?: AuthorizationURLParams): Promise<AuthorizationResponse> => {
@@ -127,7 +131,6 @@ export const WebWorkerCore = async (
             authorizationCode,
             sessionState,
             undefined,
-            _spaHelper,
             pkce,
             state
         );
@@ -144,12 +147,12 @@ export const WebWorkerCore = async (
     };
 
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
-        return await _authenticationHelper.requestCustomGrant(config, _spaHelper);
+        return await _authenticationHelper.requestCustomGrant(config);
     };
 
     const refreshAccessToken = async (): Promise<BasicUserInfo> => {
         try {
-            return await _authenticationHelper.refreshAccessToken(_spaHelper);
+            return await _authenticationHelper.refreshAccessToken();
         } catch (error) {
             return Promise.reject(error);
         }
@@ -167,26 +170,26 @@ export const WebWorkerCore = async (
     };
 
     const getBasicUserInfo = async (): Promise<BasicUserInfo> => {
-        return _authenticationClient.getBasicUserInfo();
+        return _authenticationHelper.getBasicUserInfo();
     };
 
     const getDecodedIDToken = async (): Promise<DecodedIDTokenPayload> => {
-        return _authenticationClient.getDecodedIDToken();
+        return _authenticationHelper.getDecodedIDToken();
     };
 
     const getIDToken = async (): Promise<string> => {
-        return _authenticationClient.getIDToken();
+        return _authenticationHelper.getIDToken();
     };
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
-        return _authenticationClient.getOIDCServiceEndpoints();
+        return _authenticationHelper.getOIDCServiceEndpoints();
     };
 
     const getAccessToken = (): Promise<string> => {
-        return _authenticationClient.getAccessToken();
+        return _authenticationHelper.getAccessToken();
     };
 
     const isAuthenticated = (): Promise<boolean> => {
-        return _authenticationClient.isAuthenticated();
+        return _authenticationHelper.isAuthenticated();
     };
 
     const setSessionState = async (sessionState: string): Promise<void> => {
