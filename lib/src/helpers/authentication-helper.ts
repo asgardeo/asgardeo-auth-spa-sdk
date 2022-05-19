@@ -314,7 +314,7 @@ export class AuthenticationHelper<
         } else {
             return Promise.reject(
                 new AsgardeoAuthException(
-                    "SPA-WORKER_CORE-HR-IV02",
+                    "SPA-AUTH_HELPER-HR-IV02",
                     "Request to the provided endpoint is prohibited.",
                     "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
                     " attribute while initializing the SDK. The specified endpoint in this request " +
@@ -504,7 +504,7 @@ export class AuthenticationHelper<
 
         return Promise.reject(
             new AsgardeoAuthException(
-                "SPA-WORKER_CORE-RAT1-NF01",
+                "SPA-AUTH_HELPER-RAT1-NF01",
                 "No authorization code.",
                 "No authorization code was found."
             )
@@ -624,7 +624,7 @@ export class AuthenticationHelper<
 
             history.pushState(null, document.title, url.toString());
 
-            throw new AsgardeoAuthException("SPA-MAIN_THREAD_CLIENT-SI-SE01", error, errorDescription ?? "");
+            throw new AsgardeoAuthException("SPA-AUTH_HELPER-SI-SE01", error, errorDescription ?? "");
         }
 
         if (config.storage === Storage.WebWorker && tryRetrievingUserInfo) {
