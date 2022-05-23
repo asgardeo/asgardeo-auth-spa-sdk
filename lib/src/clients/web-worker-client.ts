@@ -33,7 +33,6 @@ import {
     STATE,
     Store
 } from "@asgardeo/auth-js";
-import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
@@ -94,7 +93,12 @@ const initiateStore = (store: Storage | undefined): Store => {
 };
 
 export const WebWorkerClient = async (
-    config: AuthClientConfig<WebWorkerClientConfig>
+    config: AuthClientConfig<WebWorkerClientConfig>,
+    webWorker: new () => Worker,
+    getAuthHelper: (
+        authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
+        spaHelper: SPAHelper<WebWorkerClientConfig>
+    ) => AuthenticationHelper<WebWorkerClientConfig>
 ): Promise<WebWorkerClientInterface> => {
     /**
      * HttpClient handlers
@@ -131,12 +135,10 @@ export const WebWorkerClient = async (
         (sessionState: string) => setSessionState(sessionState)
     );
 
-    const _authenticationHelper = new AuthenticationHelper<WebWorkerClientConfig>(
-        _authenticationClient, 
-        _spaHelper
-    );
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+        getAuthHelper(_authenticationClient, _spaHelper);
 
-    const worker: Worker = new WorkerFile();
+    const worker: Worker = new webWorker();
 
     const communicate = <T, R>(message: Message<T>): Promise<R> => {
         const channel = new MessageChannel();

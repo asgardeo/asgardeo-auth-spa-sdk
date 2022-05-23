@@ -17,6 +17,7 @@
  */
 
 import {
+    AsgardeoAuthClient,
     AsgardeoAuthException,
     AuthClientConfig,
     BasicUserInfo,
@@ -25,8 +26,10 @@ import {
     FetchResponse,
     OIDCEndpoints
 } from "@asgardeo/auth-js";
+import WorkerFile from "web-worker:./worker.ts";
 import { MainThreadClient, WebWorkerClient } from "./clients";
 import { Hooks, Storage } from "./constants";
+import { AuthenticationHelper, SPAHelper } from "./helpers";
 import { HttpClientInstance } from "./http-client";
 import {
     AuthSPAClientConfig,
@@ -199,7 +202,15 @@ export class AsgardeoSPAClient {
             if (!this._client) {
                 const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
                 const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
-                this._client = await MainThreadClient({ ...defaultConfig, ...mainThreadClientConfig });
+                this._client = await MainThreadClient(
+                    { ...defaultConfig, ...mainThreadClientConfig },
+                    (
+                        authClient: AsgardeoAuthClient<MainThreadClientConfig>,
+                        spaHelper: SPAHelper<MainThreadClientConfig>
+                    ) => {
+                        return new AuthenticationHelper(authClient, spaHelper);
+                    }
+                );
             }
 
             this._initialized = true;
@@ -212,10 +223,19 @@ export class AsgardeoSPAClient {
         } else {
             if (!this._client) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
-                this._client = (await WebWorkerClient({
-                    ...DefaultConfig,
-                    ...webWorkerClientConfig
-                })) as WebWorkerClientInterface;
+                this._client = (await WebWorkerClient(
+                    {
+                        ...DefaultConfig,
+                        ...webWorkerClientConfig
+                    }, 
+                    WorkerFile,
+                    (
+                        authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
+                        spaHelper: SPAHelper<WebWorkerClientConfig>
+                    ) => {
+                        return new AuthenticationHelper(authClient, spaHelper);
+                    }
+                )) as WebWorkerClientInterface;
 
                 return this._client
                     .initialize()

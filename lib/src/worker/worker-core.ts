@@ -42,7 +42,11 @@ import { MemoryStore } from "../stores";
 import { SPACryptoUtils } from "../utils/crypto-utils";
 
 export const WebWorkerCore = async (
-    config: AuthClientConfig<WebWorkerClientConfig>
+    config: AuthClientConfig<WebWorkerClientConfig>,
+    getAuthHelper: (
+        authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
+        spaHelper: SPAHelper<WebWorkerClientConfig>
+    ) => AuthenticationHelper<WebWorkerClientConfig>
 ): Promise<WebWorkerCoreInterface> => {
     const _store: Store = new MemoryStore();
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
@@ -51,10 +55,8 @@ export const WebWorkerCore = async (
 
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
 
-    const _authenticationHelper = new AuthenticationHelper<WebWorkerClientConfig>(
-        _authenticationClient, 
-        _spaHelper
-    );
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+        getAuthHelper(_authenticationClient, _spaHelper);
 
     const _dataLayer = _authenticationClient.getDataLayer();
 

@@ -58,9 +58,9 @@ import { SPACustomGrantConfig } from "../models/request-custom-grant";
 export class AuthenticationHelper<
   T extends MainThreadClientConfig | WebWorkerClientConfig
 > {
-    private _authenticationClient: AsgardeoAuthClient<T>;
-    private _dataLayer: DataLayer<T>;
-    private _spaHelper: SPAHelper<T>;
+    protected _authenticationClient: AsgardeoAuthClient<T>;
+    protected _dataLayer: DataLayer<T>;
+    protected _spaHelper: SPAHelper<T>;
 
     public constructor(
         authClient: AsgardeoAuthClient<T>,
@@ -75,8 +75,8 @@ export class AuthenticationHelper<
         const requestConfig = { attachToken: true, ...request };
         if (requestConfig.attachToken) {
             request.headers = {
-            ...request.headers,
-            Authorization: `Bearer ${await this._authenticationClient.getAccessToken()}`
+                ...request.headers,
+                Authorization: `Bearer ${ await this._authenticationClient.getAccessToken() }`
             };
         }
     }
@@ -276,8 +276,8 @@ export class AuthenticationHelper<
                                 "SPA-AUTH_HELPER-HR-SE01",
                                 refreshError?.name ?? "Refresh token request failed.",
                                 refreshError?.message ??
-                                "An error occurred while trying to refresh the " +
-                                "access token following a 401 response from the server."
+                                    "An error occurred while trying to refresh the " +
+                                    "access token following a 401 response from the server."
                             );
                         }
 

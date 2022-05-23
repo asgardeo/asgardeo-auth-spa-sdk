@@ -16,5 +16,5 @@
 * under the License.
 */
 
-export * from "./client.worker";
+export * from "./worker-receiver";
 export * from "./worker-core";
