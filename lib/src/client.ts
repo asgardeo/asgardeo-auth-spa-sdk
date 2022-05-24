@@ -81,7 +81,7 @@ export class AsgardeoSPAClient {
     protected _instanceID: string;
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    public constructor(id: string) {
+    protected constructor(id: string) {
         this._instanceID = id;
     }
 
