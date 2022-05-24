@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,24 +16,15 @@
  * under the License.
  */
 
-/**
- * Entry point for all public APIs of this SDK.
- */
-export * from "./client";
-export * from "./models";
+import { AsgardeoAuthClient } from "@asgardeo/auth-js";
+import { AuthenticationHelper, SPAHelper } from "./helpers";
+import { WebWorkerClientConfig } from "./models";
+import { workerReceiver } from "./worker/worker-receiver";
 
-// Utils
-export * from "./utils/spa-utils"
+workerReceiver(
+    (authClient: AsgardeoAuthClient<WebWorkerClientConfig>, spaHelper: SPAHelper<WebWorkerClientConfig>) => {
+        return new AuthenticationHelper(authClient, spaHelper);
+    }
+);
 
-// Constants
-export * from "./constants/storage";
-export * from "./constants/hooks";
-
-export * from "@asgardeo/auth-js";
-
-// helpers
-export * from "./helpers/authentication-helper";
-export * from "./helpers/spa-helper";
-
-// worker receiver
-export * from "./worker/worker-receiver";
+export default {} as typeof Worker & { new (): Worker };

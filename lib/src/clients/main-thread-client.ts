@@ -19,11 +19,9 @@
 import {
     AUTHORIZATION_CODE,
     AsgardeoAuthClient,
-    AsgardeoAuthException,
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
-    CustomGrantConfig,
     DecodedIDTokenPayload,
     FetchResponse,
     GetAuthURLConfig,
@@ -31,31 +29,20 @@ import {
     ResponseMode,
     SESSION_STATE,
     STATE,
-    Store,
-    TokenResponse
+    Store
 } from "@asgardeo/auth-js";
 import {
-    ACCESS_TOKEN_INVALID,
-    CHECK_SESSION_SIGNED_IN,
-    CHECK_SESSION_SIGNED_OUT,
-    CUSTOM_GRANT_CONFIG,
-    ERROR,
-    ERROR_DESCRIPTION,
-    PROMPT_NONE_IFRAME,
-    RP_IFRAME,
     SILENT_SIGN_IN_STATE,
     Storage
 } from "../constants";
-import { SPAHelper, SessionManagementHelper } from "../helpers";
+import { AuthenticationHelper, SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
-    AuthorizationInfo,
     HttpError,
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
-    MainThreadClientInterface,
-    Message
+    MainThreadClientInterface
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
@@ -76,7 +63,11 @@ const initiateStore = (store: Storage | undefined): Store => {
 };
 
 export const MainThreadClient = async (
-    config: AuthClientConfig<MainThreadClientConfig>
+    config: AuthClientConfig<MainThreadClientConfig>,
+    getAuthHelper: (
+        authClient: AsgardeoAuthClient<MainThreadClientConfig>, 
+        spaHelper: SPAHelper<MainThreadClientConfig>
+    ) => AuthenticationHelper<MainThreadClientConfig>
 ): Promise<MainThreadClientInterface> => {
     const _store: Store = initiateStore(config.storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
@@ -92,6 +83,8 @@ export const MainThreadClient = async (
         config.storage ?? Storage.SessionStorage,
         (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
     );
+    
+    const _authenticationHelper = getAuthHelper(_authenticationClient, _spaHelper);
 
     let _getSignOutURLFromSessionStorage: boolean = false;
 
@@ -100,28 +93,18 @@ export const MainThreadClient = async (
     let _httpErrorCallback: (error: HttpError) => void | Promise<void>;
     let _httpFinishCallback: () => void;
 
-    const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        const requestConfig = { attachToken: true, ...request };
-        if (requestConfig.attachToken) {
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
-            };
-        }
-    };
-
-    _httpClient?.init && (await _httpClient.init(true, attachToken));
+    _httpClient?.init && (await _httpClient.init(true, _authenticationHelper.attachToken));
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
+        _authenticationHelper.setHttpRequestStartCallback(_httpClient, callback);
     };
 
     const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _httpClient?.setHttpRequestSuccessCallback && _httpClient.setHttpRequestSuccessCallback(callback);
+        _authenticationHelper.setHttpRequestSuccessCallback(_httpClient, callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
+        _authenticationHelper.setHttpRequestFinishCallback(_httpClient, callback);
         _httpFinishCallback = callback;
     };
 
@@ -130,198 +113,23 @@ export const MainThreadClient = async (
     };
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
-        let matches = false;
-        const config = await _dataLayer.getConfigData();
-
-        for (const baseUrl of [ ...((await config?.resourceServerURLs) ?? []), (config as any).baseUrl ]) {
-            if (baseUrl && requestConfig?.url?.startsWith(baseUrl)) {
-                matches = true;
-
-                break;
-            }
-        }
-
-        if (matches) {
-            return _httpClient
-                .request(requestConfig)
-                .then((response: HttpResponse) => {
-                    return Promise.resolve(response);
-                })
-                .catch(async (error: HttpError) => {
-                    if (error?.response?.status === 401 || !error?.response) {
-                        // Try to refresh the token
-                        let refreshTokenResponse;
-                        try {
-                            refreshTokenResponse = await refreshAccessToken();
-                        } catch (refreshError: any) {
-                            if (_isHttpHandlerEnabled) {
-                                if (typeof _httpErrorCallback === "function") {
-                                    await _httpErrorCallback({ ...error, code: ACCESS_TOKEN_INVALID });
-                                }
-                                if (typeof _httpFinishCallback === "function") {
-                                    _httpFinishCallback();
-                                }
-                            }
-
-                            throw new AsgardeoAuthException(
-                                "SPA-MAIN_THREAD_CLIENT-HR-SE01",
-                                refreshError?.name ?? "Refresh token request failed.",
-                                refreshError?.message ??
-                                "An error occurred while trying to refresh the " +
-                                "access token following a 401 response from the server."
-                            );
-                        }
-
-                        // Retry the request after refreshing the token
-                        if (refreshTokenResponse) {
-                            try {
-                                const httpResponse = await _httpClient.request(requestConfig);
-                                return Promise.resolve(httpResponse);
-                            } catch (error: any) {
-                                if (_isHttpHandlerEnabled) {
-                                    if (typeof _httpErrorCallback === "function") {
-                                        await _httpErrorCallback(error);
-                                    }
-                                    if (typeof _httpFinishCallback === "function") {
-                                        _httpFinishCallback();
-                                    }
-                                }
-
-                                return Promise.reject(error);
-                            }
-                        }
-                    }
-
-                    if (_isHttpHandlerEnabled) {
-                        if (typeof _httpErrorCallback === "function") {
-                            await _httpErrorCallback(error);
-                        }
-                        if (typeof _httpFinishCallback === "function") {
-                            _httpFinishCallback();
-                        }
-                    }
-
-                    return Promise.reject(error);
-                });
-        } else {
-            throw new AsgardeoAuthException(
-                "SPA-MAIN_THREAD_CLIENT-HR-IV02",
-                "Request to the provided endpoint is prohibited.",
-                "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                " attribute while initializing the SDK. The specified endpoint in this request " +
-                "cannot be found among the `resourceServerURLs`"
-            );
-        }
+        return await _authenticationHelper.httpRequest(
+            _httpClient, 
+            requestConfig,
+            _isHttpHandlerEnabled,
+            _httpErrorCallback,
+            _httpFinishCallback
+        );
     };
 
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
-        let matches = true;
-        const config = await _dataLayer.getConfigData();
-
-        for (const requestConfig of requestConfigs) {
-            let urlMatches = false;
-
-            for (const baseUrl of [
-                ...((await config)?.resourceServerURLs ?? []),
-                (config as any).baseUrl
-            ]) {
-                if (baseUrl && requestConfig.url?.startsWith(baseUrl)) {
-                    urlMatches = true;
-
-                    break;
-                }
-            }
-
-            if (!urlMatches) {
-                matches = false;
-
-                break;
-            }
-        }
-
-        const requests: Promise<HttpResponse<any>>[] = [];
-
-        if (matches) {
-            requestConfigs.forEach((request) => {
-                requests.push(_httpClient.request(request));
-            });
-
-            return (
-                _httpClient?.all &&
-                _httpClient
-                    .all(requests)
-                    .then((responses: HttpResponse[]) => {
-                        return Promise.resolve(responses);
-                    })
-                    .catch(async (error: HttpError) => {
-                        if (error?.response?.status === 401 || !error?.response) {
-                            let refreshTokenResponse: TokenResponse;
-                            try {
-                                refreshTokenResponse = await _authenticationClient.refreshAccessToken();
-                            } catch (refreshError: any) {
-                                if (_isHttpHandlerEnabled) {
-                                    if (typeof _httpErrorCallback === "function") {
-                                        await _httpErrorCallback({ ...error, code: ACCESS_TOKEN_INVALID });
-                                    }
-                                    if (typeof _httpFinishCallback === "function") {
-                                        _httpFinishCallback();
-                                    }
-                                }
-
-                                throw new AsgardeoAuthException(
-                                    "SPA-MAIN_THREAD_CLIENT-HRA-SE01",
-                                    refreshError?.name ?? "Refresh token request failed.",
-                                    refreshError?.message ??
-                                    "An error occurred while trying to refresh the " +
-                                    "access token following a 401 response from the server."
-                                );
-                            }
-
-                            if (refreshTokenResponse) {
-                                return (
-                                    _httpClient.all &&
-                                    _httpClient
-                                        .all(requests)
-                                        .then((response) => {
-                                            return Promise.resolve(response);
-                                        })
-                                        .catch(async (error) => {
-                                            if (_isHttpHandlerEnabled) {
-                                                if (typeof _httpErrorCallback === "function") {
-                                                    await _httpErrorCallback(error);
-                                                }
-                                                if (typeof _httpFinishCallback === "function") {
-                                                    _httpFinishCallback();
-                                                }
-                                            }
-
-                                            return Promise.reject(error);
-                                        })
-                                );
-                            }
-                        }
-
-                        if (_isHttpHandlerEnabled) {
-                            if (typeof _httpErrorCallback === "function") {
-                                await _httpErrorCallback(error);
-                            }
-                            if (typeof _httpFinishCallback === "function") {
-                                _httpFinishCallback();
-                            }
-                        }
-
-                        return Promise.reject(error);
-                    })
-            );
-        } else {
-            throw new AsgardeoAuthException(
-                "SPA-MAIN_THREAD_CLIENT-HRA-IV02",
-                "Request to the provided endpoint is prohibited.",
-                "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                " attribute while initializing the SDK. The specified endpoint in this request " +
-                "cannot be found among the `resourceServerURLs`"
-            );
-        }
+        return await _authenticationHelper.httpRequestAll(
+            requestConfigs,
+            _httpClient,
+            _isHttpHandlerEnabled,
+            _httpErrorCallback,
+            _httpFinishCallback
+        );
     };
 
     const getHttpClient = (): HttpClientInstance => {
@@ -329,14 +137,14 @@ export const MainThreadClient = async (
     };
 
     const enableHttpHandler = (): boolean => {
-        _httpClient?.enableHandler && _httpClient.enableHandler();
+        _authenticationHelper.enableHttpHandler(_httpClient);
         _isHttpHandlerEnabled = true;
 
         return true;
     };
 
     const disableHttpHandler = (): boolean => {
-        _httpClient?.disableHandler && _httpClient.disableHandler();
+        _authenticationHelper.disableHttpHandler(_httpClient);
         _isHttpHandlerEnabled = false;
 
         return true;
@@ -346,16 +154,23 @@ export const MainThreadClient = async (
         const oidcEndpoints: OIDCEndpoints = await _authenticationClient.getOIDCServiceEndpoints();
         const config = await _dataLayer.getConfigData();
 
-        _sessionManagementHelper.initialize(
-            config.clientID,
-            oidcEndpoints.checkSessionIframe ?? "",
+        _authenticationHelper.initializeSessionManger(
+            config,
+            oidcEndpoints,
             async () => (await _authenticationClient.getBasicUserInfo()).sessionState,
-            config.checkSessionInterval ?? 3,
-            config.sessionRefreshInterval ?? 300,
-            config.signInRedirectURL,
-            async (params?: GetAuthURLConfig): Promise<string> => _authenticationClient.getAuthorizationURL(params)
+            async (params?: GetAuthURLConfig): Promise<string> => _authenticationClient.getAuthorizationURL(params),
+            _sessionManagementHelper
         );
     };
+
+    const shouldStopAuthn = async (): Promise<boolean> => {
+        return await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
+                return;
+            }
+        );
+    }
 
     const signIn = async (
         signInConfig?: GetAuthURLConfig,
@@ -363,93 +178,57 @@ export const MainThreadClient = async (
         sessionState?: string,
         state?: string
     ): Promise<BasicUserInfo> => {
-        const config = await _dataLayer.getConfigData();
 
-        const shouldStopContinue: boolean = await _sessionManagementHelper.receivePromptNoneResponse(
-            async (sessionState: string | null) => {
-                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
-                return;
-            }
+        const basicUserInfo =  await _authenticationHelper.handleSignIn(
+            shouldStopAuthn,
+            checkSession
         );
 
-        if (shouldStopContinue) {
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        if (await _authenticationClient.isAuthenticated()) {
-            _spaHelper.clearRefreshTokenTimeout();
-            _spaHelper.refreshAccessTokenAutomatically();
-
-            // Enable OIDC Sessions Management only if it is set to true in the config.
-            if (config.enableOIDCSessionManagement) {
-                checkSession();
-            }
-
-            return Promise.resolve(await _authenticationClient.getBasicUserInfo());
-        }
-
-        let resolvedAuthorizationCode: string;
-        let resolvedSessionState: string;
-        let resolvedState: string;
-
-        if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
-            resolvedAuthorizationCode = authorizationCode;
-            resolvedSessionState = sessionState ?? "";
-            resolvedState = state ?? "";
+        if(basicUserInfo) {
+            return basicUserInfo;
         } else {
-            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
-            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
-            resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
+            let resolvedAuthorizationCode: string;
+            let resolvedSessionState: string;
+            let resolvedState: string;
 
-            SPAUtils.removeAuthorizationCode();
-        }
+            if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
+                resolvedAuthorizationCode = authorizationCode;
+                resolvedSessionState = sessionState ?? "";
+                resolvedState = state ?? "";
+            } else {
+                resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
+                resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
+                resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
 
-        if (resolvedAuthorizationCode && resolvedState) {
-            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
-        }
-
-        const error = new URL(window.location.href).searchParams.get(ERROR);
-        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
-
-        if (error) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete(ERROR);
-            url.searchParams.delete(ERROR_DESCRIPTION);
-
-            history.pushState(null, document.title, url.toString());
-
-            throw new AsgardeoAuthException("SPA-MAIN_THREAD_CLIENT-SI-SE01", error, errorDescription ?? "");
-        }
-
-        return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
-            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-                const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
-
-                SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
+                SPAUtils.removeAuthorizationCode();
             }
 
-            location.href = url;
+            if (resolvedAuthorizationCode && resolvedState) {
+                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
+            }
 
-            await SPAUtils.waitTillPageRedirect();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
+            return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
+                if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
+                    const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
+    
+                    SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
+                }
+    
+                location.href = url;
+    
+                await SPAUtils.waitTillPageRedirect();
+    
+                return Promise.resolve({
+                    allowedScopes: "",
+                    displayName: "",
+                    email: "",
+                    sessionState: "",
+                    sub: "",
+                    tenantDomain: "",
+                    username: ""
+                });
             });
-        });
+        }
     };
 
     const signOut = async (): Promise<boolean> => {
@@ -469,69 +248,25 @@ export const MainThreadClient = async (
         return true;
     };
 
-    const requestCustomGrant = async (config: SPACustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
-        let useDefaultEndpoint = true;
-        let matches = false;
-
-        // If the config does not contains a token endpoint, default token endpoint will be used.
-        if (config?.tokenEndpoint) {
-            useDefaultEndpoint = false;
-
-            for (const baseUrl of [
-                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                (config as any).baseUrl
-            ]) {
-                if (baseUrl && config.tokenEndpoint?.startsWith(baseUrl)) {
-                    matches = true;
-                    break;
-                }
-            }
+    const enableRetrievingSignOutURLFromSession = (config: SPACustomGrantConfig) => {
+        if (config.preventSignOutURLUpdate) {
+            _getSignOutURLFromSessionStorage = true;
         }
-        if (config.shouldReplayAfterRefresh) {
-            _dataLayer.setTemporaryDataParameter(CUSTOM_GRANT_CONFIG, JSON.stringify(config));
-        }
-        if (useDefaultEndpoint || matches) {
-            return _authenticationClient
-                .requestCustomGrant(config)
-                .then(async (response: FetchResponse | TokenResponse) => {
-                    if (config.preventSignOutURLUpdate) {
-                        _getSignOutURLFromSessionStorage = true;
-                    }
+    }
 
-                    if (config.returnsSession) {
-                        _spaHelper.refreshAccessTokenAutomatically();
-
-                        return _authenticationClient.getBasicUserInfo();
-                    } else {
-                        return response as FetchResponse;
-                    }
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
-        } else {
-            return Promise.reject(
-                new AsgardeoAuthException(
-                    "SPA-MAIN_THREAD_CLIENT-RCG-IV01",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified token endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
-                )
-            );
-        }
+    const requestCustomGrant = async (config: SPACustomGrantConfig): 
+        Promise<BasicUserInfo | FetchResponse> => {
+            return await _authenticationHelper.requestCustomGrant(
+                    config,
+                    enableRetrievingSignOutURLFromSession
+                );
     };
 
     const refreshAccessToken = async (): Promise<BasicUserInfo> => {
         try {
-            await _authenticationClient.refreshAccessToken();
-            const customGrantConfig = await getCustomGrantConfigData();
-            if (customGrantConfig) {
-                await requestCustomGrant(customGrantConfig);
-            }
-            _spaHelper.refreshAccessTokenAutomatically();
-
-            return _authenticationClient.getBasicUserInfo();
+            return await _authenticationHelper.refreshAccessToken(
+                enableRetrievingSignOutURLFromSession
+            );
         } catch (error) {
             return Promise.reject(error);
         }
@@ -554,40 +289,38 @@ export const MainThreadClient = async (
         resolvedSessionState: string,
         resolvedState: string
     ): Promise<BasicUserInfo> => {
+        return await _authenticationHelper.requestAccessToken(
+            resolvedAuthorizationCode,
+            resolvedSessionState,
+            checkSession,
+            undefined,
+            resolvedState
+        );
+    };
+
+    const constructSilentSignInUrl = async (): Promise<string> => {
         const config = await _dataLayer.getConfigData();
+        const urlString: string = await _authenticationClient.getAuthorizationURL({
+            prompt: "none",
+            state: SILENT_SIGN_IN_STATE
+        });
+
+        // Replace form_post with query
+        const urlObject = new URL(urlString);
+        urlObject.searchParams.set("response_mode", "query");
+        const url: string = urlObject.toString();
 
         if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-            const pkce = SPAUtils.getPKCE(AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState));
+            const state = urlObject.searchParams.get(STATE);
 
-            await _authenticationClient.setPKCECode(
-                AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState),
-                pkce
+            SPAUtils.setPKCE(
+                AuthenticationUtils.extractPKCEKeyFromStateParam(state ?? ""),
+                (await _authenticationClient.getPKCECode(state ?? "")) as string
             );
         }
 
-        return _authenticationClient
-            .requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState)
-            .then(async () => {
-                // Disable this temporarily
-                /* if (config.storage === Storage.BrowserMemory) {
-                    SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-                } */
-                SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
-
-                _spaHelper.clearRefreshTokenTimeout();
-                _spaHelper.refreshAccessTokenAutomatically();
-
-                // Enable OIDC Sessions Management only if it is set to true in the config.
-                if (config.enableOIDCSessionManagement) {
-                    checkSession();
-                }
-
-                return _authenticationClient.getBasicUserInfo();
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
-    };
+        return url;
+    }
 
     /**
      * This method checks if there is an active user session in the server by sending a prompt none request.
@@ -597,109 +330,36 @@ export const MainThreadClient = async (
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
-        const config = await _dataLayer.getConfigData();
 
-        if (SPAUtils.isInitializedSilentSignIn()) {
-            await _sessionManagementHelper.receivePromptNoneResponse();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-
-        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
-            PROMPT_NONE_IFRAME
-        ) as HTMLIFrameElement;
-
-        try {
-            const urlString: string = await _authenticationClient.getAuthorizationURL({
-                prompt: "none",
-                state: SILENT_SIGN_IN_STATE
-            });
-
-            // Replace form_post with query
-            const urlObject = new URL(urlString);
-            urlObject.searchParams.set("response_mode", "query");
-            const url: string = urlObject.toString();
-
-            if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
-                const state = urlObject.searchParams.get(STATE);
-
-                SPAUtils.setPKCE(
-                    AuthenticationUtils.extractPKCEKeyFromStateParam(state ?? ""),
-                    (await _authenticationClient.getPKCECode(state ?? "")) as string
-                );
-            }
-
-            promptNoneIFrame.src = url;
-        } catch (error) {
-            return Promise.reject(error);
-        }
-
-        return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                resolve(false);
-            }, 10000);
-
-            const listenToPromptNoneIFrame = async (e: MessageEvent) => {
-                const data: Message<AuthorizationInfo | null> = e.data;
-
-                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
-                    window.removeEventListener("message", listenToPromptNoneIFrame);
-                    clearTimeout(timer);
-                    resolve(false);
-                }
-
-                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data.data.code, data?.data?.sessionState, data?.data?.state)
-                        .then((response: BasicUserInfo) => {
-                            window.removeEventListener("message", listenToPromptNoneIFrame);
-                            resolve(response);
-                        })
-                        .catch((error) => {
-                            window.removeEventListener("message", listenToPromptNoneIFrame);
-                            reject(error);
-                        })
-                        .finally(() => {
-                            clearTimeout(timer);
-                        });
-                }
-            };
-
-            window.addEventListener("message", listenToPromptNoneIFrame);
-        });
+        return await _authenticationHelper.trySignInSilently(
+            constructSilentSignInUrl,
+            requestAccessToken,
+            _sessionManagementHelper
+        );
     };
 
     const getBasicUserInfo = async (): Promise<BasicUserInfo> => {
-        return _authenticationClient.getBasicUserInfo();
+        return _authenticationHelper.getBasicUserInfo();
     };
 
     const getDecodedIDToken = async (): Promise<DecodedIDTokenPayload> => {
-        return _authenticationClient.getDecodedIDToken();
+        return _authenticationHelper.getDecodedIDToken();
     };
 
     const getIDToken = async (): Promise<string> => {
-        return _authenticationClient.getIDToken();
+        return _authenticationHelper.getIDToken();
     };
 
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
-        return _authenticationClient.getOIDCServiceEndpoints();
+        return _authenticationHelper.getOIDCServiceEndpoints();
     };
 
     const getAccessToken = async (): Promise<string> => {
-        return _authenticationClient.getAccessToken();
+        return _authenticationHelper.getAccessToken();
     };
 
     const isAuthenticated = async (): Promise<boolean> => {
-        return _authenticationClient.isAuthenticated();
+        return _authenticationHelper.isAuthenticated();
     };
 
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
@@ -721,15 +381,6 @@ export const MainThreadClient = async (
             _sessionManagementHelper.reset();
 
             checkSession();
-        }
-    };
-
-    const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
-        const configString = await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
-        if (configString) {
-            return JSON.parse(configString as string);
-        } else {
-            return null;
         }
     };
 

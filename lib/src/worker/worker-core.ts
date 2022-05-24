@@ -18,7 +18,6 @@
 
 import {
     AsgardeoAuthClient,
-    AsgardeoAuthException,
     AuthClientConfig,
     AuthorizationURLParams,
     BasicUserInfo,
@@ -28,15 +27,12 @@ import {
     OIDCEndpoints,
     SESSION_STATE,
     STATE,
-    Store,
-    TokenResponse
+    Store
 } from "@asgardeo/auth-js";
-import { CUSTOM_GRANT_CONFIG } from "../constants";
-import { SPAHelper } from "../helpers";
+import { AuthenticationHelper, SPAHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
     AuthorizationResponse,
-    HttpError,
     HttpRequestConfig,
     HttpResponse,
     WebWorkerClientConfig,
@@ -46,7 +42,11 @@ import { MemoryStore } from "../stores";
 import { SPACryptoUtils } from "../utils/crypto-utils";
 
 export const WebWorkerCore = async (
-    config: AuthClientConfig<WebWorkerClientConfig>
+    config: AuthClientConfig<WebWorkerClientConfig>,
+    getAuthHelper: (
+        authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
+        spaHelper: SPAHelper<WebWorkerClientConfig>
+    ) => AuthenticationHelper<WebWorkerClientConfig>
 ): Promise<WebWorkerCoreInterface> => {
     const _store: Store = new MemoryStore();
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
@@ -54,186 +54,53 @@ export const WebWorkerCore = async (
     await _authenticationClient.initialize(config);
 
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
+
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+        getAuthHelper(_authenticationClient, _spaHelper);
+
     const _dataLayer = _authenticationClient.getDataLayer();
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
-    const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        const requestConfig = { attachToken: true, ...request };
-        if (requestConfig.attachToken) {
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${ await _authenticationClient.getAccessToken() }`
-            };
-        }
-    };
-
-    _httpClient?.init && (await _httpClient.init(true, attachToken));
+    _httpClient?.init && (await _httpClient.init(true, _authenticationHelper.attachToken));
 
     const setHttpRequestStartCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
+        _authenticationHelper.setHttpRequestStartCallback(_httpClient, callback);
     };
 
-    const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
-        _httpClient?.setHttpRequestSuccessCallback && _httpClient.setHttpRequestSuccessCallback(callback);
+    const setHttpRequestSuccessCallback = (
+        callback: (response: HttpResponse) => void
+    ): void => {
+        _authenticationHelper.setHttpRequestSuccessCallback(_httpClient, callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback &&
+        _httpClient.setHttpRequestFinishCallback(callback);
     };
-
-    const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
-        let matches = false;
-
-        for (const baseUrl of [
-            ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-            (config as any).baseUrl
-        ]) {
-            if (baseUrl && requestConfig?.url?.startsWith(baseUrl)) {
-                matches = true;
-
-                break;
-            }
-        }
-
-        if (matches) {
-            return _httpClient
-                .request(requestConfig)
-                .then((response: HttpResponse) => {
-                    return Promise.resolve(response);
-                })
-                .catch(async (error: HttpError) => {
-                    if (error?.response?.status === 401 || !error?.response) {
-                        let refreshAccessTokenResponse: BasicUserInfo;
-                        try {
-                            refreshAccessTokenResponse = await refreshAccessToken();
-                        } catch (refreshError: any) {
-                            throw new AsgardeoAuthException(
-                                "SPA-WORKER_CORE-HR-SE01",
-                                refreshError?.name ?? "Refresh token request failed.",
-                                refreshError?.message ??
-                                "An error occurred while trying to refresh the " +
-                                "access token following a 401 response from the server."
-                            );
-                        }
-
-                        if (refreshAccessTokenResponse) {
-                            return _httpClient
-                                .request(requestConfig)
-                                .then((response) => {
-                                    return Promise.resolve(response);
-                                })
-                                .catch((error) => {
-                                    return Promise.reject(error);
-                                });
-                        }
-                    }
-
-                    return Promise.reject(error);
-                });
-        } else {
-            return Promise.reject(
-                new AsgardeoAuthException(
-                    "SPA-WORKER_CORE-HR-IV02",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
-                )
-            );
-        }
+    
+    const httpRequest = async (
+        requestConfig: HttpRequestConfig
+    ): Promise<HttpResponse> => {
+        return await _authenticationHelper.httpRequest(
+          _httpClient,
+          requestConfig
+        );
     };
 
     const httpRequestAll = async (requestConfigs: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> => {
-        let matches = true;
-
-        for (const requestConfig of requestConfigs) {
-            let urlMatches = false;
-
-            for (const baseUrl of [
-                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                (config as any).baseUrl
-            ]) {
-                if (baseUrl && requestConfig.url?.startsWith(baseUrl)) {
-                    urlMatches = true;
-
-                    break;
-                }
-            }
-
-            if (!urlMatches) {
-                matches = false;
-
-                break;
-            }
-        }
-
-        const requests: Promise<HttpResponse<any>>[] = [];
-
-        if (matches) {
-            requestConfigs.forEach((request) => {
-                requests.push(_httpClient.request(request));
-            });
-
-            return (
-                _httpClient?.all &&
-                _httpClient
-                    .all(requests)
-                    .then((responses: HttpResponse[]) => {
-                        return Promise.resolve(responses);
-                    })
-                    .catch(async (error: HttpError) => {
-                        if (error?.response?.status === 401) {
-                            let refreshAccessTokenResponse: BasicUserInfo;
-                            try {
-                                refreshAccessTokenResponse = await refreshAccessToken();
-                            } catch (refreshError: any) {
-                                throw new AsgardeoAuthException(
-                                    "SPA-WORKER_CORE-HRA-SE01",
-                                    refreshError?.name ?? "Refresh token request failed.",
-                                    refreshError?.message ??
-                                    "An error occurred while trying to refresh the " +
-                                    "access token following a 401 response from the server."
-                                );
-                            }
-
-                            if (refreshAccessTokenResponse) {
-                                return (
-                                    _httpClient.all &&
-                                    _httpClient
-                                        .all(requests)
-                                        .then((response) => {
-                                            return Promise.resolve(response);
-                                        })
-                                        .catch((error) => {
-                                            return Promise.reject(error);
-                                        })
-                                );
-                            }
-                        }
-
-                        return Promise.reject(error);
-                    })
-            );
-        } else {
-            return Promise.reject(
-                new AsgardeoAuthException(
-                    "SPA-WORKER_CORE-HRA-IV02",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
-                )
-            );
-        }
+        return await _authenticationHelper.httpRequestAll(
+            requestConfigs,
+            _httpClient
+        );
     };
 
     const enableHttpHandler = (): void => {
-        _httpClient.enableHandler && _httpClient.enableHandler();
+        _authenticationHelper.enableHttpHandler(_httpClient);
     };
 
     const disableHttpHandler = (): void => {
-        _httpClient.disableHandler && _httpClient.disableHandler();
+        _authenticationHelper.disableHttpHandler(_httpClient);
     };
 
     const getAuthorizationURL = async (params?: AuthorizationURLParams): Promise<AuthorizationResponse> => {
@@ -262,31 +129,12 @@ export const WebWorkerCore = async (
         pkce?: string,
         state?: string
     ): Promise<BasicUserInfo> => {
-        const config = await _dataLayer.getConfigData();
-
-        if (pkce && config.enablePKCE) {
-            await _authenticationClient.setPKCECode(pkce, state ?? "");
-        }
-
-        if (authorizationCode) {
-            return _authenticationClient
-                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "'")
-                .then(() => {
-                    _spaHelper.refreshAccessTokenAutomatically();
-
-                    return _authenticationClient.getBasicUserInfo();
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
-        }
-
-        return Promise.reject(
-            new AsgardeoAuthException(
-                "SPA-WORKER_CORE-RAT1-NF01",
-                "No authorization code.",
-                "No authorization code was found."
-            )
+        return await _authenticationHelper.requestAccessToken(
+            authorizationCode,
+            sessionState,
+            undefined,
+            pkce,
+            state
         );
     };
 
@@ -301,64 +149,12 @@ export const WebWorkerCore = async (
     };
 
     const requestCustomGrant = async (config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse> => {
-        let useDefaultEndpoint = true;
-        let matches = false;
-
-        // If the config does not contains a token endpoint, default token endpoint will be used.
-        if (config?.tokenEndpoint) {
-            useDefaultEndpoint = false;
-            for (const baseUrl of [
-                ...((await _dataLayer.getConfigData())?.resourceServerURLs ?? []),
-                (config as any).baseUrl
-            ]) {
-                if (baseUrl && config.tokenEndpoint?.startsWith(baseUrl)) {
-                    matches = true;
-                    break;
-                }
-            }
-        }
-
-        if (config.shouldReplayAfterRefresh) {
-            _dataLayer.setTemporaryDataParameter(CUSTOM_GRANT_CONFIG, JSON.stringify(config));
-        }
-        if (useDefaultEndpoint || matches) {
-            return _authenticationClient
-                .requestCustomGrant(config)
-                .then(async (response: FetchResponse | TokenResponse) => {
-                    if (config.returnsSession) {
-                        _spaHelper.refreshAccessTokenAutomatically();
-
-                        return _authenticationClient.getBasicUserInfo();
-                    } else {
-                        return response as FetchResponse;
-                    }
-                })
-                .catch((error) => {
-                    return Promise.reject(error);
-                });
-        } else {
-            return Promise.reject(
-                new AsgardeoAuthException(
-                    "SPA-WORKER_CORE-RCG-IV01",
-                    "Request to the provided endpoint is prohibited.",
-                    "Requests can only be sent to resource servers specified by the `resourceServerURLs`" +
-                    " attribute while initializing the SDK. The specified token endpoint in this request " +
-                    "cannot be found among the `resourceServerURLs`"
-                )
-            );
-        }
+        return await _authenticationHelper.requestCustomGrant(config);
     };
 
     const refreshAccessToken = async (): Promise<BasicUserInfo> => {
         try {
-            await _authenticationClient.refreshAccessToken();
-            const customGrantConfig = await getCustomGrantConfigData();
-            if (customGrantConfig) {
-                await requestCustomGrant(customGrantConfig);
-            }
-            _spaHelper.refreshAccessTokenAutomatically();
-
-            return _authenticationClient.getBasicUserInfo();
+            return await _authenticationHelper.refreshAccessToken();
         } catch (error) {
             return Promise.reject(error);
         }
@@ -376,26 +172,26 @@ export const WebWorkerCore = async (
     };
 
     const getBasicUserInfo = async (): Promise<BasicUserInfo> => {
-        return _authenticationClient.getBasicUserInfo();
+        return _authenticationHelper.getBasicUserInfo();
     };
 
     const getDecodedIDToken = async (): Promise<DecodedIDTokenPayload> => {
-        return _authenticationClient.getDecodedIDToken();
+        return _authenticationHelper.getDecodedIDToken();
     };
 
     const getIDToken = async (): Promise<string> => {
-        return _authenticationClient.getIDToken();
+        return _authenticationHelper.getIDToken();
     };
     const getOIDCServiceEndpoints = async (): Promise<OIDCEndpoints> => {
-        return _authenticationClient.getOIDCServiceEndpoints();
+        return _authenticationHelper.getOIDCServiceEndpoints();
     };
 
     const getAccessToken = (): Promise<string> => {
-        return _authenticationClient.getAccessToken();
+        return _authenticationHelper.getAccessToken();
     };
 
     const isAuthenticated = (): Promise<boolean> => {
-        return _authenticationClient.isAuthenticated();
+        return _authenticationHelper.isAuthenticated();
     };
 
     const setSessionState = async (sessionState: string): Promise<void> => {
@@ -412,15 +208,6 @@ export const WebWorkerCore = async (
 
     const getConfigData = async (): Promise<AuthClientConfig<WebWorkerClientConfig>> => {
         return _dataLayer.getConfigData();
-    };
-
-    const getCustomGrantConfigData = async (): Promise<AuthClientConfig<CustomGrantConfig> | null> => {
-        const configString = await _dataLayer.getTemporaryDataParameter(CUSTOM_GRANT_CONFIG);
-        if (configString) {
-            return JSON.parse(configString as string);
-        } else {
-            return null;
-        }
     };
 
     return {

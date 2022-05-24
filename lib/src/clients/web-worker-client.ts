@@ -18,6 +18,7 @@
 
 import {
     AUTHORIZATION_CODE,
+    AsgardeoAuthClient,
     AsgardeoAuthException,
     AuthClientConfig,
     AuthenticationUtils,
@@ -29,16 +30,12 @@ import {
     OIDCEndpoints,
     ResponseMode,
     SESSION_STATE,
-    STATE
+    STATE,
+    Store
 } from "@asgardeo/auth-js";
-import WorkerFile from "web-worker:../worker/client.worker.ts";
 import {
-    CHECK_SESSION_SIGNED_IN,
-    CHECK_SESSION_SIGNED_OUT,
     DISABLE_HTTP_HANDLER,
     ENABLE_HTTP_HANDLER,
-    ERROR,
-    ERROR_DESCRIPTION,
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_CONFIG_DATA,
@@ -50,7 +47,6 @@ import {
     HTTP_REQUEST_ALL,
     INIT,
     IS_AUTHENTICATED,
-    PROMPT_NONE_IFRAME,
     REFRESH_ACCESS_TOKEN,
     REQUEST_ACCESS_TOKEN,
     REQUEST_CUSTOM_GRANT,
@@ -58,14 +54,14 @@ import {
     REQUEST_START,
     REQUEST_SUCCESS,
     REVOKE_ACCESS_TOKEN,
-    RP_IFRAME,
     SET_SESSION_STATE,
     SIGN_OUT,
     SILENT_SIGN_IN_STATE,
     START_AUTO_REFRESH_TOKEN,
+    Storage,
     UPDATE_CONFIG
 } from "../constants";
-import { SessionManagementHelper } from "../helpers";
+import { AuthenticationHelper, SPAHelper, SessionManagementHelper } from "../helpers";
 import {
     AuthorizationInfo,
     AuthorizationResponse,
@@ -79,10 +75,30 @@ import {
     WebWorkerClientInterface
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
+import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
+import { SPACryptoUtils } from "../utils/crypto-utils";
+
+const initiateStore = (store: Storage | undefined): Store => {
+    switch (store) {
+        case Storage.LocalStorage:
+            return new LocalStore();
+        case Storage.SessionStorage:
+            return new SessionStore();
+        case Storage.BrowserMemory:
+            return new MemoryStore();
+        default:
+            return new SessionStore();
+    }
+};
 
 export const WebWorkerClient = async (
-    config: AuthClientConfig<WebWorkerClientConfig>
+    config: AuthClientConfig<WebWorkerClientConfig>,
+    webWorker: new () => Worker,
+    getAuthHelper: (
+        authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
+        spaHelper: SPAHelper<WebWorkerClientConfig>
+    ) => AuthenticationHelper<WebWorkerClientConfig>
 ): Promise<WebWorkerClientInterface> => {
     /**
      * HttpClient handlers
@@ -94,7 +110,13 @@ export const WebWorkerClient = async (
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
     let _isHttpHandlerEnabled: boolean = true;
     let _getSignOutURLFromSessionStorage: boolean = false;
-
+    
+    const _store: Store = initiateStore(config.storage);
+    const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
+    const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>(_store, _cryptoUtils);
+    await _authenticationClient.initialize(config);
+    const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
+    
     const _sessionManagementHelper = await SessionManagementHelper(
         async () => {
             const message: Message<string> = {
@@ -113,7 +135,10 @@ export const WebWorkerClient = async (
         (sessionState: string) => setSessionState(sessionState)
     );
 
-    const worker: Worker = new WorkerFile();
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+        getAuthHelper(_authenticationClient, _spaHelper);
+
+    const worker: Worker = new webWorker();
 
     const communicate = <T, R>(message: Message<T>): Promise<R> => {
         const channel = new MessageChannel();
@@ -340,16 +365,42 @@ export const WebWorkerClient = async (
         const oidcEndpoints: OIDCEndpoints = await getOIDCServiceEndpoints();
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
-        _sessionManagementHelper.initialize(
-            config.clientID,
-            oidcEndpoints.checkSessionIframe ?? "",
+        _authenticationHelper.initializeSessionManger(
+            config,
+            oidcEndpoints,
             async () => (await getBasicUserInfo()).sessionState,
-            config.checkSessionInterval ?? 3,
-            config.sessionRefreshInterval ?? 300,
-            config.signInRedirectURL,
-            async (params?: GetAuthURLConfig): Promise<string> => (await getAuthorizationURL(params)).authorizationURL
+            async (params?: GetAuthURLConfig): Promise<string> => (await getAuthorizationURL(params)).authorizationURL,
+            _sessionManagementHelper
         );
     };
+
+    const constructSilentSignInUrl = async (): Promise<string> => {
+        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
+        const message: Message<GetAuthURLConfig> = {
+            data: {
+                prompt: "none",
+                state: SILENT_SIGN_IN_STATE
+            },
+            type: GET_AUTH_URL
+        };
+
+        const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
+
+        const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(
+            new URL(response.authorizationURL).searchParams.get(STATE) ?? ""
+        );
+
+        response.pkce && config.enablePKCE && SPAUtils.setPKCE(pkceKey, response.pkce);
+
+        const urlString: string = response.authorizationURL;
+
+        // Replace form_post with query
+        const urlObject = new URL(urlString);
+        urlObject.searchParams.set("response_mode", "query");
+        const url: string = urlObject.toString();
+
+        return url;
+    }
 
     /**
      * This method checks if there is an active user session in the server by sending a prompt none request.
@@ -359,91 +410,11 @@ export const WebWorkerClient = async (
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
-        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
-
-        // This block is executed by the iFrame when the server redirects with the authorization code.
-        if (SPAUtils.isInitializedSilentSignIn()) {
-            await _sessionManagementHelper.receivePromptNoneResponse();
-
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
-
-        // This gets executed in the main thread and sends the prompt none request.
-        const rpIFrame = document.getElementById(RP_IFRAME) as HTMLIFrameElement;
-
-        const promptNoneIFrame: HTMLIFrameElement = rpIFrame?.contentDocument?.getElementById(
-            PROMPT_NONE_IFRAME
-        ) as HTMLIFrameElement;
-
-        const message: Message<GetAuthURLConfig> = {
-            data: {
-                prompt: "none",
-                state: SILENT_SIGN_IN_STATE
-            },
-            type: GET_AUTH_URL
-        };
-
-        try {
-            const response: AuthorizationResponse = await communicate<GetAuthURLConfig, AuthorizationResponse>(message);
-
-            const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(
-                new URL(response.authorizationURL).searchParams.get(STATE) ?? ""
-            );
-
-            response.pkce && config.enablePKCE && SPAUtils.setPKCE(pkceKey, response.pkce);
-
-            const urlString: string = response.authorizationURL;
-
-            // Replace form_post with query
-            const urlObject = new URL(urlString);
-            urlObject.searchParams.set("response_mode", "query");
-            const url: string = urlObject.toString();
-
-            promptNoneIFrame.src = url;
-        } catch (error) {
-            return Promise.reject(error);
-        }
-
-        return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                resolve(false);
-            }, 10000);
-
-            const listenToPromptNoneIFrame = async (e: MessageEvent) => {
-                const data: Message<AuthorizationInfo | null> = e.data;
-
-                if (data?.type == CHECK_SESSION_SIGNED_OUT) {
-                    window.removeEventListener("message", listenToPromptNoneIFrame);
-                    clearTimeout(timer);
-                    resolve(false);
-                }
-
-                if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.state)
-                        .then((response: BasicUserInfo) => {
-                            window.removeEventListener("message", listenToPromptNoneIFrame);
-                            resolve(response);
-                        })
-                        .catch((error) => {
-                            window.removeEventListener("message", listenToPromptNoneIFrame);
-                            reject(error);
-                        })
-                        .finally(() => {
-                            clearTimeout(timer);
-                        });
-                }
-            };
-
-            window.addEventListener("message", listenToPromptNoneIFrame);
-        });
+        return await _authenticationHelper.trySignInSilently(
+            constructSilentSignInUrl,
+            requestAccessToken,
+            _sessionManagementHelper
+        );
     };
 
     /**
@@ -523,6 +494,27 @@ export const WebWorkerClient = async (
             });
     };
 
+    const shouldStopAuthn = async (): Promise<boolean> => {
+        return await _sessionManagementHelper.receivePromptNoneResponse(
+            async (sessionState: string | null) => {
+                return setSessionState(sessionState);
+            }
+        );
+    }
+
+    const tryRetrievingUserInfo = async (): Promise<BasicUserInfo | undefined> => {
+        if (await isAuthenticated()) {
+            await startAutoRefreshToken();
+
+            // Enable OIDC Sessions Management only if it is set to true in the config.
+            if (config.enableOIDCSessionManagement) {
+                checkSession();
+            }
+
+            return getBasicUserInfo();
+        }
+    }
+    
     /**
      * Initiates the authentication flow.
      *
@@ -534,89 +526,56 @@ export const WebWorkerClient = async (
         sessionState?: string,
         state?: string
     ): Promise<BasicUserInfo> => {
-        const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
 
-        const shouldStopContinue: boolean = await _sessionManagementHelper.receivePromptNoneResponse(
-            async (sessionState: string | null) => {
-                return setSessionState(sessionState);
-            }
+        const basicUserInfo =  await _authenticationHelper.handleSignIn(
+            shouldStopAuthn,
+            checkSession,
+            tryRetrievingUserInfo
         );
 
-        if (shouldStopContinue) {
-            return Promise.resolve({
-                allowedScopes: "",
-                displayName: "",
-                email: "",
-                sessionState: "",
-                sub: "",
-                tenantDomain: "",
-                username: ""
-            });
-        }
+        if(basicUserInfo) {
+            return basicUserInfo;
+        } else {
+            let resolvedAuthorizationCode: string;
+            let resolvedSessionState: string;
+            let resolvedState: string;
 
-        const error = new URL(window.location.href).searchParams.get(ERROR);
-        const errorDescription = new URL(window.location.href).searchParams.get(ERROR_DESCRIPTION);
+            if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
+                resolvedAuthorizationCode = authorizationCode;
+                resolvedSessionState = sessionState ?? "";
+                resolvedState = state ?? "";
+            } else {
+                resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
+                resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
+                resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
 
-        if (error) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete(ERROR);
-            url.searchParams.delete(ERROR_DESCRIPTION);
-
-            history.pushState(null, document.title, url.toString());
-
-            throw new AsgardeoAuthException("SPA-WEB_WORKER_CLIENT-SI-SE01", error, errorDescription ?? "");
-        }
-
-        if (await isAuthenticated()) {
-            await startAutoRefreshToken();
-
-            // Enable OIDC Sessions Management only if it is set to true in the config.
-            if (config.enableOIDCSessionManagement) {
-                checkSession();
+                SPAUtils.removeAuthorizationCode();
             }
 
-            return getBasicUserInfo();
-        }
+            if (resolvedAuthorizationCode && resolvedState) {
+                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
+            }
+            
+            return getAuthorizationURL(params)
+                .then(async (response: AuthorizationResponse) => {
+                    location.href = response.authorizationURL;
 
-        let resolvedAuthorizationCode: string;
-        let resolvedSessionState: string;
-        let resolvedState: string;
+                    await SPAUtils.waitTillPageRedirect();
 
-        if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
-            resolvedAuthorizationCode = authorizationCode;
-            resolvedSessionState = sessionState ?? "";
-            resolvedState = state ?? "";
-        } else {
-            resolvedAuthorizationCode = new URL(window.location.href).searchParams.get(AUTHORIZATION_CODE) ?? "";
-            resolvedSessionState = new URL(window.location.href).searchParams.get(SESSION_STATE) ?? "";
-            resolvedState = new URL(window.location.href).searchParams.get(STATE) ?? "";
-
-            SPAUtils.removeAuthorizationCode();
-        }
-
-        if (resolvedAuthorizationCode && resolvedState) {
-            return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
-        }
-
-        return getAuthorizationURL(params)
-            .then(async (response: AuthorizationResponse) => {
-                location.href = response.authorizationURL;
-
-                await SPAUtils.waitTillPageRedirect();
-
-                return Promise.resolve({
-                    allowedScopes: "",
-                    displayName: "",
-                    email: "",
-                    sessionState: "",
-                    sub: "",
-                    tenantDomain: "",
-                    username: ""
+                    return Promise.resolve({
+                        allowedScopes: "",
+                        displayName: "",
+                        email: "",
+                        sessionState: "",
+                        sub: "",
+                        tenantDomain: "",
+                        username: ""
+                    });
+                })
+                .catch((error) => {
+                    return Promise.reject(error);
                 });
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+        }
     };
 
     /**
