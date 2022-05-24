@@ -65,22 +65,40 @@ const PRIMARY_INSTANCE = "primaryInstance";
  * @class AsgardeoSPAClient
  */
 export class AsgardeoSPAClient {
-    private static _instances: Map<string, AsgardeoSPAClient> = new Map<string, AsgardeoSPAClient>();
-    private _client: WebWorkerClientInterface | MainThreadClientInterface | undefined;
-    private _storage: Storage | undefined;
-    private _initialized: boolean = false;
-    private _startedInitialize: boolean = false;
-    private _onSignInCallback: (response: BasicUserInfo) => void = () => null;
-    private _onSignOutCallback: () => void = () => null;
-    private _onSignOutFailedCallback: (error: SignOutError) => void = () => null;
-    private _onEndUserSession: (response: any) => void = () => null;
-    private _onInitialize: (response: boolean) => void = () => null;
-    private _onCustomGrant: Map<string, (response: any) => void> = new Map();
-    private _instanceID: string;
+    protected static _instances: Map<string, AsgardeoSPAClient> = new Map<string, AsgardeoSPAClient>();
+    protected _client: WebWorkerClientInterface | MainThreadClientInterface | undefined;
+    protected _storage: Storage | undefined;
+    protected _authHelper: typeof AuthenticationHelper = AuthenticationHelper;
+    protected _worker: new () => Worker = WorkerFile;
+    protected _initialized: boolean = false;
+    protected _startedInitialize: boolean = false;
+    protected _onSignInCallback: (response: BasicUserInfo) => void = () => null;
+    protected _onSignOutCallback: () => void = () => null;
+    protected _onSignOutFailedCallback: (error: SignOutError) => void = () => null;
+    protected _onEndUserSession: (response: any) => void = () => null;
+    protected _onInitialize: (response: boolean) => void = () => null;
+    protected _onCustomGrant: Map<string, (response: any) => void> = new Map();
+    protected _instanceID: string;
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    private constructor(id: string) {
+    public constructor(id: string) {
         this._instanceID = id;
+    }
+
+    public instantiateAuthHelper(authHelper?: typeof AuthenticationHelper) {
+        if(authHelper) {
+            this._authHelper = authHelper;
+        } else {
+            this._authHelper = AuthenticationHelper;
+        }
+    }
+
+    public instantiateWorker(worker: new () => Worker) {
+        if(worker) {
+            this._worker = worker;
+        } else {
+            this._worker = WorkerFile;
+        }
     }
 
     /**
@@ -193,10 +211,18 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public async initialize(config: AuthSPAClientConfig): Promise<boolean> {
+    
+    public async initialize(
+        config: AuthSPAClientConfig, 
+        authHelper?: typeof AuthenticationHelper,
+        workerFile?: new () => Worker
+    ): Promise<boolean> {
         this._storage = config.storage ?? Storage.SessionStorage;
         this._initialized = false;
         this._startedInitialize = true;
+
+        authHelper && this.instantiateAuthHelper(authHelper);
+        workerFile && this.instantiateWorker(workerFile);
 
         if (!(this._storage === Storage.WebWorker)) {
             if (!this._client) {
@@ -208,7 +234,7 @@ export class AsgardeoSPAClient {
                         authClient: AsgardeoAuthClient<MainThreadClientConfig>,
                         spaHelper: SPAHelper<MainThreadClientConfig>
                     ) => {
-                        return new AuthenticationHelper(authClient, spaHelper);
+                        return new this._authHelper(authClient, spaHelper);
                     }
                 );
             }
@@ -228,12 +254,12 @@ export class AsgardeoSPAClient {
                         ...DefaultConfig,
                         ...webWorkerClientConfig
                     }, 
-                    WorkerFile,
+                    this._worker,
                     (
                         authClient: AsgardeoAuthClient<WebWorkerClientConfig>,
                         spaHelper: SPAHelper<WebWorkerClientConfig>
                     ) => {
-                        return new AuthenticationHelper(authClient, spaHelper);
+                        return new this._authHelper(authClient, spaHelper);
                     }
                 )) as WebWorkerClientInterface;
 
