@@ -508,7 +508,7 @@ export class AuthenticationHelper<
                 "No authorization code was found."
             )
         );
-    };
+    }
 
     public async trySignInSilently(
         constructSilentSignInUrl: () => Promise<string>,
