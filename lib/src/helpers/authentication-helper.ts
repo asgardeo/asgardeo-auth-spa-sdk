@@ -442,13 +442,13 @@ export class AuthenticationHelper<
         }
     }
 
-    public requestAccessToken = async (
+    public async requestAccessToken(
         authorizationCode?: string,
         sessionState?: string,
         checkSession?: () => Promise<void>,
         pkce?: string,
         state?: string
-    ): Promise<BasicUserInfo> => {
+    ): Promise<BasicUserInfo> {
         const config = await this._dataLayer.getConfigData();
 
         if (config.storage === Storage.BrowserMemory && config.enablePKCE && sessionState) {
@@ -508,7 +508,7 @@ export class AuthenticationHelper<
                 "No authorization code was found."
             )
         );
-    };
+    }
 
     public async trySignInSilently(
         constructSilentSignInUrl: () => Promise<string>,
