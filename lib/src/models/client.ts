@@ -20,6 +20,7 @@ import {
     AuthClientConfig,
     BasicUserInfo,
     CustomGrantConfig,
+    DataLayer,
     DecodedIDTokenPayload,
     FetchResponse,
     OIDCEndpoints
@@ -59,6 +60,7 @@ export interface MainThreadClientInterface {
     getIDToken(): Promise<string>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getAccessToken(): Promise<string>;
+    getDataLayer(): Promise<DataLayer<MainThreadClientConfig>>;
     isAuthenticated(): Promise<boolean>;
     updateConfig(config: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void>;
     trySignInSilently(): Promise<BasicUserInfo | boolean>;

@@ -655,6 +655,10 @@ export class AuthenticationHelper<
         return this._authenticationClient.getAccessToken();
     }
 
+    public getDataLayer(): DataLayer<T> {
+        return this._dataLayer;
+    }
+
     public async isAuthenticated(): Promise<boolean> {
         return this._authenticationClient.isAuthenticated();
     }

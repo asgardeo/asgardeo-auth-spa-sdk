@@ -22,6 +22,7 @@ import {
     AuthClientConfig,
     BasicUserInfo,
     CustomGrantConfig,
+    DataLayer,
     DecodedIDTokenPayload,
     FetchResponse,
     OIDCEndpoints
@@ -765,6 +766,84 @@ export class AsgardeoSPAClient {
         const mainThreadClient = this._client as MainThreadClientInterface;
 
         return mainThreadClient.getAccessToken();
+    }
+
+    /**
+     * This method return a Promise that resolves with the idp access token.
+     *
+     * **This method will not return the access token if the storage type is set to `webWorker`.**
+     *
+     * @return {Promise<string>} - A Promise that resolves with the idp access token.
+     *
+     * @example
+     * ```
+     *   auth.getIDPAccessToken().then((token) => {
+     *       // console.log(token);
+     *   }).catch((error) => {
+     *       // console.error(error);
+     *   });
+     * ```
+     *
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getaccesstoken
+     *
+     * @memberof AsgardeoSPAClient
+     *
+     * @preserve
+     */
+     public async getIDPAccessToken(): Promise<string> {
+        await this._validateMethod();
+
+        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
+            return Promise.reject(
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-GAT-IV01",
+                    "The access token cannot be returned.",
+                    "The access token cannot be returned when the storage type is set to webWorker or browserMemory."
+                )
+            );
+        }
+        const mainThreadClient = this._client as MainThreadClientInterface;
+
+        return mainThreadClient.getAccessToken();
+    }
+
+    /**
+     * This method return a Promise that resolves with the data layer object.
+     *
+     * **This method will not return the data layer object, if the storage type is set to `webWorker`.**
+     *
+     * @return {Promise<string>} - A Promise that resolves with the data layer object.
+     *
+     * @example
+     * ```
+     *   auth.getDataLayer().then((dataLayer) => {
+     *       // console.log(dataLayer);
+     *   }).catch((error) => {
+     *       // console.error(error);
+     *   });
+     * ```
+     *
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getdatalayer
+     *
+     * @memberof AsgardeoSPAClient
+     *
+     * @preserve
+     */
+     public async getDataLayer(): Promise<DataLayer<MainThreadClientConfig>> {
+        await this._validateMethod();
+
+        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
+            return Promise.reject(
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-GAT-IV01",
+                    "The access token cannot be returned.",
+                    "The access token cannot be returned when the storage type is set to webWorker or browserMemory."
+                )
+            );
+        }
+        const mainThreadClient = this._client as MainThreadClientInterface;
+
+        return mainThreadClient.getDataLayer();
     }
 
     /**
