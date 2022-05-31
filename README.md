@@ -662,6 +662,58 @@ auth.getAccessToken().then((token) => {
 });
 ```
 
+---
+
+### getIDPAccessToken
+
+```typescript
+getIDPAccessToken(): Promise<string>;
+```
+
+#### Returns
+
+A Promise that resolves with the idp access token.
+
+#### Description
+
+This returns a promise that resolves with the idp access token. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise an error is thrown.
+
+#### Example
+
+```TypeScript
+auth.getIDPAccessToken().then((token) => {
+    // console.log(token);
+}).error((error) => {
+    // console.error(error);
+});
+```
+
+---
+
+### getDataLayer
+
+```typescript
+getDataLayer(): Promise<DataLayer<MainThreadClientConfig>>;
+```
+
+#### Returns
+
+A Promise that resolves with the data layer object.
+
+#### Description
+
+This returns a promise that resolves with the data layer object. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise an error is thrown.
+
+#### Example
+
+```TypeScript
+auth.getDataLayer().then((dataLayer) => {
+    // console.log(dataLayer);
+}).error((error) => {
+    // console.error(error);
+});
+```
+
 ### refreshAccessToken
 
 ```typescript

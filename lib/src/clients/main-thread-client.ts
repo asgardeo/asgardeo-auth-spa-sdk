@@ -22,6 +22,7 @@ import {
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
+    DataLayer,
     DecodedIDTokenPayload,
     FetchResponse,
     GetAuthURLConfig,
@@ -358,6 +359,10 @@ export const MainThreadClient = async (
         return _authenticationHelper.getAccessToken();
     };
 
+    const getDataLayer = async (): Promise<DataLayer<MainThreadClientConfig>> => {
+        return _authenticationHelper.getDataLayer();
+    };
+
     const isAuthenticated = async (): Promise<boolean> => {
         return _authenticationHelper.isAuthenticated();
     };
@@ -389,6 +394,7 @@ export const MainThreadClient = async (
         enableHttpHandler,
         getAccessToken,
         getBasicUserInfo,
+        getDataLayer,
         getDecodedIDToken,
         getHttpClient,
         getIDToken,
