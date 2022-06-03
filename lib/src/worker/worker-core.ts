@@ -62,21 +62,28 @@ export const WebWorkerCore = async (
 
     const _httpClient: HttpClientInstance = HttpClient.getInstance();
 
-    _httpClient?.init && (await _httpClient.init(true, _authenticationHelper.attachToken));
-
-    const setHttpRequestStartCallback = (callback: () => void): void => {
-        _authenticationHelper.setHttpRequestStartCallback(_httpClient, callback);
+    const attachToken = async (request: HttpRequestConfig): Promise<void> => {
+        const requestConfig = { attachToken: true, ...request };
+        if (requestConfig.attachToken) {
+            request.headers = {
+                ...request.headers,
+                Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
+            };
+        }
     };
 
-    const setHttpRequestSuccessCallback = (
-        callback: (response: HttpResponse) => void
-    ): void => {
-        _authenticationHelper.setHttpRequestSuccessCallback(_httpClient, callback);
+    _httpClient?.init && (await _httpClient.init(true, attachToken));
+
+    const setHttpRequestStartCallback = (callback: () => void): void => {
+        _httpClient?.setHttpRequestStartCallback && _httpClient.setHttpRequestStartCallback(callback);
+    };
+
+    const setHttpRequestSuccessCallback = (callback: (response: HttpResponse) => void): void => {
+        _httpClient?.setHttpRequestSuccessCallback && _httpClient.setHttpRequestSuccessCallback(callback);
     };
 
     const setHttpRequestFinishCallback = (callback: () => void): void => {
-        _httpClient?.setHttpRequestFinishCallback &&
-        _httpClient.setHttpRequestFinishCallback(callback);
+        _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
     
     const httpRequest = async (
