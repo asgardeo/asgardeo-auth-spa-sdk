@@ -70,40 +70,6 @@ export class AuthenticationHelper<
         this._spaHelper = spaHelper;
     }
 
-    public async attachToken(request: HttpRequestConfig): Promise<void> {
-        const requestConfig = { attachToken: true, ...request };
-        if (requestConfig.attachToken) {
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${ await this._authenticationClient.getAccessToken() }`
-            };
-        }
-    }
-
-    public setHttpRequestStartCallback(
-        _httpClient: HttpClientInstance,
-        callback: () => void
-    ): void {
-        _httpClient?.setHttpRequestStartCallback &&
-        _httpClient.setHttpRequestStartCallback(callback);
-    }
-
-    public setHttpRequestSuccessCallback(
-        _httpClient: HttpClientInstance,
-        callback: (response: HttpResponse) => void
-    ): void {
-        _httpClient?.setHttpRequestSuccessCallback &&
-        _httpClient.setHttpRequestSuccessCallback(callback);
-    }
-
-    public setHttpRequestFinishCallback(
-        _httpClient: HttpClientInstance,
-        callback: () => void
-    ): void {
-        _httpClient?.setHttpRequestFinishCallback && 
-        _httpClient.setHttpRequestFinishCallback(callback);
-    }
-
     public enableHttpHandler(httpClient: HttpClientInstance): void {
         httpClient?.enableHandler && httpClient.enableHandler();
     }
