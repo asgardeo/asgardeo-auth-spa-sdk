@@ -1,5 +1,17 @@
 name: Send Notification
 
+env:
+    ISSUE: ${{ github.event.issue }}
+    TITLE: ${{ github.event.issue.title }}
+    ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+    ISSUE_URL: ${{ github.event.issue.html_url }}
+    ISSUE_BODY: ${{ github.event.issue.body }}
+    PULL_REQUEST: ${{github.event.pull_request}}
+    PR_TITLE: ${{ github.event.pull_request.title }}
+    PR_URL: ${{ github.event.pull_request.html_url }}
+    PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+    PR_BODY: ${{ github.event.pull_request.body }}    
+
 on:
   issues:
     types: [opened]
@@ -11,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send notification on issue creation
-        if: ${{github.event.issue}}
+        if: $ISSUE
         run: |
           curl --location --request POST '${{secrets.WEBHOOK_CHAT}}' \
           --header 'Content-Type: application/json' \
@@ -19,8 +31,8 @@ jobs:
               "cards": [
                   {
                       "header": {
-                          "title": "ISSUE: ${{ github.event.issue.title }}",
-                          "subtitle": "By ${{ github.event.issue.user.login }} in Asgardeo SPA SDK Repo",
+                          "title": "ISSUE: $ISSUE_TITLE",
+                          "subtitle": "By $ISSUE_AUTHOR in Asgardeo SPA SDK Repo",
                           "imageUrl": "https://avatars.githubusercontent.com/u/583231?v=4",
                           "imageStyle": "IMAGE"
                       },
@@ -33,14 +45,14 @@ jobs:
                                               "text": "Open Issue",
                                               "onClick": {
                                                   "openLink": {
-                                                      "url": "${{ github.event.issue.html_url }}"
+                                                      "url": "$ISSUE_URL"
                                                   }
                                               }
                                           }
                                       }
                                   ],
                                   "textParagraph": {
-                                      "text": "${{ github.event.issue.body }}"
+                                      "text": "$ISSUE_BODY"
                                   }
                               }
                           ]
@@ -50,7 +62,7 @@ jobs:
           }'
 
       - name: Send notification on pull request creation
-        if: ${{github.event.pull_request}}
+        if: $PULL_REQUEST
         run: |
             curl --location --request POST '${{secrets.WEBHOOK_CHAT}}' \
             --header 'Content-Type: application/json' \
@@ -58,8 +70,8 @@ jobs:
                 "cards": [
                     {
                         "header": {
-                            "title": "PR: ${{ github.event.pull_request.title }}",
-                            "subtitle": "By ${{ github.event.pull_request.user.login }} in Asgardeo SPA SDK Repo",
+                            "title": "PR: $PR_TITLE",
+                            "subtitle": "By $PR_AUTHOR in Asgardeo SPA SDK Repo",
                             "imageUrl": "https://avatars.githubusercontent.com/u/583231?v=4",
                             "imageStyle": "IMAGE"
                         },
@@ -72,14 +84,14 @@ jobs:
                                                 "text": "Open PR",
                                                 "onClick": {
                                                     "openLink": {
-                                                        "url": "${{ github.event.pull_request.html_url }}"
+                                                        "url": "$PR_URL"
                                                     }
                                                 }
                                             }
                                         }
                                     ],
                                     "textParagraph": {
-                                        "text": "${{ github.event.pull_request.body }}"
+                                        "text": "$PR_BODY"
                                     }
                                 }
                             ]
