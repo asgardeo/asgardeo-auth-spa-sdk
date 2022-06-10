@@ -142,6 +142,8 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
 
             request.data = formData;
         }
+        
+        request.startTimeInMs = new Date().getTime()
 
         if (HttpClient.isHandlerEnabled) {
             if (this.requestStartCallback && typeof this.requestStartCallback === "function") {
