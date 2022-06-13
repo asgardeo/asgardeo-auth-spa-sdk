@@ -31,7 +31,9 @@
     -   [getOIDCServiceEndpoints](#getOIDCServiceEndpoints)
     -   [getDecodedIDToken](#getdecodedidtoken)
     -   [getIDToken](#getIDToken)
+    -   [getCryptoHelper](#getCryptoHelper)
     -   [getAccessToken](#getaccesstoken)
+    -   [getIDPAccessToken](#getIDPAccessToken)
     -   [refreshAccessToken](#refreshAccessToken)
     -   [on](#on)
     -   [isAuthenticated](#isAuthenticated)
@@ -714,6 +716,35 @@ auth.getDataLayer().then((dataLayer) => {
 });
 ```
 
+---
+
+### getCryptoHelper
+
+```TypeScript
+getCryptoHelper(): Promise<CryptoHelper>
+```
+
+#### Returns
+
+cryptoHelper : [`CryptoHelper`](#CryptoUtils)
+
+`CryptoHelper` provides support for performing a cryptographic operation such as producing a PKCE code and verifying ID tokens.
+
+#### Description
+
+This method returns the `CryptoHelper` object used by the SDK to perform cryptographic operations.
+
+#### Example
+
+```TypeScript
+auth.getCryptoHelper().then((cryptoHelper) => {
+    // console.log(cryptoHelper);
+}).error((error) => {
+    // console.error(error);
+});
+```
+
+---
 ### refreshAccessToken
 
 ```typescript
