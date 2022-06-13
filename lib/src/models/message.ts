@@ -26,6 +26,8 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_CONFIG_DATA,
+    GET_CRYPTO_HELPER,
+    GET_DECODED_IDP_ID_TOKEN,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -86,6 +88,8 @@ export type MessageType =
     | typeof GET_OIDC_SERVICE_ENDPOINTS
     | typeof GET_BASIC_USER_INFO
     | typeof GET_DECODED_ID_TOKEN
+    | typeof GET_CRYPTO_HELPER
+    | typeof GET_DECODED_IDP_ID_TOKEN
     | typeof ENABLE_HTTP_HANDLER
     | typeof DISABLE_HTTP_HANDLER
     | typeof GET_AUTH_URL

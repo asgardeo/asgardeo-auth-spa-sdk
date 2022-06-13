@@ -29,6 +29,7 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_CONFIG_DATA,
+    GET_CRYPTO_HELPER,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -191,6 +192,14 @@ export const workerReceiver = (
             case GET_DECODED_ID_TOKEN:
                 try {
                     port.postMessage(MessageUtils.generateSuccessMessage(await webWorker.getDecodedIDToken()));
+                } catch (error) {
+                    port.postMessage(MessageUtils.generateFailureMessage(error));
+                }
+
+                break;
+            case GET_CRYPTO_HELPER:
+                try {
+                    port.postMessage(MessageUtils.generateSuccessMessage(await webWorker.getCryptoHelper()));
                 } catch (error) {
                     port.postMessage(MessageUtils.generateFailureMessage(error));
                 }

@@ -31,6 +31,13 @@ export * from "./constants/hooks";
 
 export * from "@asgardeo/auth-js";
 
+// clients
+export * from "./clients/main-thread-client";
+export * from "./clients/web-worker-client";
+
+// models
+export * from "./models/request-custom-grant";
+
 // helpers
 export * from "./helpers/authentication-helper";
 export * from "./helpers/spa-helper";

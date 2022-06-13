@@ -23,6 +23,7 @@ import {
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
+    CryptoHelper,
     CustomGrantConfig,
     DecodedIDTokenPayload,
     FetchResponse,
@@ -39,6 +40,8 @@ import {
     GET_AUTH_URL,
     GET_BASIC_USER_INFO,
     GET_CONFIG_DATA,
+    GET_CRYPTO_HELPER,
+    GET_DECODED_IDP_ID_TOKEN,
     GET_DECODED_ID_TOKEN,
     GET_ID_TOKEN,
     GET_OIDC_SERVICE_ENDPOINTS,
@@ -691,6 +694,34 @@ export const WebWorkerClient = async (
             });
     };
 
+    const getDecodedIDPIDToken = (): Promise<DecodedIDTokenPayload> => {
+        const message: Message<null> = {
+            type: GET_DECODED_IDP_ID_TOKEN
+        };
+
+        return communicate<null, DecodedIDTokenPayload>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
+    };
+
+    const getCryptoHelper = (): Promise<CryptoHelper> => {
+        const message: Message<null> = {
+            type: GET_CRYPTO_HELPER
+        };
+
+        return communicate<null, CryptoHelper>(message)
+            .then((response) => {
+                return Promise.resolve(response);
+            })
+            .catch((error) => {
+                return Promise.reject(error);
+            });
+    };
+
     const getIDToken = (): Promise<string> => {
         const message: Message<null> = {
             type: GET_ID_TOKEN
@@ -783,6 +814,8 @@ export const WebWorkerClient = async (
         disableHttpHandler,
         enableHttpHandler,
         getBasicUserInfo,
+        getCryptoHelper,
+        getDecodedIDPIDToken,
         getDecodedIDToken,
         getIDToken,
         getOIDCServiceEndpoints,

@@ -21,6 +21,7 @@ import {
     AsgardeoAuthException,
     AuthClientConfig,
     BasicUserInfo,
+    CryptoHelper,
     CustomGrantConfig,
     DataLayer,
     DecodedIDTokenPayload,
@@ -708,6 +709,32 @@ export class AsgardeoSPAClient {
     }
 
     /**
+     * This method returns the CryptoHelper instance.
+     *
+     * @return {Promise<DecodedIdTokenPayloadInterface>} - A Promise that resolves with
+     * the CryptoHelper instance.
+     *
+     * @example
+     * ```
+     * auth.getCryptoHelper().then((response)=>{
+     *     // console.log(response);
+     * }).catch((error)=>{
+     *     // console.error(error);
+     * });
+     * ```
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/master#getCryptoHelper
+     *
+     * @memberof AsgardeoSPAClient
+     *
+     * @preserve
+     */
+     public async getCryptoHelper(): Promise<CryptoHelper | undefined> {
+        await this._validateMethod();
+
+        return this._client?.getCryptoHelper();
+    }
+
+    /**
      * This method return the ID token.
      *
      * @return {Promise<string>} - A Promise that resolves with the ID token.
@@ -796,7 +823,7 @@ export class AsgardeoSPAClient {
         if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoAuthException(
-                    "SPA-AUTH_CLIENT-GAT-IV01",
+                    "SPA-AUTH_CLIENT-GIAT-IV01",
                     "The access token cannot be returned.",
                     "The access token cannot be returned when the storage type is set to webWorker or browserMemory."
                 )
@@ -835,9 +862,9 @@ export class AsgardeoSPAClient {
         if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
             return Promise.reject(
                 new AsgardeoAuthException(
-                    "SPA-AUTH_CLIENT-GAT-IV01",
-                    "The access token cannot be returned.",
-                    "The access token cannot be returned when the storage type is set to webWorker or browserMemory."
+                    "SPA-AUTH_CLIENT-GDL-IV01",
+                    "The data layer cannot be returned.",
+                    "The data layer cannot be returned when the storage type is set to webWorker or browserMemory."
                 )
             );
         }

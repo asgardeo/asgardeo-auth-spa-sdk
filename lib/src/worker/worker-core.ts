@@ -21,6 +21,7 @@ import {
     AuthClientConfig,
     AuthorizationURLParams,
     BasicUserInfo,
+    CryptoHelper,
     CustomGrantConfig,
     DecodedIDTokenPayload,
     FetchResponse,
@@ -65,10 +66,17 @@ export const WebWorkerCore = async (
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
         const requestConfig = { attachToken: true, ...request };
         if (requestConfig.attachToken) {
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
-            };
+            if(requestConfig.shouldAttachIDPAccessToken) {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await _authenticationHelper.getIDPAccessToken() }`
+                };
+            } else {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
+                };
+            }
         }
     };
 
@@ -186,6 +194,14 @@ export const WebWorkerCore = async (
         return _authenticationHelper.getDecodedIDToken();
     };
 
+    const getCryptoHelper = async (): Promise<CryptoHelper> => {
+        return _authenticationHelper.getCryptoHelper();
+    };
+
+    const getDecodedIDPIDToken = async (): Promise<DecodedIDTokenPayload> => {
+        return _authenticationHelper.getDecodedIDPIDToken();
+    };
+
     const getIDToken = async (): Promise<string> => {
         return _authenticationHelper.getIDToken();
     };
@@ -224,6 +240,8 @@ export const WebWorkerCore = async (
         getAuthorizationURL,
         getBasicUserInfo,
         getConfigData,
+        getCryptoHelper,
+        getDecodedIDPIDToken,
         getDecodedIDToken,
         getIDToken,
         getOIDCServiceEndpoints,

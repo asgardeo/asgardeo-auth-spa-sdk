@@ -22,6 +22,7 @@ import {
     AuthClientConfig,
     AuthenticationUtils,
     BasicUserInfo,
+    CryptoHelper,
     DataLayer,
     DecodedIDTokenPayload,
     FetchResponse,
@@ -96,11 +97,19 @@ export const MainThreadClient = async (
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
         const requestConfig = { attachToken: true, ...request };
+        
         if (requestConfig.attachToken) {
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
-            };
+            if(requestConfig.shouldAttachIDPAccessToken) {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await _authenticationHelper.getIDPAccessToken() }`
+                };
+            } else {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
+                };
+            }
         }
     }
 
@@ -356,6 +365,10 @@ export const MainThreadClient = async (
         return _authenticationHelper.getDecodedIDToken();
     };
 
+    const getCryptoHelper = async (): Promise<CryptoHelper> => {
+        return _authenticationHelper.getCryptoHelper();
+    };
+
     const getIDToken = async (): Promise<string> => {
         return _authenticationHelper.getIDToken();
     };
@@ -403,6 +416,7 @@ export const MainThreadClient = async (
         enableHttpHandler,
         getAccessToken,
         getBasicUserInfo,
+        getCryptoHelper,
         getDataLayer,
         getDecodedIDToken,
         getHttpClient,
