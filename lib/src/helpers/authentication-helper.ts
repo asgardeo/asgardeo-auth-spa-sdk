@@ -22,6 +22,7 @@ import {
     AuthClientConfig, 
     AuthenticationUtils, 
     BasicUserInfo, 
+    CryptoHelper, 
     CustomGrantConfig, 
     DataLayer, 
     DecodedIDTokenPayload, 
@@ -609,6 +610,14 @@ export class AuthenticationHelper<
         return this._authenticationClient.getDecodedIDToken();
     }
 
+    public async getDecodedIDPIDToken(): Promise<DecodedIDTokenPayload> {
+        return this._authenticationClient.getDecodedIDToken();
+    }
+
+    public async getCryptoHelper(): Promise<CryptoHelper> {
+        return this._authenticationClient.getCryptoHelper();
+    }
+
     public async getIDToken(): Promise<string> {
         return this._authenticationClient.getIDToken();
     }
@@ -619,6 +628,10 @@ export class AuthenticationHelper<
 
     public async getAccessToken(): Promise<string> {
         return this._authenticationClient.getAccessToken();
+    }
+
+    public async getIDPAccessToken(): Promise<string> {
+        return (await this._dataLayer.getSessionData())?.access_token;
     }
 
     public getDataLayer(): DataLayer<T> {

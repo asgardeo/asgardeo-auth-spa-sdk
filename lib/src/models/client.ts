@@ -19,6 +19,7 @@
 import {
     AuthClientConfig,
     BasicUserInfo,
+    CryptoHelper,
     CustomGrantConfig,
     DataLayer,
     DecodedIDTokenPayload,
@@ -57,6 +58,7 @@ export interface MainThreadClientInterface {
     revokeAccessToken(): Promise<boolean>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
+    getCryptoHelper(): Promise<CryptoHelper>;
     getIDToken(): Promise<string>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getAccessToken(): Promise<string>;
@@ -84,6 +86,8 @@ export interface WebWorkerClientInterface {
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
+    getDecodedIDPIDToken(): Promise<DecodedIDTokenPayload>;
+    getCryptoHelper(): Promise<CryptoHelper>;
     getIDToken(): Promise<string>;
     isAuthenticated(): Promise<boolean>;
     setHttpRequestSuccessCallback(callback: (response: HttpResponse) => void): void;
