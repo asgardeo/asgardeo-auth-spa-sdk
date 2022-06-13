@@ -30,6 +30,7 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
     attachToken?: boolean;
     shouldEncodeToFormData?: boolean;
     shouldAttachIDPAccessToken?: boolean;
+    startTimeInMs?: number
 }
 
 export {
