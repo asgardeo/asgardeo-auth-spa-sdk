@@ -416,6 +416,7 @@ httpRequest(config: HttpRequestConfig): Promise<HttpResponse>;
     |--------------------------|-----------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------|
     | `attachToken`            | `boolean` | `true`  | If set to `true`, the token will be attached to the request header.                                                                           |
     | `shouldEncodeToFormData` | `boolean` | `false` | If set to `true`, the request body will be encoded to `FormData`. The body (specified by the `data` attribute) should be a Javascript object. |
+    | `shouldAttachIDPAccessToken` | `boolean` | `false` | If set to `true`, the IDP access token will be attached to the the request `Authorization` header. |
 
 #### Returns
 
@@ -423,7 +424,7 @@ A Promise that resolves with the response.
 
 #### Description
 
-This method is used to send http requests to the Asgardeo. The developer doesn't need to manually attach the access token since this method does it automatically.
+This method is used to send http requests to the Asgardeo authenticated endpoints. The developer doesn't need to manually attach the access token since this method does it automatically.
 
 If the `storage` type is set to `sessionStorage` or `localStorage`, the developer may choose to implement their own ways of sending http requests by obtaining the access token from the relevant storage medium and attaching it to the header. However, if the `storage` is set to `webWorker`, this is the _ONLY_ way http requests can be sent.
 
