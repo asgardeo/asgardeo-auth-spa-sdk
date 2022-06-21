@@ -98,7 +98,6 @@ export const SessionManagementHelper = (() => {
         const opIframe: HTMLIFrameElement
             = rpIFrame?.contentDocument?.getElementById(OP_IFRAME) as HTMLIFrameElement;
         opIframe.src = _checkSessionEndpoint + "?client_id=" + _clientID + "&redirect_uri=" + _redirectURL;
-        // await checkSession();
 
         _checkSessionIntervalTimeout =  setInterval(checkSession, _interval * 1000) as unknown as number;
 
