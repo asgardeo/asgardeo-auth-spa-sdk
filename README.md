@@ -758,7 +758,7 @@ A Promise that resolves with the [`BasicUserInfo`](#BasicUserInfo) object.
 
 #### Description
 
-This refreshes the access token and stores the refreshed session information in either the session or local storage as per your configuration. Note that this method cannot be used when the storage type is set to `webWorker` since the web worker automatically refreshes the token and there is no need for the developer to do it.
+This refreshes the access token and stores the refreshed session information in either the session or local storage as per your configuration. Note that this method is not required to be used when the storage type is set to `webWorker` since the web worker automatically refreshes the token, and there is no need for the developer to do it.
 
 #### Example
 
@@ -994,7 +994,7 @@ This table shows the extended attributes provided by the `Config` interface.
 | `requestTimeout`              | Optional                                        | `number`                                            | 60000 (seconds)    | Specifies in seconds how long a request to the web worker should wait before being timed out.                                                                                                                                                                                                                                              |
 | `sessionRefreshInterval`      | Optional                                        | `number`                                            | 300 (seconds)      | Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.                                                                                                                                                               |
 | `checkSessionInterval`        | Optional                                        | `number`                                            | 3 (seconds)        | Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout.                                                                                                                                                                                                          |
-| `enableOIDCSessionManagement` | Optional                                        | `boolean`                                           | false              | Flag to enable OIDC Session Management                                                                                                                                                                                                                                                                                                     |
+| `enableOIDCSessionManagement` | Optional                                        | `boolean`                                           | false              | Flag to enable OIDC Session Management. Set this flag to `true` to add single logout capabilities in your application.                                                                                                                                                                                                                     |
 
 #### The AuthClientConfig Interface
 
