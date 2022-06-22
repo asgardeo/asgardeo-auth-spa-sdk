@@ -241,7 +241,7 @@ An instance of the `AsgardeoSPAClient`.
 
 This returns a static instance of the `AsgardeoSPAClient`. The SDK allows you to create multiple instances of the `AsgardeoSPAClient`. To do so, you can pass an `id` into the `getInstance` method. If no instance has been created for the provided `id`, a new instance will be created and returned by this method. If an instance exists, then that instance will be returned. If no `id` is provided, the default instance will be returned. This allows the SDK to talk to multiple identity providers through the same app.
 
-Creating a static instance affords the developers the flexibility of using multiple files to implement the authentication logic. That is, you can have the sign in logic implemented on one page and the sign out logic on another.
+Creating a static instance affords the developers the flexibility of using multiple files to implement the authentication logic. That is, you can have the sign in logic implemented on one page and the sign-out logic on another.
 
 #### Example
 
@@ -270,7 +270,7 @@ initialize(config?: `AuthClientConfig<Config>`): Promise<void>;
 
 #### Description
 
-The `initialize` method is used to the initialize the client. This _MUST_ be called soon after instantiating the `AsgardeoSPAClient` and before calling another methods.
+The `initialize` method is used to initialize the client. This _MUST_ be called soon after instantiating the `AsgardeoSPAClient` and before calling another methods.
 
 This method takes a `config` object as the only argument. The attributes of the `config` object is as follows.
 
@@ -335,7 +335,7 @@ signIn(config?: SignInConfig, authorizationCode?: string, sessionState?: string)
 
 #### Description
 
-As the name implies, this method is used to sign-in users. This method will have to be called twice to implement the two phases of the authentication process. The first phase generates generates the authorization URl and takes the user to the single-sign-on page of the Asgardeo, while second phase triggers the token request to complete the authentication process. So, this method should be called when initiating authentication and when the user is redirected back to the app after authentication themselves with the server.
+As the name implies, this method is used to sign-in users. This method will have to be called twice to implement the two phases of the authentication process. The first phase generates the authorization URl and takes the user to the single-sign-on page of the Asgardeo, while second phase triggers the token request to complete the authentication process. So, this method should be called when initiating authentication and when the user is redirected back to the app after authentication themselves with the server.
 
 The `sign-in` hook is used to fire a callback function after signing in is successful. Check the [on()](#on) section for more information.
 
@@ -653,7 +653,7 @@ A Promise that resolves with the access token.
 
 #### Description
 
-This returns a promise that resolves with the access token. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise an error is thrown.
+This returns a promise that resolves with the access token. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise, an error is thrown.
 
 #### Example
 
@@ -679,7 +679,7 @@ A Promise that resolves with the idp access token.
 
 #### Description
 
-This returns a promise that resolves with the idp access token. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise an error is thrown.
+This returns a promise that resolves with the idp access token. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise, an error is thrown.
 
 #### Example
 
@@ -705,7 +705,7 @@ A Promise that resolves with the data layer object.
 
 #### Description
 
-This returns a promise that resolves with the data layer object. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise an error is thrown.
+This returns a promise that resolves with the data layer object. The promise resolves successfully only if the storage type is set to a type other than `webWorker`. Otherwise, an error is thrown.
 
 #### Example
 
@@ -758,22 +758,12 @@ A Promise that resolves with the [`BasicUserInfo`](#BasicUserInfo) object.
 
 #### Description
 
-This refreshes the access token and stores the refreshed session information in either the session or local storage as per your configuration. Note that this method cannot be used when the storage type is set to `webWorker` since the web worker automatically refreshes the token and there is no need for the developer to do it.
-
-This method also returns a Promise that resolves with an object containing the attributes mentioned in the table below.
-| Attribute        | Description                         |
-|------------------|-------------------------------------|
-| `"accessToken"`  | The new access token                |
-| `"expiresIn"`    | The expiry time in seconds          |
-| `"idToken"`      | The ID token                        |
-| `"refreshToken"` | The refresh token                   |
-| `"scope"`        | The scope of the access token       |
-| `"tokenType"`    | The type of the token. E.g.: Bearer |
+This refreshes the access token and stores the refreshed session information in either the session or local storage as per your configuration. Note that this method is not required to be used when the storage type is set to `webWorker` since the web worker automatically refreshes the token, and there is no need for the developer to do it.
 
 #### Example
 
 ```TypeScript
-auth.refreshToken().then((response)=>{
+auth.refreshAccessToken().then((response)=>{
       // console.log(response);
  }).catch((error)=>{
       // console.error(error);
@@ -967,7 +957,7 @@ const hasParams: boolean = SPAUtils.hasAuthSearchParamsInURL();
 
 When the `responseMode` is set to `form_post`, the authorization code is sent in the body of a `POST` request as opposed to in the URL. So, the Single Page Application should have a backend to receive the authorization code and send it back to the Single Page Application.
 
-The backend can then inject the authorization code into a JavaSCript variable while rendering the webpage in the server side. But this results in the authorization code getting printed in the HTML of the page creating a **threat vector**.
+The backend can then inject the authorization code into a JavaScript variable while rendering the webpage in the server side. But this results in the authorization code getting printed in the HTML of the page creating a **threat vector**.
 
 To address this issue, we recommend storing the authorization code in a server session variable and providing the Single Page Application a separate API endpoint to request the authorization code. The server, when the request is received, can then respond with the authorization code from the server session.
 
@@ -1004,7 +994,7 @@ This table shows the extended attributes provided by the `Config` interface.
 | `requestTimeout`              | Optional                                        | `number`                                            | 60000 (seconds)    | Specifies in seconds how long a request to the web worker should wait before being timed out.                                                                                                                                                                                                                                              |
 | `sessionRefreshInterval`      | Optional                                        | `number`                                            | 300 (seconds)      | Specifies how often the session state should be checked. To check the authentication state, the authorization endpoint is queried with the `prompt` parameter set to `none`.                                                                                                                                                               |
 | `checkSessionInterval`        | Optional                                        | `number`                                            | 3 (seconds)        | Specifies how often the check-session iFrame should be queried to check the session state. This is used to perform single logout.                                                                                                                                                                                                          |
-| `enableOIDCSessionManagement` | Optional                                        | `boolean`                                           | false              | Flag to enable OIDC Session Management                                                                                                                                                                                                                                                                                                     |
+| `enableOIDCSessionManagement` | Optional                                        | `boolean`                                           | false              | Flag to enable OIDC Session Management. Set this flag to `true` to add single logout capabilities into your application.                                                                                                                                                                                                                     |
 
 #### The AuthClientConfig Interface
 
@@ -1076,6 +1066,7 @@ This table shows the extended attributes provided by the `Config` interface.
 #### Custom Grant Template Tags
 
 Session information can be attached to the body of a custom-grant request using template tags. This is useful when the session information is not exposed outside the SDK but you want such information to be used in custom-grant requests. The following table lists the available template tags.
+
 | Tag                | Data               |
 |--------------------|--------------------|
 | "{{token}}"        | The access token.  |
