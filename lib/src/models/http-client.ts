@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { AxiosRequestConfig } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { HttpError, HttpResponse } from ".";
 
 export interface HttpClient {
@@ -33,8 +33,11 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
     startTimeInMs?: number
 }
 
+export interface HttpResponse extends AxiosResponse {
+    startTimeInMs?: number
+}
+
 export {
-    AxiosResponse as HttpResponse,
     Method as HttpMethod,
     AxiosRequestTransformer as HttpRequestTransformer,
     AxiosResponseTransformer as HttpResponseTransformer,
