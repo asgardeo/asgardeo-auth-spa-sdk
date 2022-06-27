@@ -16,9 +16,8 @@
  * under the License.
  */
 
-import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-
-export type HttpError<T = any, D = any> = AxiosError<T,D>;
+import { AxiosRequestConfig } from "axios";
+import { HttpError, HttpResponse } from ".";
 
 export interface HttpClient {
     requestStartCallback: () => void;
@@ -34,11 +33,8 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
     startTimeInMs?: number
 }
 
-export interface HttpResponse<T = any, D = any> extends AxiosResponse<T,D> {
-    startTimeInMs?: number
-}
-
 export {
+    AxiosResponse as HttpResponse,
     Method as HttpMethod,
     AxiosRequestTransformer as HttpRequestTransformer,
     AxiosResponseTransformer as HttpResponseTransformer,
@@ -47,6 +43,7 @@ export {
     ResponseType,
     AxiosProxyConfig as HttpProxyConfig,
     CancelToken,
+    AxiosError as HttpError,
     AxiosPromise as HttpPromise,
     AxiosInstance as HttpInstance
 } from "axios";
