@@ -33,7 +33,7 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
     startTimeInMs?: number
 }
 
-export interface HttpResponse extends AxiosResponse {
+export interface HttpResponse<T> extends AxiosResponse<T> {
     startTimeInMs?: number
 }
 
