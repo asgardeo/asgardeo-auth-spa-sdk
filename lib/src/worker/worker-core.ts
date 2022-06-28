@@ -156,7 +156,7 @@ export const WebWorkerCore = async (
     const signOut = async (): Promise<string> => {
         _spaHelper.clearRefreshTokenTimeout();
 
-        return await _authenticationClient.signOut();
+        return await _authenticationClient.getSignOutURL();
     };
 
     const getSignOutURL = async (): Promise<string> => {
