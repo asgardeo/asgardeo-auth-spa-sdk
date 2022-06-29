@@ -401,6 +401,17 @@ The `sign-out` hook is used to fire a callback function after signing out is suc
 auth.signOut();
 ```
 
+**Clearing the locally stored user session happens when a sign-out hook is registered after the user gets redirected back to the `signOutRedirectURL`.**
+Therefore, the developer should ensure that a sign-out hook is registered when `signOutRedirectURL` is loaded. Refer the [example](#sign-out-hook-example) 
+for further details.
+
+#### Example
+```TypeScript
+// Register a sign-out hook with any callback function when signOutRedirectURL is loaded 
+// to clear locally stored user session
+auth.on("sign-out", () => {});
+```
+
 ---
 
 ### httpRequest
@@ -807,7 +818,6 @@ If you are using TypeScript, you may want to use the `Hooks` enum that consists 
 **When the user signs out, the user is taken to the Asgardeo's logout page and then redirected back to the SPA on successful log out. Hence, developers should ensure that the `"sign-out"` hook is called when the page the user is redirected to loads.**
 
 #### Example
-
 ```TypeScript
 auth.on("sign-in", () => {
     // console.log(response);

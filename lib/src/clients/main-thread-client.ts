@@ -80,7 +80,7 @@ export const MainThreadClient = async (
     const _dataLayer = _authenticationClient.getDataLayer();
     const _sessionManagementHelper = await SessionManagementHelper(
         async () => {
-            return _authenticationClient.signOut();
+            return _authenticationClient.getSignOutURL();
         },
         config.storage ?? Storage.SessionStorage,
         (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
@@ -252,7 +252,7 @@ export const MainThreadClient = async (
 
     const signOut = async (): Promise<boolean> => {
         if ((await _authenticationClient.isAuthenticated()) && !_getSignOutURLFromSessionStorage) {
-            location.href = await _authenticationClient.signOut();
+            location.href = await _authenticationClient.getSignOutURL();
         } else {
             location.href = SPAUtils.getSignOutURL();
             await _dataLayer.removeOIDCProviderMetaData();
