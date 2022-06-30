@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { GetAuthURLConfig, SESSION_STATE } from "@asgardeo/auth-js";
+import { AsgardeoAuthClient, GetAuthURLConfig, SESSION_STATE } from "@asgardeo/auth-js";
 import {
     CHECK_SESSION_SIGNED_IN,
     CHECK_SESSION_SIGNED_OUT,
@@ -243,7 +243,11 @@ export const SessionManagementHelper = (() => {
 
                 SPAUtils.setPromptNoneRequestSent(false);
 
-                parent.location.href = await _signOut();
+                const signOutURL = await _signOut();
+                // Clearing user session data before redirecting to the signOutURL because user has been already logged
+                // out by the initial logout request in the single logout flow.
+                await AsgardeoAuthClient.clearUserSessionData();
+                parent.location.href = signOutURL;
                 window.location.href = "about:blank";
 
                 await SPAUtils.waitTillPageRedirect();
