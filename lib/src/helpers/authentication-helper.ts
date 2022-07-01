@@ -134,7 +134,7 @@ export class AuthenticationHelper<
                         }
                 
                         if (config.returnsSession) {
-                            this._spaHelper.refreshAccessTokenAutomatically();
+                            this._spaHelper.refreshAccessTokenAutomatically(this);
                 
                             return this._authenticationClient.getBasicUserInfo();
                         } else {
@@ -181,7 +181,7 @@ export class AuthenticationHelper<
                         enableRetrievingSignOutURLFromSession
                     );
             }
-            this._spaHelper.refreshAccessTokenAutomatically();
+            this._spaHelper.refreshAccessTokenAutomatically(this);
 
             return this._authenticationClient.getBasicUserInfo();
         } catch (error) {
@@ -444,7 +444,7 @@ export class AuthenticationHelper<
 
                         if (this._spaHelper) {
                             this._spaHelper.clearRefreshTokenTimeout();
-                            this._spaHelper.refreshAccessTokenAutomatically();
+                            this._spaHelper.refreshAccessTokenAutomatically(this);
                         }
 
                         // Enable OIDC Sessions Management only if it is set to true in the config.
@@ -457,7 +457,7 @@ export class AuthenticationHelper<
                         }
                     } else {
                         if (this._spaHelper) {
-                            this._spaHelper.refreshAccessTokenAutomatically();
+                            this._spaHelper.refreshAccessTokenAutomatically(this);
                         }
                     }
 
@@ -569,7 +569,7 @@ export class AuthenticationHelper<
         if (config.storage !== Storage.WebWorker) {
             if (await this._authenticationClient.isAuthenticated()) {
                 this._spaHelper.clearRefreshTokenTimeout();
-                this._spaHelper.refreshAccessTokenAutomatically();
+                this._spaHelper.refreshAccessTokenAutomatically(this);
 
                 // Enable OIDC Sessions Management only if it is set to true in the config.
                 if (config.enableOIDCSessionManagement) {

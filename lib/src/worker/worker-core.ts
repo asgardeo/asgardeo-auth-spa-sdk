@@ -133,7 +133,7 @@ export const WebWorkerCore = async (
 
     const startAutoRefreshToken = async (): Promise<void> => {
         _spaHelper.clearRefreshTokenTimeout();
-        _spaHelper.refreshAccessTokenAutomatically();
+        _spaHelper.refreshAccessTokenAutomatically(_authenticationHelper);
 
         return;
     };
