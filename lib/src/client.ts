@@ -147,11 +147,23 @@ export class AsgardeoSPAClient {
      */
     private async _validateMethod(): Promise<boolean> {
         if (!(await this._isInitialized())) {
-            return Promise.reject("Method validation failed! Reason: Client is not initialized!");
+            return Promise.reject(
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-VM-NF01",
+                    "The SDK is not initialized.",
+                    "The SDK must be initialized first."
+                )
+            );
         }
 
         if (!(await this.isAuthenticated())) {
-            return Promise.reject("Method validation failed! Reason: User is not authenticated!");
+            return Promise.reject(
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-VM-IV02",
+                    "The user is not authenticated.",
+                    "The user must be authenticated first."
+                )
+            );
         }
 
         return true;
