@@ -147,11 +147,11 @@ export class AsgardeoSPAClient {
      */
     private async _validateMethod(): Promise<boolean> {
         if (!(await this._isInitialized())) {
-            return Promise.reject();
+            return Promise.reject("Method validation failed! Reason: Client is not initialized!");
         }
 
         if (!(await this.isAuthenticated())) {
-            return Promise.reject();
+            return Promise.reject("Method validation failed! Reason: User is not authenticated!");
         }
 
         return true;
