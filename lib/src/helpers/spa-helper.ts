@@ -18,7 +18,7 @@
 
 import { AsgardeoAuthClient, DataLayer, REFRESH_TOKEN_TIMER } from "@asgardeo/auth-js";
 
-import { MainThreadClientConfig, WebWorkerClientConfig } from "..";
+import { AuthenticationHelper, MainThreadClientConfig, WebWorkerClientConfig } from "../";
 
 export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig> {
     private _authenticationClient: AsgardeoAuthClient<T>;
@@ -28,7 +28,11 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
         this._dataLayer = this._authenticationClient.getDataLayer();
     }
 
-    public async refreshAccessTokenAutomatically(): Promise<void> {
+    public async refreshAccessTokenAutomatically(
+        authenticationHelper: AuthenticationHelper<
+          MainThreadClientConfig | WebWorkerClientConfig
+        >
+      ): Promise<void> {
         const sessionData = await this._dataLayer.getSessionData();
         if (sessionData.refresh_token) {
             // Refresh 10 seconds before the expiry time
@@ -36,7 +40,7 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
             const time = expiryTime <= 10 ? expiryTime : expiryTime - 10;
 
             const timer = setTimeout(async () => {
-                await this._authenticationClient.refreshAccessToken();
+                await authenticationHelper.refreshAccessToken();
             }, time * 1000);
 
             await this._dataLayer.setTemporaryDataParameter(REFRESH_TOKEN_TIMER, JSON.stringify(timer));
