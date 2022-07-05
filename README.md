@@ -15,6 +15,7 @@
 -   [Getting Started](#getting-started)
     -   [Using an Embedded Script](#using-an-embedded-script)
     -   [Using a Module](#using-a-module)
+    -   [Configuring Single Logout](#configuring-single-logout)
 -   [Try Out the Sample Apps](#try-out-the-sample-apps)
 -   [Browser Compatibility](#browser-compatibility)
 -   [APIs](#apis)
@@ -140,6 +141,19 @@ auth.on("sign-in", (response) => {
 ```
 
 [Learn more](#apis).
+
+### Configuring Single Logout
+
+Asgardeo allows the developers to add single logout capabilities to their applications. To configure single logout:
+
+1. Include following configs when initializing the `AsgardeoSPAClient` instance.
+   1. Set `enableOIDCSessionManagement` flag to `true` in order to enable single logout.
+   2. Adjust the `checkSessionInterval` value as needed to override the default interval. See [AuthClientConfig](#AuthClientConfigConfig) for more details.
+2. Ensure  [signIn( )](#signin) method is called with `{callOnlyOnRedirect: true}` when `signInRedirectURL` is loaded.
+
+```typescript
+    auth.signIn({callOnlyOnRedirect: true});
+```
 
 ## Try Out the Sample Apps
 
@@ -989,7 +1003,6 @@ Of the four methods, storing the session information in the **web worker** is th
 ```TypeScript
 auth.initialize(config);
 ```
-
 ## Models
 
 ### AuthClientConfig\<Config>
