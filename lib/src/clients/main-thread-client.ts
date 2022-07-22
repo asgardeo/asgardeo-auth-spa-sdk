@@ -255,10 +255,11 @@ export const MainThreadClient = async (
             location.href = await _authenticationClient.getSignOutURL();
         } else {
             location.href = SPAUtils.getSignOutURL();
-            await _dataLayer.removeOIDCProviderMetaData();
-            await _dataLayer.removeTemporaryData();
-            await _dataLayer.removeSessionData();
         }
+
+        await _dataLayer.removeOIDCProviderMetaData();
+        await _dataLayer.removeTemporaryData();
+        await _dataLayer.removeSessionData();
 
         _spaHelper.clearRefreshTokenTimeout();
 
