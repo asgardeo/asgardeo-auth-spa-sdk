@@ -67,7 +67,7 @@ const initiateStore = (store: Storage | undefined): Store => {
 export const MainThreadClient = async (
     config: AuthClientConfig<MainThreadClientConfig>,
     getAuthHelper: (
-        authClient: AsgardeoAuthClient<MainThreadClientConfig>, 
+        authClient: AsgardeoAuthClient<MainThreadClientConfig>,
         spaHelper: SPAHelper<MainThreadClientConfig>
     ) => AuthenticationHelper<MainThreadClientConfig>
 ): Promise<MainThreadClientInterface> => {
@@ -85,7 +85,7 @@ export const MainThreadClient = async (
         config.storage ?? Storage.SessionStorage,
         (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
     );
-    
+
     const _authenticationHelper = getAuthHelper(_authenticationClient, _spaHelper);
 
     let _getSignOutURLFromSessionStorage: boolean = false;
@@ -97,7 +97,7 @@ export const MainThreadClient = async (
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
         const requestConfig = { attachToken: true, ...request };
-        
+
         if (requestConfig.attachToken) {
             if(requestConfig.shouldAttachIDPAccessToken) {
                 request.headers = {
@@ -133,7 +133,7 @@ export const MainThreadClient = async (
 
     const httpRequest = async (requestConfig: HttpRequestConfig): Promise<HttpResponse> => {
         return await _authenticationHelper.httpRequest(
-            _httpClient, 
+            _httpClient,
             requestConfig,
             _isHttpHandlerEnabled,
             _httpErrorCallback,
@@ -229,14 +229,14 @@ export const MainThreadClient = async (
             return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
                 if (config.storage === Storage.BrowserMemory && config.enablePKCE) {
                     const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
-    
+
                     SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
                 }
-    
+
                 location.href = url;
-    
+
                 await SPAUtils.waitTillPageRedirect();
-    
+
                 return Promise.resolve({
                     allowedScopes: "",
                     displayName: "",
@@ -257,11 +257,11 @@ export const MainThreadClient = async (
             location.href = SPAUtils.getSignOutURL();
         }
 
+        _spaHelper.clearRefreshTokenTimeout();
+
         await _dataLayer.removeOIDCProviderMetaData();
         await _dataLayer.removeTemporaryData();
         await _dataLayer.removeSessionData();
-
-        _spaHelper.clearRefreshTokenTimeout();
 
         await SPAUtils.waitTillPageRedirect();
 
@@ -274,7 +274,7 @@ export const MainThreadClient = async (
         }
     }
 
-    const requestCustomGrant = async (config: SPACustomGrantConfig): 
+    const requestCustomGrant = async (config: SPACustomGrantConfig):
         Promise<BasicUserInfo | FetchResponse> => {
             return await _authenticationHelper.requestCustomGrant(
                     config,
@@ -292,12 +292,14 @@ export const MainThreadClient = async (
         }
     };
 
-    const revokeAccessToken = (): Promise<boolean> => {
+    const revokeAccessToken = async (): Promise<boolean> => {
+        const timer: number = await _spaHelper.getRefreshTimeoutTimer();
+
         return _authenticationClient
             .revokeAccessToken()
             .then(() => {
                 _sessionManagementHelper.reset();
-                _spaHelper.clearRefreshTokenTimeout();
+                _spaHelper.clearRefreshTokenTimeout(timer);
 
                 return Promise.resolve(true);
             })

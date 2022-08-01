@@ -47,13 +47,27 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
         }
     }
 
-    public async clearRefreshTokenTimeout(): Promise<void> {
+    public async getRefreshTimeoutTimer(): Promise<number> {
         if (await this._dataLayer.getTemporaryDataParameter(REFRESH_TOKEN_TIMER)) {
-            const oldTimer = JSON.parse(
+            return JSON.parse(
                 (await this._dataLayer.getTemporaryDataParameter(REFRESH_TOKEN_TIMER)) as string
             );
+        }
 
-            clearTimeout(oldTimer);
+        return -1;
+    }
+
+    public async clearRefreshTokenTimeout(timer?: number): Promise<void> {
+        if (timer) {
+            clearTimeout(timer);
+
+            return;
+        }
+
+        const refreshTimer: number = await this.getRefreshTimeoutTimer();
+
+        if (refreshTimer !== -1) {
+            clearTimeout(refreshTimer);
         }
     }
 }
