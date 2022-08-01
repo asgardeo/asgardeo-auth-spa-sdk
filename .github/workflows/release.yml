@@ -38,12 +38,12 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           token: ${{secrets.ASGARDIO_GITHUB_BOT_TOKEN}}
         if: github.repository == 'asgardeo/asgardeo-auth-spa-sdk'
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: github.repository != 'asgardeo/asgardeo-auth-spa-sdk'
 
       - name: Build
