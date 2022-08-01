@@ -56,7 +56,7 @@ export const WebWorkerCore = async (
 
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
 
-    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> =
         getAuthHelper(_authenticationClient, _spaHelper);
 
     const _dataLayer = _authenticationClient.getDataLayer();
@@ -93,7 +93,7 @@ export const WebWorkerCore = async (
     const setHttpRequestFinishCallback = (callback: () => void): void => {
         _httpClient?.setHttpRequestFinishCallback && _httpClient.setHttpRequestFinishCallback(callback);
     };
-    
+
     const httpRequest = async (
         requestConfig: HttpRequestConfig
     ): Promise<HttpResponse> => {
@@ -175,11 +175,13 @@ export const WebWorkerCore = async (
         }
     };
 
-    const revokeAccessToken = (): Promise<boolean> => {
+    const revokeAccessToken = async (): Promise<boolean> => {
+        const timer: number = await _spaHelper.getRefreshTimeoutTimer();
+
         return _authenticationClient
             .revokeAccessToken()
             .then(() => {
-                _spaHelper.clearRefreshTokenTimeout();
+                _spaHelper.clearRefreshTokenTimeout(timer);
 
                 return Promise.resolve(true);
             })
