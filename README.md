@@ -1129,7 +1129,7 @@ This extends the `AxiosRequestConfig` by providing an additional attribute that 
 
 ### Prerequisites
 
--   `Node.js` (version 10 or above).
+-   `Node.js` (version 14 or above).
 -   `yarn` package manager.
 
 ### Installing Dependencies
