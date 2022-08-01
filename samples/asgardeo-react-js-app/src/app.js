@@ -26,6 +26,7 @@ import FOOTER_LOGOS from "./images/footer.png";
 // Import Asgardeo Auth SPA JS SDK
 import { Hooks, AsgardeoSPAClient } from "@asgardeo/auth-spa";
 import { ReactNotifications } from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 import * as authConfig from "./config.json";
 
 const authClient = AsgardeoSPAClient.getInstance();
