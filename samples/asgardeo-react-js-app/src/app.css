@@ -19,7 +19,6 @@
 body {
     margin: 0;
     padding: 0;
-    text-align: center;
     color: #2A2A2A;
     background-color: #fff;
     font-family: BlinkMacSystemFont, Segoe WPC,Segoe UI, HelveticaNeue-Light, Ubuntu,Droid Sans, sans-serif, 'Helvetica Neue', Arial, Helvetica,sans-serif;
@@ -142,6 +141,7 @@ code {
     margin: 0 auto;
     margin-top: 50px;
     border-radius: 10px;
+    text-align: center;
 }
 
 .json {
