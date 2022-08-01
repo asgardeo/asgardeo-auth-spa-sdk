@@ -17,7 +17,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import ReactJson from "react-json-view";
 import "./app.css";
 import REACT_LOGO from "./images/react-logo.png";
@@ -25,9 +25,11 @@ import JS_LOGO from "./images/js-logo.png";
 import FOOTER_LOGOS from "./images/footer.png";
 // Import Asgardeo Auth SPA JS SDK
 import { Hooks, AsgardeoSPAClient } from "@asgardeo/auth-spa";
+import { ReactNotifications } from "react-notifications-component";
 import * as authConfig from "./config.json";
 
 const authClient = AsgardeoSPAClient.getInstance();
+const API_ENDPOINT = `${authConfig?.default?.baseUrl}/oauth2/userinfo`;
 
 const App = () => {
 
@@ -36,6 +38,7 @@ const App = () => {
     const [ isLoading, setIsLoading ] = useState(true);
     const [ hasLogoutFailureError, setHasLogoutFailureError ] = useState();
     const [ hasAuthRequiredError, setHasAuthRequiredError ] = useState();
+    const [ apiResponse, setApiResponse ] = useState(null);
 
     const urlParams = new URLSearchParams(window.location.search);
     const stateParam = urlParams.get('state');
@@ -105,7 +108,7 @@ const App = () => {
     };
 
     useEffect(() => {
-        authClient.on(Hooks.SignIn, (response) => {
+        authClient.on(Hooks.SignIn, async (response) => {
             const username = response?.username?.split("/");
 
             if (username && username.length >= 2) {
@@ -125,6 +128,25 @@ const App = () => {
                 setIsAuth(true);
                 setIsLoading(false);
             });
+
+            try {
+                const apiResponse = await performAPIRequest();
+                apiResponse && setApiResponse(apiResponse);
+            } catch (error) {
+                Store.addNotification({
+                    title: "Error!",
+                    message: "Invoking the API has failed",
+                    type: "danger",
+                    insert: "top",
+                    container: "top-right",
+                    animationIn: ["animate__animated", "animate__fadeIn"],
+                    animationOut: ["animate__animated", "animate__fadeOut"],
+                    dismiss: {
+                      duration: 4000,
+                      onScreen: true
+                    }
+                });
+            }
         });
 
         authClient.on(Hooks.SignOut, () => {
@@ -143,6 +165,12 @@ const App = () => {
     const handleLogout = () => {
         authClient.signOut();
     };
+
+    const performAPIRequest = async () => {
+        return await authClient.httpRequest({
+            url: API_ENDPOINT
+        });
+     }
 
     useEffect(() => {
 
@@ -213,6 +241,25 @@ const App = () => {
                             :   <> 
                                     { isAuth ?
                                         <>
+                                            {
+                                                apiResponse ? (
+                                                    <>
+                                                        <h2>API Response</h2>
+                                                        <div className="json">
+                                                            {/* @ts-ignore */}
+                                                            <ReactJson
+                                                                src={ apiResponse["data"] }
+                                                                name={ null }
+                                                                enableClipboard={ false }
+                                                                displayObjectSize={ false }
+                                                                displayDataTypes={ false }
+                                                                iconStyle="square"
+                                                                theme="monokai"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                ) : null
+                                            }
                                             <h2>Authentication response derived by the Asgardeo Auth SPA JS SDK</h2>
                                             <div className="json">
                                                 <ReactJson
@@ -326,4 +373,14 @@ const App = () => {
 
 }
 
-ReactDOM.render( (<App />), document.getElementById("root") );
+const AppWrapper = () => {
+    return (
+        <>
+            <ReactNotifications />
+            <App />
+        </>
+    )
+};
+
+const root = createRoot(document.getElementById("root"));
+root.render(<AppWrapper />);
