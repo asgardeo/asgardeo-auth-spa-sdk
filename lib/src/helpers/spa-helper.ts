@@ -57,7 +57,6 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
         return -1;
     }
 
-
     public async clearRefreshTokenTimeout(timer?: number): Promise<void> {
         if (timer) {
             clearTimeout(timer);
