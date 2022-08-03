@@ -17,7 +17,7 @@
  */
 
 import { Buffer } from "buffer";
-import { CryptoUtils, JWKInterface } from "@asgardeo/auth-js";
+import { AsgardeoAuthException, CryptoUtils, JWKInterface } from "@asgardeo/auth-js";
 import base64url from "base64url";
 import sha256 from "fast-sha256";
 import { createLocalJWKSet, jwtVerify } from "jose";
@@ -69,6 +69,12 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string>
             }
         ).then(() => {
             return Promise.resolve(true);
+        }).catch((error) => {
+            return Promise.reject(new AsgardeoAuthException(
+                "SPA-CRYPTO-UTILS-VJ-IV01",
+                error?.reason,
+                `${error?.code} ${error?.claim}`
+            ));
         });
     }
 }
