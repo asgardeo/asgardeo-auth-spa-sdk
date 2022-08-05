@@ -72,7 +72,7 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string>
         }).catch((error) => {
             return Promise.reject(new AsgardeoAuthException(
                 "SPA-CRYPTO-UTILS-VJ-IV01",
-                error?.reason,
+                error?.reason ?? JSON.stringify(error),
                 `${error?.code} ${error?.claim}`
             ));
         });

@@ -113,13 +113,13 @@ export const WebWorkerClient = async (
     const _requestTimeout: number = config?.requestTimeout ?? 60000;
     let _isHttpHandlerEnabled: boolean = true;
     let _getSignOutURLFromSessionStorage: boolean = false;
-    
+
     const _store: Store = initiateStore(config.storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
     const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>(_store, _cryptoUtils);
     await _authenticationClient.initialize(config);
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
-    
+
     const _sessionManagementHelper = await SessionManagementHelper(
         async () => {
             const message: Message<string> = {
@@ -138,7 +138,7 @@ export const WebWorkerClient = async (
         (sessionState: string) => setSessionState(sessionState)
     );
 
-    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> = 
+    const _authenticationHelper: AuthenticationHelper<WebWorkerClientConfig> =
         getAuthHelper(_authenticationClient, _spaHelper);
 
     const worker: Worker = new webWorker();
@@ -163,6 +163,8 @@ export const WebWorkerClient = async (
 
             return (channel.port1.onmessage = ({ data }: { data: ResponseMessage<string>; }) => {
                 clearTimeout(timer);
+                channel.port1.close();
+                channel.port2.close();
 
                 if (data?.success) {
                     const responseData = data?.data ? JSON.parse(data?.data) : null;
@@ -517,7 +519,7 @@ export const WebWorkerClient = async (
             return getBasicUserInfo();
         }
     }
-    
+
     /**
      * Initiates the authentication flow.
      *
@@ -558,7 +560,7 @@ export const WebWorkerClient = async (
             if (resolvedAuthorizationCode && resolvedState) {
                 return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
             }
-            
+
             return getAuthorizationURL(params)
                 .then(async (response: AuthorizationResponse) => {
                     location.href = response.authorizationURL;
