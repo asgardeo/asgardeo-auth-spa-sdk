@@ -216,6 +216,10 @@ export const WebWorkerClient = async (
      * @returns {Promise<HttpResponse>} A promise that resolves with the response data.
      */
     const httpRequest = <T = any>(config: HttpRequestConfig): Promise<HttpResponse<T>> => {
+        if(config?.data && config?.data instanceof FormData) {
+            config.data = { ...Object.fromEntries(config?.data.entries()), formData: true };
+        }
+
         const message: Message<HttpRequestConfig> = {
             data: config,
             type: HTTP_REQUEST

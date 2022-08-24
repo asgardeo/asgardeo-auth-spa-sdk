@@ -122,9 +122,21 @@ export const workerReceiver = (
                     });
 
                 break;
-            case HTTP_REQUEST:
+            case HTTP_REQUEST: {
+                const request = data.data;
+                const requestData = request?.data;
+                if(data.data?.data?.formData === true) {
+                    const formData = new FormData();
+                    for (const key in requestData) {
+                        if(key === "formData") {
+                            continue;
+                        }
+                        formData.append(key, requestData[key])
+                     }
+                     request.data = formData;
+                }
                 webWorker
-                    .httpRequest(data.data)
+                    .httpRequest(request)
                     .then((response) => {
                         port.postMessage(MessageUtils.generateSuccessMessage(response));
                     })
@@ -133,6 +145,7 @@ export const workerReceiver = (
                     });
 
                 break;
+            }
             case HTTP_REQUEST_ALL:
                 webWorker
                     .httpRequestAll(data.data)
