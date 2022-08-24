@@ -216,6 +216,14 @@ export const WebWorkerClient = async (
      * @returns {Promise<HttpResponse>} A promise that resolves with the response data.
      */
     const httpRequest = <T = any>(config: HttpRequestConfig): Promise<HttpResponse<T>> => {
+        /**
+         *
+         * Currently FormData is not supported to send to a web worker
+         *
+         * Below workaround will represent FormData object as a JSON.
+         * This workaround will not be needed once FormData object is made cloneable
+         * Reference: https://github.com/whatwg/xhr/issues/55
+         */
         if(config?.data && config?.data instanceof FormData) {
             config.data = { ...Object.fromEntries(config?.data.entries()), formData: true };
         }
