@@ -145,7 +145,7 @@ export class AsgardeoSPAClient {
      *
      * @private
      */
-    private async _validateMethod(): Promise<boolean> {
+    private async _validateMethod(validateAuthentication: boolean = true): Promise<boolean> {
         if (!(await this._isInitialized())) {
             return Promise.reject(
                 new AsgardeoAuthException(
@@ -156,7 +156,7 @@ export class AsgardeoSPAClient {
             );
         }
 
-        if (!(await this.isAuthenticated())) {
+        if (validateAuthentication && !(await this.isAuthenticated())) {
             return Promise.reject(
                 new AsgardeoAuthException(
                     "SPA-AUTH_CLIENT-VM-IV02",
@@ -492,7 +492,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async httpRequest(config: HttpRequestConfig): Promise<HttpResponse | undefined> {
-        await this._validateMethod();
+        await this._validateMethod(config.attachToken);
 
         return this._client?.httpRequest(config);
     }
