@@ -2,7 +2,7 @@
 
 ![Builder](https://github.com/asgardeo/asgardeo-auth-spa-sdk/workflows/Builder/badge.svg)
 [![Stackoverflow](https://img.shields.io/badge/Ask%20for%20help%20on-Stackoverflow-orange)](https://stackoverflow.com/questions/tagged/asgardeo)
-[![Discord](https://img.shields.io/badge/Join%20us%20on-Discord-%23e01563.svg)](https://discord.com/invite/Xa5VubmThw)
+[![Discord](https://img.shields.io/badge/Join%20us%20on-Discord-%23e01563.svg)](https://discord.gg/wso2)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/asgardeo/asgardeo-auth-spa-sdk/blob/main/LICENSE)
 [![Twitter](https://img.shields.io/twitter/follow/wso2.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=asgardeo)
 
