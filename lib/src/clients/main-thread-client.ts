@@ -96,21 +96,7 @@ export const MainThreadClient = async (
     let _httpFinishCallback: () => void;
 
     const attachToken = async (request: HttpRequestConfig): Promise<void> => {
-        const requestConfig = { attachToken: true, ...request };
-
-        if (requestConfig.attachToken) {
-            if(requestConfig.shouldAttachIDPAccessToken) {
-                request.headers = {
-                    ...request.headers,
-                    Authorization: `Bearer ${ await _authenticationHelper.getIDPAccessToken() }`
-                };
-            } else {
-                request.headers = {
-                    ...request.headers,
-                    Authorization: `Bearer ${ await _authenticationHelper.getAccessToken() }`
-                };
-            }
-        }
+        await _authenticationHelper.attachTokenToRequestConfig(request);
     }
 
     _httpClient?.init && (await _httpClient.init(true, attachToken));
