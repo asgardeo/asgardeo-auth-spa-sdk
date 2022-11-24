@@ -602,6 +602,23 @@ export class AuthenticationHelper<
         }
     }
 
+    public async attachTokenToRequestConfig(request : HttpRequestConfig): Promise<void> {
+        const requestConfig = { attachToken: true, ...request };
+        if (requestConfig.attachToken) {
+            if(requestConfig.shouldAttachIDPAccessToken) {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await this.getIDPAccessToken() }`
+                };
+            } else {
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${ await this.getAccessToken() }`
+                };
+            }
+        }
+    }
+
     public async getBasicUserInfo(): Promise<BasicUserInfo> {
         return this._authenticationClient.getBasicUserInfo();
     }
