@@ -415,7 +415,7 @@ The `sign-out` hook is used to fire a callback function after signing out is suc
 auth.signOut();
 ```
 
-**Clearing the locally stored user session happens when a sign-out hook is registered after the user gets redirected back to the `signOutRedirectURL`.**
+**The locally stored user session is cleared when a sign-out hook is registered after the user gets redirected back to the `signOutRedirectURL`.**
 Therefore, the developer should ensure that a sign-out hook is registered when `signOutRedirectURL` is loaded. Refer the [example](#sign-out-hook-example) 
 for further details.
 
