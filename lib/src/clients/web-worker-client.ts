@@ -116,8 +116,8 @@ export const WebWorkerClient = async (
 
     const _store: Store = initiateStore(config.storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
-    const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>(_store, _cryptoUtils);
-    await _authenticationClient.initialize(config);
+    const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>();
+    await _authenticationClient.initialize(config, _store, _cryptoUtils);
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
 
     const _sessionManagementHelper = await SessionManagementHelper(
@@ -131,7 +131,7 @@ export const WebWorkerClient = async (
 
                 return signOutURL;
             } catch {
-                return SPAUtils.getSignOutURL();
+                return SPAUtils.getSignOutURL(config.clientID);
             }
         },
         config.storage,
@@ -491,7 +491,7 @@ export const WebWorkerClient = async (
 
                 return communicate<null, string>(message)
                     .then((url: string) => {
-                        SPAUtils.setSignOutURL(url);
+                        SPAUtils.setSignOutURL(url, config.clientID);
 
                         // Enable OIDC Sessions Management only if it is set to true in the config.
                         if (config.enableOIDCSessionManagement) {
@@ -620,7 +620,7 @@ export const WebWorkerClient = async (
                             return Promise.reject(error);
                         });
                 } else {
-                    window.location.href = SPAUtils.getSignOutURL();
+                    window.location.href = SPAUtils.getSignOutURL(config.clientID);
 
                     await SPAUtils.waitTillPageRedirect();
 

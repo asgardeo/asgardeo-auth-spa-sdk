@@ -31,6 +31,7 @@ import {
     ResponseMode,
     SESSION_STATE,
     STATE,
+    SessionData,
     Store
 } from "@asgardeo/auth-js";
 import {
@@ -73,8 +74,8 @@ export const MainThreadClient = async (
 ): Promise<MainThreadClientInterface> => {
     const _store: Store = initiateStore(config.storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
-    const _authenticationClient = new AsgardeoAuthClient<MainThreadClientConfig>(_store, _cryptoUtils);
-    await _authenticationClient.initialize(config);
+    const _authenticationClient = new AsgardeoAuthClient<MainThreadClientConfig>();
+    await _authenticationClient.initialize(config, _store, _cryptoUtils);
 
     const _spaHelper = new SPAHelper<MainThreadClientConfig>(_authenticationClient);
     const _dataLayer = _authenticationClient.getDataLayer();
@@ -83,7 +84,8 @@ export const MainThreadClient = async (
             return _authenticationClient.getSignOutURL();
         },
         config.storage ?? Storage.SessionStorage,
-        (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "")
+        (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE as keyof SessionData, 
+            sessionState ?? "")
     );
 
     const _authenticationHelper = getAuthHelper(_authenticationClient, _spaHelper);
@@ -171,7 +173,7 @@ export const MainThreadClient = async (
     const shouldStopAuthn = async (): Promise<boolean> => {
         return await _sessionManagementHelper.receivePromptNoneResponse(
             async (sessionState: string | null) => {
-                await _dataLayer.setSessionDataParameter(SESSION_STATE, sessionState ?? "");
+                await _dataLayer.setSessionDataParameter(SESSION_STATE as keyof SessionData, sessionState ?? "");
                 return;
             }
         );
@@ -240,7 +242,7 @@ export const MainThreadClient = async (
         if ((await _authenticationClient.isAuthenticated()) && !_getSignOutURLFromSessionStorage) {
             location.href = await _authenticationClient.getSignOutURL();
         } else {
-            location.href = SPAUtils.getSignOutURL();
+            location.href = SPAUtils.getSignOutURL(config.clientID);
         }
 
         _spaHelper.clearRefreshTokenTimeout();

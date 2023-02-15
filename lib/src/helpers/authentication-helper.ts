@@ -440,7 +440,7 @@ export class AuthenticationHelper<
                         SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
                     } */
                     if (config.storage !== Storage.WebWorker) {
-                        SPAUtils.setSignOutURL(await this._authenticationClient.getSignOutURL());
+                        SPAUtils.setSignOutURL(await this._authenticationClient.getSignOutURL(), config.clientID);
 
                         if (this._spaHelper) {
                             this._spaHelper.clearRefreshTokenTimeout();
