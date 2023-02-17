@@ -61,6 +61,7 @@ export class AuthenticationHelper<
     protected _authenticationClient: AsgardeoAuthClient<T>;
     protected _dataLayer: DataLayer<T>;
     protected _spaHelper: SPAHelper<T>;
+    protected _instanceID: number;
 
     public constructor(
         authClient: AsgardeoAuthClient<T>,
@@ -69,6 +70,7 @@ export class AuthenticationHelper<
         this._authenticationClient = authClient;
         this._dataLayer = this._authenticationClient.getDataLayer();
         this._spaHelper = spaHelper;
+        this._instanceID = this._authenticationClient.getInstanceID();
     }
 
     public enableHttpHandler(httpClient: HttpClientInstance): void {
@@ -440,7 +442,8 @@ export class AuthenticationHelper<
                         SPAUtils.setSignOutURL(await _authenticationClient.getSignOutURL());
                     } */
                     if (config.storage !== Storage.WebWorker) {
-                        SPAUtils.setSignOutURL(await this._authenticationClient.getSignOutURL(), config.clientID);
+                        SPAUtils.setSignOutURL(
+                            await this._authenticationClient.getSignOutURL(), config.clientID, this._instanceID);
 
                         if (this._spaHelper) {
                             this._spaHelper.clearRefreshTokenTimeout();

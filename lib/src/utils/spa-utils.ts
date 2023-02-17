@@ -45,12 +45,12 @@ export class SPAUtils {
         sessionStorage.setItem(pkceKey, pkce);
     }
 
-    public static setSignOutURL(url: string, clientId: string): void {
-        sessionStorage.setItem(`${SIGN_OUT_URL}-${clientId}`, url);
+    public static setSignOutURL(url: string, clientID: string, instanceID: number): void {
+        sessionStorage.setItem(`${SIGN_OUT_URL}-instance_${ instanceID }-${ clientID }`, url);
     }
 
-    public static getSignOutURL(clientId: string): string {
-        return sessionStorage.getItem(`${SIGN_OUT_URL}-${clientId}`) ?? "";
+    public static getSignOutURL(clientID: string, instanceID: number): string {
+        return sessionStorage.getItem(`${SIGN_OUT_URL}-instance_${ instanceID }-${ clientID }`) ?? "";
     }
 
     public static removePKCE(pkceKey: string): void {

@@ -96,6 +96,7 @@ const initiateStore = (store: Storage | undefined): Store => {
 };
 
 export const WebWorkerClient = async (
+    instanceID: number,
     config: AuthClientConfig<WebWorkerClientConfig>,
     webWorker: new () => Worker,
     getAuthHelper: (
@@ -117,7 +118,7 @@ export const WebWorkerClient = async (
     const _store: Store = initiateStore(config.storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
     const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>();
-    await _authenticationClient.initialize(config, _store, _cryptoUtils);
+    await _authenticationClient.initialize(config, _store, _cryptoUtils, instanceID);
     const _spaHelper = new SPAHelper<WebWorkerClientConfig>(_authenticationClient);
 
     const _sessionManagementHelper = await SessionManagementHelper(
@@ -131,7 +132,7 @@ export const WebWorkerClient = async (
 
                 return signOutURL;
             } catch {
-                return SPAUtils.getSignOutURL(config.clientID);
+                return SPAUtils.getSignOutURL(config.clientID, instanceID);
             }
         },
         config.storage,
@@ -491,7 +492,7 @@ export const WebWorkerClient = async (
 
                 return communicate<null, string>(message)
                     .then((url: string) => {
-                        SPAUtils.setSignOutURL(url, config.clientID);
+                        SPAUtils.setSignOutURL(url, config.clientID, instanceID);
 
                         // Enable OIDC Sessions Management only if it is set to true in the config.
                         if (config.enableOIDCSessionManagement) {
@@ -620,7 +621,7 @@ export const WebWorkerClient = async (
                             return Promise.reject(error);
                         });
                 } else {
-                    window.location.href = SPAUtils.getSignOutURL(config.clientID);
+                    window.location.href = SPAUtils.getSignOutURL(config.clientID, instanceID);
 
                     await SPAUtils.waitTillPageRedirect();
 

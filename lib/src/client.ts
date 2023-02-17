@@ -58,8 +58,6 @@ const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     storage: Storage.SessionStorage
 };
 
-const PRIMARY_INSTANCE = "primaryInstance";
-
 /**
  * This class provides the necessary methods to implement authentication in a Single Page Application.
  *
@@ -67,7 +65,7 @@ const PRIMARY_INSTANCE = "primaryInstance";
  * @class AsgardeoSPAClient
  */
 export class AsgardeoSPAClient {
-    protected static _instances: Map<string, AsgardeoSPAClient> = new Map<string, AsgardeoSPAClient>();
+    protected static _instances: Map<number, AsgardeoSPAClient> = new Map<number, AsgardeoSPAClient>();
     protected _client: WebWorkerClientInterface | MainThreadClientInterface | undefined;
     protected _storage: Storage | undefined;
     protected _authHelper: typeof AuthenticationHelper = AuthenticationHelper;
@@ -80,10 +78,9 @@ export class AsgardeoSPAClient {
     protected _onEndUserSession: (response: any) => void = () => null;
     protected _onInitialize: (response: boolean) => void = () => null;
     protected _onCustomGrant: Map<string, (response: any) => void> = new Map();
-    protected _instanceID: string;
+    protected _instanceID: number;
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    protected constructor(id: string) {
+    protected constructor(id: number) {
         this._instanceID = id;
     }
 
@@ -171,7 +168,9 @@ export class AsgardeoSPAClient {
 
     /**
      * This method returns the instance of the singleton class.
-     *
+     * If an ID is provided, it will return the instance with the given ID.
+     * If no ID is provided, it will return the default instance value 0.
+     * 
      * @return {AsgardeoSPAClient} - Returns the instance of the singleton class.
      *
      * @example
@@ -185,11 +184,11 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    public static getInstance(id?: string): AsgardeoSPAClient | undefined {
+    public static getInstance(id?: number): AsgardeoSPAClient | undefined {
         if (id && this._instances?.get(id)) {
             return this._instances.get(id);
-        } else if (!id && this._instances?.get(PRIMARY_INSTANCE)) {
-            return this._instances.get(PRIMARY_INSTANCE);
+        } else if (!id && this._instances?.get(0)) {
+            return this._instances.get(0);
         }
 
         if (id) {
@@ -198,9 +197,9 @@ export class AsgardeoSPAClient {
             return this._instances.get(id);
         }
 
-        this._instances.set(PRIMARY_INSTANCE, new AsgardeoSPAClient(PRIMARY_INSTANCE));
+        this._instances.set(0, new AsgardeoSPAClient(0));
 
-        return this._instances.get(PRIMARY_INSTANCE);
+        return this._instances.get(0);
     }
 
     /**
@@ -243,6 +242,7 @@ export class AsgardeoSPAClient {
                 const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
                 const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
                 this._client = await MainThreadClient(
+                    this._instanceID,
                     { ...defaultConfig, ...mainThreadClientConfig },
                     (
                         authClient: AsgardeoAuthClient<MainThreadClientConfig>,
@@ -264,6 +264,7 @@ export class AsgardeoSPAClient {
             if (!this._client) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
                 this._client = (await WebWorkerClient(
+                    this._instanceID,
                     {
                         ...DefaultConfig,
                         ...webWorkerClientConfig
