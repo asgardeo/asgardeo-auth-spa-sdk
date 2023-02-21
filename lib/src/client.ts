@@ -937,23 +937,23 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-        public async isSessionActive(): Promise<boolean | undefined> {
-            await this._isInitialized();
+    public async isSessionActive(): Promise<boolean | undefined> {
+        await this._isInitialized();
 
-            if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
-                return Promise.reject(
-                    new AsgardeoAuthException(
-                        "SPA-AUTH_CLIENT-ISA-IV01",
-                        "The active session cannot be returned.",
-                        "The active session cannot be returned when the storage type is set to webWorker " + 
-                        "or browserMemory."
-                    )
-                );
-            }
-            const mainThreadClient = this._client as MainThreadClientInterface;
-    
-            return mainThreadClient?.isSessionActive();
+        if (this._storage && [ (Storage.WebWorker, Storage.BrowserMemory) ].includes(this._storage)) {
+            return Promise.reject(
+                new AsgardeoAuthException(
+                    "SPA-AUTH_CLIENT-ISA-IV01",
+                    "The active session cannot be returned.",
+                    "The active session cannot be returned when the storage type is set to webWorker " + 
+                    "or browserMemory."
+                )
+            );
         }
+        const mainThreadClient = this._client as MainThreadClientInterface;
+
+        return mainThreadClient?.isSessionActive();
+    }
 
     /**
      * This method attaches a callback function to an event hook that fires the callback when the event happens.
