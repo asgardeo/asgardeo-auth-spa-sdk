@@ -251,6 +251,7 @@ export const MainThreadClient = async (
         await _dataLayer.removeOIDCProviderMetaData();
         await _dataLayer.removeTemporaryData();
         await _dataLayer.removeSessionData();
+        await _dataLayer.removeSessionStatus();
 
         await SPAUtils.waitTillPageRedirect();
 
@@ -381,6 +382,10 @@ export const MainThreadClient = async (
         return _authenticationHelper.isAuthenticated();
     };
 
+    const isSessionActive = async (): Promise<boolean> => {
+        return await _dataLayer.getSessionStatus() === "true";
+    };
+
     const updateConfig = async (newConfig: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void> => {
         const existingConfig = await _dataLayer.getConfigData();
         const isCheckSessionIframeDifferent: boolean = !(
@@ -417,6 +422,7 @@ export const MainThreadClient = async (
         httpRequest,
         httpRequestAll,
         isAuthenticated,
+        isSessionActive,
         refreshAccessToken,
         requestCustomGrant,
         revokeAccessToken,

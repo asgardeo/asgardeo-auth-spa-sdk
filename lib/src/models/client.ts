@@ -66,6 +66,7 @@ export interface MainThreadClientInterface {
     isAuthenticated(): Promise<boolean>;
     updateConfig(config: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void>;
     trySignInSilently(): Promise<BasicUserInfo | boolean>;
+    isSessionActive(): Promise<boolean>;
 }
 
 export interface WebWorkerClientInterface {
