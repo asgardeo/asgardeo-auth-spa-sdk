@@ -180,6 +180,10 @@ export const MainThreadClient = async (
         );
     }
 
+    const setSessionStatus = async (sessionStatus: string): Promise<void> => {
+        await _dataLayer.setSessionStatus(sessionStatus);
+    }
+
     const signIn = async (
         signInConfig?: GetAuthURLConfig,
         authorizationCode?: string,
@@ -212,6 +216,7 @@ export const MainThreadClient = async (
             }
 
             if (resolvedAuthorizationCode && resolvedState) {
+                setSessionStatus("true");
                 return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
             }
 
