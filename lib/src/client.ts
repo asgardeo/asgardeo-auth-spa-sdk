@@ -30,7 +30,7 @@ import {
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:./worker.ts";
 import { MainThreadClient, WebWorkerClient } from "./clients";
-import { Hooks, Storage } from "./constants";
+import { Hooks, REFRESH_ACCESS_TOKEN_ERR0R, Storage } from "./constants";
 import { AuthenticationHelper, SPAHelper } from "./helpers";
 import { HttpClientInstance } from "./http-client";
 import {
@@ -258,6 +258,12 @@ export class AsgardeoSPAClient {
             if (this._onInitialize) {
                 this._onInitialize(true);
             }
+
+            window.addEventListener("message", (event) => {
+                if (event?.data?.type === REFRESH_ACCESS_TOKEN_ERR0R) {
+                    this.signOut();
+                }
+            });
 
             return Promise.resolve(true);
         } else {
