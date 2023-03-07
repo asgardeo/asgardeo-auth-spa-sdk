@@ -41,6 +41,7 @@ import {
     ERROR,
     ERROR_DESCRIPTION,
     PROMPT_NONE_IFRAME,
+    REFRESH_ACCESS_TOKEN_ERR0R,
     RP_IFRAME,
     Storage  
 } from "../constants";
@@ -187,6 +188,11 @@ export class AuthenticationHelper<
 
             return this._authenticationClient.getBasicUserInfo();
         } catch (error) {
+            const refreshTokenError: Message<string> = {
+                type: REFRESH_ACCESS_TOKEN_ERR0R
+            }
+            
+            window.postMessage(refreshTokenError);
             return Promise.reject(error);
         }
     }
