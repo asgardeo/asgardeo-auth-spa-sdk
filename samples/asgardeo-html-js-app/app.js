@@ -212,7 +212,12 @@ function setAuthenticatedState(response) {
  */
 function handleLogin() {
     hasLogoutFailureError = false;
-    authClient.signIn();
+
+    if (authConfig.authParams) {
+        authClient.signIn(authConfig.authParams);
+    } else {
+        authClient.signIn();
+    }
 }
 
 /**
