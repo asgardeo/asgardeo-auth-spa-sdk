@@ -30,6 +30,7 @@ export interface SPAConfig {
     checkSessionInterval?: number;
     sessionRefreshInterval?: number;
     resourceServerURLs?: string[];
+    authParams?: Record<string, string>
 }
 
 /**

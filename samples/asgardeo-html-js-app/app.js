@@ -212,7 +212,8 @@ function setAuthenticatedState(response) {
  */
 function handleLogin() {
     hasLogoutFailureError = false;
-    authClient.signIn();
+
+    authClient.signIn(authConfig.authParams);
 }
 
 /**
