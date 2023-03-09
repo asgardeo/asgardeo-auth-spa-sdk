@@ -33,17 +33,22 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
           MainThreadClientConfig | WebWorkerClientConfig
         >
       ): Promise<void> {
-        const sessionData = await this._dataLayer.getSessionData();
-        if (sessionData.refresh_token) {
-            // Refresh 10 seconds before the expiry time
-            const expiryTime = parseInt(sessionData.expires_in);
-            const time = expiryTime <= 10 ? expiryTime : expiryTime - 10;
+        const shouldRefreshAutomatically = (await this._dataLayer.getConfigData())?.periodicTokenRefresh;        
 
-            const timer = setTimeout(async () => {
-                await authenticationHelper.refreshAccessToken();
-            }, time * 1000);
-
-            await this._dataLayer.setTemporaryDataParameter(REFRESH_TOKEN_TIMER, JSON.stringify(timer));
+        // Automatic Token Refresh is enabled
+        if (shouldRefreshAutomatically) {            
+            const sessionData = await this._dataLayer.getSessionData();
+            if (sessionData.refresh_token) {
+                // Refresh 10 seconds before the expiry time
+                const expiryTime = parseInt(sessionData.expires_in);
+                const time = expiryTime <= 10 ? expiryTime : expiryTime - 10;
+    
+                const timer = setTimeout(async () => {
+                    await authenticationHelper.refreshAccessToken();
+                }, time * 1000);
+    
+                await this._dataLayer.setTemporaryDataParameter(REFRESH_TOKEN_TIMER, JSON.stringify(timer));
+            }
         }
     }
 
