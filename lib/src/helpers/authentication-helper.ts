@@ -17,33 +17,32 @@
  */
 
 import {
-    AsgardeoAuthClient, 
-    AsgardeoAuthException, 
-    AuthClientConfig, 
-    AuthenticationUtils, 
-    BasicUserInfo, 
-    CryptoHelper, 
-    CustomGrantConfig, 
-    DataLayer, 
-    DecodedIDTokenPayload, 
-    FetchResponse, 
-    GetAuthURLConfig, 
+    AsgardeoAuthClient,
+    AsgardeoAuthException,
+    AuthClientConfig,
+    AuthenticationUtils,
+    BasicUserInfo,
+    CryptoHelper,
+    CustomGrantConfig,
+    DataLayer,
+    DecodedIDTokenPayload,
+    FetchResponse,
+    GetAuthURLConfig,
     OIDCEndpoints,
     TokenResponse
 } from "@asgardeo/auth-js";
 import { SPAHelper } from "./spa-helper";
-import { Message, SPAUtils, SessionManagementHelperInterface } from "..";
-import { 
-    ACCESS_TOKEN_INVALID, 
-    CHECK_SESSION_SIGNED_IN, 
-    CHECK_SESSION_SIGNED_OUT, 
+import {
+    ACCESS_TOKEN_INVALID,
+    CHECK_SESSION_SIGNED_IN,
+    CHECK_SESSION_SIGNED_OUT,
     CUSTOM_GRANT_CONFIG,
     ERROR,
     ERROR_DESCRIPTION,
     PROMPT_NONE_IFRAME,
     REFRESH_ACCESS_TOKEN_ERR0R,
     RP_IFRAME,
-    Storage  
+    Storage
 } from "../constants";
 import {
     AuthorizationInfo,
@@ -52,9 +51,12 @@ import {
     HttpRequestConfig,
     HttpResponse,
     MainThreadClientConfig,
+    Message,
+    SessionManagementHelperInterface,
     WebWorkerClientConfig
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
+import { SPAUtils } from "../utils";
 
 export class AuthenticationHelper<
   T extends MainThreadClientConfig | WebWorkerClientConfig
@@ -106,11 +108,11 @@ export class AuthenticationHelper<
     ): Promise<BasicUserInfo | FetchResponse> {
         let useDefaultEndpoint = true;
         let matches = false;
-    
+
         // If the config does not contains a token endpoint, default token endpoint will be used.
         if (config?.tokenEndpoint) {
             useDefaultEndpoint = false;
-    
+
             for (const baseUrl of [
                 ...((await this._dataLayer.getConfigData())?.resourceServerURLs ?? []),
                 (config as any).baseUrl
@@ -131,14 +133,14 @@ export class AuthenticationHelper<
             return this._authenticationClient
                 .requestCustomGrant(config)
                     .then(async (response: FetchResponse | TokenResponse) => {
-                        if (enableRetrievingSignOutURLFromSession && 
+                        if (enableRetrievingSignOutURLFromSession &&
                             typeof enableRetrievingSignOutURLFromSession === "function") {
                             enableRetrievingSignOutURLFromSession(config);
                         }
-                
+
                         if (config.returnsSession) {
                             this._spaHelper.refreshAccessTokenAutomatically(this);
-                
+
                             return this._authenticationClient.getBasicUserInfo();
                         } else {
                             return response as FetchResponse;
@@ -191,7 +193,7 @@ export class AuthenticationHelper<
             const refreshTokenError: Message<string> = {
                 type: REFRESH_ACCESS_TOKEN_ERR0R
             }
-            
+
             window.postMessage(refreshTokenError);
             return Promise.reject(error);
         }
@@ -236,16 +238,16 @@ export class AuthenticationHelper<
                         } catch (refreshError: any) {
                             if (isHttpHandlerEnabled) {
                                 if (typeof httpErrorCallback === "function") {
-                                    await httpErrorCallback({ 
-                                        ...error, 
-                                        code: ACCESS_TOKEN_INVALID 
+                                    await httpErrorCallback({
+                                        ...error,
+                                        code: ACCESS_TOKEN_INVALID
                                     });
                                 }
                                 if (typeof httpFinishCallback === "function") {
                                     httpFinishCallback();
                                 }
                             }
-                            
+
                             throw new AsgardeoAuthException(
                                 "SPA-AUTH_HELPER-HR-SE01",
                                 refreshError?.name ?? "Refresh token request failed.",
@@ -307,10 +309,10 @@ export class AuthenticationHelper<
     ): Promise<HttpResponse[] | undefined> {
         let matches = true;
         const config = await this._dataLayer.getConfigData();
-    
+
         for (const requestConfig of requestConfigs) {
             let urlMatches = false;
-    
+
             for (const baseUrl of [
                 ...((await config)?.resourceServerURLs ?? []),
                 (config as any).baseUrl
@@ -321,21 +323,21 @@ export class AuthenticationHelper<
                     break;
                 }
             }
-    
+
             if (!urlMatches) {
                 matches = false;
-        
+
                 break;
             }
         }
-    
+
         const requests: Promise<HttpResponse<any>>[] = [];
-    
+
         if (matches) {
             requestConfigs.forEach((request) => {
                 requests.push(httpClient.request(request));
             });
-    
+
             return (
                 httpClient?.all &&
                 httpClient
@@ -360,7 +362,7 @@ export class AuthenticationHelper<
                                         httpFinishCallback();
                                     }
                                 }
-                
+
                                 throw new AsgardeoAuthException(
                                     "SPA-AUTH_HELPER-HRA-SE01",
                                     refreshError?.name ?? "Refresh token request failed.",
@@ -369,7 +371,7 @@ export class AuthenticationHelper<
                                         "access token following a 401 response from the server."
                                 );
                             }
-            
+
                         if (refreshTokenResponse) {
                             return (
                                 httpClient.all &&
@@ -387,13 +389,13 @@ export class AuthenticationHelper<
                                                 httpFinishCallback();
                                             }
                                         }
-                
+
                                         return Promise.reject(error);
                                     })
                             );
                         }
                         }
-            
+
                         if (isHttpHandlerEnabled) {
                             if (typeof httpErrorCallback === "function") {
                                 await httpErrorCallback(error);
@@ -402,7 +404,7 @@ export class AuthenticationHelper<
                                 httpFinishCallback();
                             }
                         }
-            
+
                         return Promise.reject(error);
                     })
             );
@@ -458,8 +460,8 @@ export class AuthenticationHelper<
 
                         // Enable OIDC Sessions Management only if it is set to true in the config.
                         if (
-                            checkSession && 
-                            typeof checkSession === "function" && 
+                            checkSession &&
+                            typeof checkSession === "function" &&
                             config.enableOIDCSessionManagement
                         ) {
                             checkSession();
