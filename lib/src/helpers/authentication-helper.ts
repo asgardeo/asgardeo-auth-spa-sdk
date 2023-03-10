@@ -191,7 +191,7 @@ export class AuthenticationHelper<
         }
     }
 
-    retryFailedRequests = async (failedRequest: HttpRequestInterface): Promise<HttpResponse> => {
+    protected async retryFailedRequests (failedRequest: HttpRequestInterface): Promise<HttpResponse> {
         if (this._isTokenRefreshing) {            
             return new Promise(() => setTimeout(() => {
                 return this.retryFailedRequests(failedRequest);
