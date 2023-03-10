@@ -135,7 +135,7 @@ export class AuthenticationHelper<
                             enableRetrievingSignOutURLFromSession(config);
                         }
                 
-                        if (config.returnsSession) {                            
+                        if (config.returnsSession) {
                             this._spaHelper.refreshAccessTokenAutomatically(this);
                 
                             return this._authenticationClient.getBasicUserInfo();
@@ -232,7 +232,7 @@ export class AuthenticationHelper<
         if (matches) {
             return httpClient
                 .request(requestConfig)
-                .then((response: HttpResponse) => {                    
+                .then((response: HttpResponse) => {
                     return Promise.resolve(response);
                 })
                 .catch(async (error: HttpError) => {
@@ -250,7 +250,6 @@ export class AuthenticationHelper<
                         this._isTokenRefreshing = true;
                         // Try to refresh the token
                         let refreshAccessTokenResponse: BasicUserInfo;
-
                         try {
                             refreshAccessTokenResponse = await this.refreshAccessToken(
                                 enableRetrievingSignOutURLFromSession
