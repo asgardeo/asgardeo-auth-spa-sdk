@@ -32,7 +32,7 @@ import {
     TokenResponse
 } from "@asgardeo/auth-js";
 import { SPAHelper } from "./spa-helper";
-import { Message, SPAUtils, SessionManagementHelperInterface } from "..";
+import { HttpRequestInterface, Message, SPAUtils, SessionManagementHelperInterface } from "..";
 import { 
     ACCESS_TOKEN_INVALID, 
     CHECK_SESSION_SIGNED_IN, 
@@ -61,6 +61,7 @@ export class AuthenticationHelper<
     protected _authenticationClient: AsgardeoAuthClient<T>;
     protected _dataLayer: DataLayer<T>;
     protected _spaHelper: SPAHelper<T>;
+    protected _isTokenRefreshing: boolean;
 
     public constructor(
         authClient: AsgardeoAuthClient<T>,
@@ -69,6 +70,7 @@ export class AuthenticationHelper<
         this._authenticationClient = authClient;
         this._dataLayer = this._authenticationClient.getDataLayer();
         this._spaHelper = spaHelper;
+        this._isTokenRefreshing = false;
     }
 
     public enableHttpHandler(httpClient: HttpClientInstance): void {
@@ -189,6 +191,22 @@ export class AuthenticationHelper<
         }
     }
 
+    protected async retryFailedRequests (failedRequest: HttpRequestInterface): Promise<HttpResponse> {
+        if (this._isTokenRefreshing) {            
+            return new Promise(() => setTimeout(() => {
+                return this.retryFailedRequests(failedRequest);
+            }, 500));
+        } else {
+            return this.httpRequest(failedRequest.httpClient,
+                failedRequest.requestConfig,
+                failedRequest.isHttpHandlerEnabled,
+                failedRequest.httpErrorCallback,
+                failedRequest.httpFinishCallback,
+                failedRequest.enableRetrievingSignOutURLFromSession
+            );
+        }
+    }
+
     public async httpRequest(
         httpClient: HttpClientInstance,
         requestConfig: HttpRequestConfig,
@@ -219,13 +237,26 @@ export class AuthenticationHelper<
                 })
                 .catch(async (error: HttpError) => {
                     if (error?.response?.status === 401 || !error?.response) {
+                        if (this._isTokenRefreshing) {
+                            return this.retryFailedRequests({
+                                enableRetrievingSignOutURLFromSession,
+                                httpClient,
+                                httpErrorCallback,
+                                httpFinishCallback,
+                                isHttpHandlerEnabled,
+                                requestConfig
+                            });
+                        }
+                        this._isTokenRefreshing = true;
                         // Try to refresh the token
                         let refreshAccessTokenResponse: BasicUserInfo;
                         try {
                             refreshAccessTokenResponse = await this.refreshAccessToken(
                                 enableRetrievingSignOutURLFromSession
                             );
+                            this._isTokenRefreshing = false;
                         } catch (refreshError: any) {
+                            this._isTokenRefreshing = false;
                             if (isHttpHandlerEnabled) {
                                 if (typeof httpErrorCallback === "function") {
                                     await httpErrorCallback({ 

@@ -17,7 +17,8 @@
  */
 
 import { AxiosRequestConfig } from "axios";
-import { HttpError, HttpResponse } from ".";
+import { HttpClientInstance, HttpError, HttpResponse } from ".";
+import { SPACustomGrantConfig } from "..";
 
 export interface HttpClient {
     requestStartCallback: () => void;
@@ -31,6 +32,15 @@ export interface HttpRequestConfig extends AxiosRequestConfig {
     shouldEncodeToFormData?: boolean;
     shouldAttachIDPAccessToken?: boolean;
     startTimeInMs?: number
+}
+
+export interface HttpRequestInterface {
+    httpClient: HttpClientInstance,
+    requestConfig: HttpRequestConfig,
+    isHttpHandlerEnabled?: boolean,
+    httpErrorCallback?: (error: HttpError) => void | Promise<void>,
+    httpFinishCallback?: () => void,
+    enableRetrievingSignOutURLFromSession?: (config: SPACustomGrantConfig) => void
 }
 
 export {
