@@ -192,18 +192,30 @@ export class AuthenticationHelper<
     }
 
     protected async retryFailedRequests (failedRequest: HttpRequestInterface): Promise<HttpResponse> {
-        if (this._isTokenRefreshing) {            
-            return new Promise(() => setTimeout(() => {
-                return this.retryFailedRequests(failedRequest);
-            }, 500));
-        } else {
-            return this.httpRequest(failedRequest.httpClient,
-                failedRequest.requestConfig,
-                failedRequest.isHttpHandlerEnabled,
-                failedRequest.httpErrorCallback,
-                failedRequest.httpFinishCallback,
-                failedRequest.enableRetrievingSignOutURLFromSession
-            );
+        const httpClient = failedRequest.httpClient;
+        const requestConfig = failedRequest.requestConfig;
+        const isHttpHandlerEnabled = failedRequest.isHttpHandlerEnabled;
+        const httpErrorCallback = failedRequest.httpErrorCallback;
+        const httpFinishCallback = failedRequest.httpFinishCallback;
+
+        // Wait until the token is refreshed.
+        await SPAUtils.until(() => !this._isTokenRefreshing);
+
+        try {
+            const httpResponse = await httpClient.request(requestConfig);
+
+            return Promise.resolve(httpResponse);
+        } catch (error: any) {
+            if (isHttpHandlerEnabled) {
+                if (typeof httpErrorCallback === "function") {
+                    await httpErrorCallback(error);
+                }
+                if (typeof httpFinishCallback === "function") {
+                    httpFinishCallback();
+                }
+            }
+
+            return Promise.reject(error);
         }
     }
 
@@ -305,7 +317,7 @@ export class AuthenticationHelper<
                             httpFinishCallback();
                         }
                     }
-
+                    
                     return Promise.reject(error);
                 });
         } else {
