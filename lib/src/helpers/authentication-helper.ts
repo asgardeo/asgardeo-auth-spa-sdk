@@ -317,7 +317,7 @@ export class AuthenticationHelper<
                             httpFinishCallback();
                         }
                     }
-                    
+
                     return Promise.reject(error);
                 });
         } else {
