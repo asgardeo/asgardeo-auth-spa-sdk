@@ -54,7 +54,7 @@ const DefaultConfig: Partial<AuthClientConfig<Config>> = {
     checkSessionInterval: 3,
     clientHost: origin,
     enableOIDCSessionManagement: false,
-    sessionRefreshInterval: 43200,
+    sessionRefreshInterval: 28800,
     storage: Storage.SessionStorage
 };
 
