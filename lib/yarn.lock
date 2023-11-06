@@ -10,10 +10,10 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@asgardeo/auth-js@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@asgardeo/auth-js/-/auth-js-4.0.1.tgz#0ef723ad4d053b7299374b1a0fc37ed685b0ce39"
-  integrity sha512-YbHvW3xXZoYiSShbPZdGSx8KjsBJDlo3lBV+GbsHebxgTWYkJc+xkmNXNWRJqlSVrzou4h71vknBv4zFWOUCbQ==
+"@asgardeo/auth-js@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@asgardeo/auth-js/-/auth-js-4.0.2.tgz#d6f657aff08ec95a6c36aaae55a9622be25f3261"
+  integrity sha512-7+3rxPIVDrS8uHeFmT/RjwAAMz3F/h+SBMJ2Dxi2Cnp9/pQ9ZuxHbyS7IPyBOQ2X2TTQeBJO8uL8YWMo7g/Egw==
 
 "@babel/cli@^7.17.6":
   version "7.18.9"
