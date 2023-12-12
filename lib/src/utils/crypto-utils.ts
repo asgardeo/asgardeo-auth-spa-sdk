@@ -62,6 +62,7 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string>
             clockTolerance: clockTolerance,
             subject: subject
         }
+
         if (validateJwtIssuer ?? true) {
             jwtVerifyOptions["issuer"] = issuer
         }
