@@ -53,20 +53,26 @@ export class SPACryptoUtils implements CryptoUtils<Buffer | string>
         clientID: string,
         issuer: string,
         subject: string,
-        clockTolerance?: number
+        clockTolerance?: number,
+        validateJwtIssuer?: boolean
     ): Promise<boolean> {
+        const jwtVerifyOptions = {
+            algorithms: algorithms,
+            audience: clientID,
+            clockTolerance: clockTolerance,
+            subject: subject
+        }
+
+        if (validateJwtIssuer ?? true) {
+            jwtVerifyOptions["issuer"] = issuer
+        }
+
         return jwtVerify(
             idToken,
             createLocalJWKSet({
                 keys: [jwk]
             }),
-            {
-                algorithms: algorithms,
-                audience: clientID,
-                clockTolerance: clockTolerance,
-                issuer: issuer,
-                subject: subject
-            }
+            jwtVerifyOptions
         ).then(() => {
             return Promise.resolve(true);
         }).catch((error) => {
