@@ -521,9 +521,10 @@ export class AuthenticationHelper<
     }
 
     public async trySignInSilently(
-        constructSilentSignInUrl: () => Promise<string>,
+        constructSilentSignInUrl: (additionalParams?: Record<string, string | boolean>) => Promise<string>,
         requestAccessToken: (authzCode: string, sessionState: string, state: string) => Promise<BasicUserInfo>,
-        sessionManagementHelper: SessionManagementHelperInterface
+        sessionManagementHelper: SessionManagementHelperInterface,
+        additionalParams?: Record<string, string | boolean>
     ): Promise<BasicUserInfo | boolean> {
 
         // This block is executed by the iFrame when the server redirects with the authorization code.
@@ -549,7 +550,7 @@ export class AuthenticationHelper<
         ) as HTMLIFrameElement;
 
         try {
-            const url = await constructSilentSignInUrl();
+            const url = await constructSilentSignInUrl(additionalParams);
 
             promptNoneIFrame.src = url;
         } catch (error) {
