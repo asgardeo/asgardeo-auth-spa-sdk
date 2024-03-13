@@ -315,11 +315,14 @@ export const MainThreadClient = async (
         );
     };
 
-    const constructSilentSignInUrl = async (): Promise<string> => {
+    const constructSilentSignInUrl = async (
+        additionalParams: Record<string, string | boolean> = {}
+    ): Promise<string> => {
         const config = await _dataLayer.getConfigData();
         const urlString: string = await _authenticationClient.getAuthorizationURL({
             prompt: "none",
-            state: SILENT_SIGN_IN_STATE
+            state: SILENT_SIGN_IN_STATE,
+            ...additionalParams
         });
 
         // Replace form_post with query
@@ -346,12 +349,15 @@ export const MainThreadClient = async (
      * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
-    const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
+    const trySignInSilently = async (
+        additionalParams: Record<string, string | boolean> = {}
+    ): Promise<BasicUserInfo | boolean> => {
 
         return await _authenticationHelper.trySignInSilently(
             constructSilentSignInUrl,
             requestAccessToken,
-            _sessionManagementHelper
+            _sessionManagementHelper,
+            additionalParams
         );
     };
 
