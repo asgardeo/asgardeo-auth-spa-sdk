@@ -408,7 +408,9 @@ export class AsgardeoSPAClient {
      * auth.trySignInSilently()
      *```
      */
-    public async trySignInSilently(): Promise<BasicUserInfo | boolean | undefined> {
+    public async trySignInSilently(
+        additionalParams?: Record<string, string | boolean>
+    ): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
 
         // checks if the `signIn` method has been called.
@@ -416,7 +418,7 @@ export class AsgardeoSPAClient {
             return;
         }
 
-        return this._client?.trySignInSilently().then((response: BasicUserInfo | boolean) => {
+        return this._client?.trySignInSilently(additionalParams).then((response: BasicUserInfo | boolean) => {
             if (this._onSignInCallback && response) {
                 const basicUserInfo = response as BasicUserInfo;
                 if (

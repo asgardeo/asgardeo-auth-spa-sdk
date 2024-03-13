@@ -392,12 +392,15 @@ export const WebWorkerClient = async (
         );
     };
 
-    const constructSilentSignInUrl = async (): Promise<string> => {
+    const constructSilentSignInUrl = async (
+        additionalParams: Record<string, string | boolean> = {}
+    ): Promise<string> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
         const message: Message<GetAuthURLConfig> = {
             data: {
                 prompt: "none",
-                state: SILENT_SIGN_IN_STATE
+                state: SILENT_SIGN_IN_STATE,
+                ...additionalParams
             },
             type: GET_AUTH_URL
         };
@@ -427,11 +430,14 @@ export const WebWorkerClient = async (
      * @return {Promise<BasicUserInfo|boolean} Returns a Promise that resolves with the BasicUserInfo
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
-    const trySignInSilently = async (): Promise<BasicUserInfo | boolean> => {
+    const trySignInSilently = async (
+        additionalParams: Record<string, string | boolean> = {}
+    ): Promise<BasicUserInfo | boolean> => {
         return await _authenticationHelper.trySignInSilently(
             constructSilentSignInUrl,
             requestAccessToken,
-            _sessionManagementHelper
+            _sessionManagementHelper,
+            additionalParams
         );
     };
 
