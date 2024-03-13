@@ -1,11 +1,11 @@
 {
     "name": "@asgardeo/spa-java-webapp",
-    "version": "0.4.14",
+    "version": "0.4.15",
     "description": "A sample java web app demonstrating OIDC authentication using Asgardeo's SDK",
     "main": "index.js",
     "scripts": {},
     "dependencies": {
-        "@asgardeo/auth-spa": "^0.4.14"
+        "@asgardeo/auth-spa": "^0.4.15"
     },
     "author": "Asgardeo",
     "license": "Apache-2.0"
