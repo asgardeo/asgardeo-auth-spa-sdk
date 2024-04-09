@@ -33,6 +33,13 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
           MainThreadClientConfig | WebWorkerClientConfig
         >
       ): Promise<void> {
+        const shouldRefreshAutomatically: boolean = (await this._dataLayer.getConfigData())?.periodicTokenRefresh ?? 
+            false;
+        
+        if (!shouldRefreshAutomatically) {
+            return;
+        }
+
         const sessionData = await this._dataLayer.getSessionData();
         if (sessionData.refresh_token) {
             // Refresh 10 seconds before the expiry time
