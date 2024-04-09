@@ -31,6 +31,7 @@ export interface SPAConfig {
     sessionRefreshInterval?: number;
     resourceServerURLs?: string[];
     authParams?: Record<string, string>
+    periodicTokenRefresh?: boolean;
 }
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020-2024, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -17,13 +17,23 @@
  */
 
 import { AxiosRequestConfig } from "axios";
-import { HttpError, HttpResponse } from ".";
+import { HttpClientInstance, HttpError, HttpResponse } from ".";
+import { SPACustomGrantConfig } from "..";
 
 export interface HttpClient {
     requestStartCallback: () => void;
     requestSuccessCallback: (response: HttpResponse) => void;
     requestErrorCallback: (error: HttpError) => void | Promise<void>;
     requestFinishCallback: () => void;
+}
+
+export interface HttpRequestInterface {
+    httpClient: HttpClientInstance,
+    requestConfig: HttpRequestConfig,
+    isHttpHandlerEnabled?: boolean,
+    httpErrorCallback?: (error: HttpError) => void | Promise<void>,
+    httpFinishCallback?: () => void,
+    enableRetrievingSignOutURLFromSession?: (config: SPACustomGrantConfig) => void
 }
 
 export interface HttpRequestConfig extends AxiosRequestConfig {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020-2024, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -215,4 +215,19 @@ export class SPAUtils {
 
         await new Promise((resolve) => setTimeout(resolve, timeToWait * 1000));
     }
+
+    /**
+     * Waits for a condition before executing the rest of the code in non-blocking manner.
+     *
+     * @param condition {() => boolean} - Condition to be checked.
+     * @param timeout {number} - Time in miliseconds.
+     */
+    public static until = (
+        condition: () => boolean,
+        timeout: number = 500
+    ) => {
+        const poll = (done) => (condition() ? done() : setTimeout(() => poll(done), timeout));
+
+        return new Promise(poll);
+    };
 }

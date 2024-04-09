@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022-2024, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -49,6 +49,7 @@ import {
     HttpClientInstance,
     HttpError,
     HttpRequestConfig,
+    HttpRequestInterface,
     HttpResponse,
     MainThreadClientConfig,
     Message,
@@ -65,6 +66,7 @@ export class AuthenticationHelper<
     protected _dataLayer: DataLayer<T>;
     protected _spaHelper: SPAHelper<T>;
     protected _instanceID: number;
+    protected _isTokenRefreshing: boolean;
 
     public constructor(
         authClient: AsgardeoAuthClient<T>,
@@ -74,6 +76,7 @@ export class AuthenticationHelper<
         this._dataLayer = this._authenticationClient.getDataLayer();
         this._spaHelper = spaHelper;
         this._instanceID = this._authenticationClient.getInstanceID();
+        this._isTokenRefreshing = false;
     }
 
     public enableHttpHandler(httpClient: HttpClientInstance): void {
@@ -199,6 +202,34 @@ export class AuthenticationHelper<
         }
     }
 
+    protected async retryFailedRequests (failedRequest: HttpRequestInterface): Promise<HttpResponse> {
+        const httpClient = failedRequest.httpClient;
+        const requestConfig = failedRequest.requestConfig;
+        const isHttpHandlerEnabled = failedRequest.isHttpHandlerEnabled;
+        const httpErrorCallback = failedRequest.httpErrorCallback;
+        const httpFinishCallback = failedRequest.httpFinishCallback;
+
+        // Wait until the token is refreshed.
+        await SPAUtils.until(() => !this._isTokenRefreshing);
+
+        try {
+            const httpResponse = await httpClient.request(requestConfig);
+
+            return Promise.resolve(httpResponse);
+        } catch (error: any) {
+            if (isHttpHandlerEnabled) {
+                if (typeof httpErrorCallback === "function") {
+                    await httpErrorCallback(error);
+                }
+                if (typeof httpFinishCallback === "function") {
+                    httpFinishCallback();
+                }
+            }
+
+            return Promise.reject(error);
+        }
+    }
+
     public async httpRequest(
         httpClient: HttpClientInstance,
         requestConfig: HttpRequestConfig,
@@ -229,13 +260,29 @@ export class AuthenticationHelper<
                 })
                 .catch(async (error: HttpError) => {
                     if (error?.response?.status === 401 || !error?.response) {
+                        if (this._isTokenRefreshing) {
+                            return this.retryFailedRequests({
+                                enableRetrievingSignOutURLFromSession,
+                                httpClient,
+                                httpErrorCallback,
+                                httpFinishCallback,
+                                isHttpHandlerEnabled,
+                                requestConfig
+                            });
+                        }
+                        
+                        this._isTokenRefreshing = true;
                         // Try to refresh the token
                         let refreshAccessTokenResponse: BasicUserInfo;
                         try {
                             refreshAccessTokenResponse = await this.refreshAccessToken(
                                 enableRetrievingSignOutURLFromSession
                             );
+
+                            this._isTokenRefreshing = false;
                         } catch (refreshError: any) {
+                            this._isTokenRefreshing = false;
+
                             if (isHttpHandlerEnabled) {
                                 if (typeof httpErrorCallback === "function") {
                                     await httpErrorCallback({
