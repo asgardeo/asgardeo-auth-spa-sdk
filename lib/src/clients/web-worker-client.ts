@@ -608,35 +608,31 @@ export const WebWorkerClient = async (
      * @returns {Promise<boolean>} A promise that resolves when sign out is completed.
      */
     const signOut = (): Promise<boolean> => {
-        return isAuthenticated()
-            .then(async (response: boolean) => {
-                if (response && !_getSignOutURLFromSessionStorage) {
-                    const message: Message<null> = {
-                        type: SIGN_OUT
-                    };
+        return new Promise((resolve, reject) => {
+            if (!_getSignOutURLFromSessionStorage) {
+                const message: Message<null> = {
+                    type: SIGN_OUT
+                };
 
-                    return communicate<null, string>(message)
-                        .then(async (response) => {
-                            window.location.href = response;
+                return communicate<null, string>(message)
+                    .then(async (response) => {
+                        window.location.href = response;
 
-                            await SPAUtils.waitTillPageRedirect();
+                        await SPAUtils.waitTillPageRedirect();
 
-                            return Promise.resolve(true);
-                        })
-                        .catch((error) => {
-                            return Promise.reject(error);
-                        });
-                } else {
-                    window.location.href = SPAUtils.getSignOutURL(config.clientID, instanceID);
+                        return resolve(true);
+                    })
+                    .catch((error) => {
+                        return reject(error);
+                    });
+            } else {
+                window.location.href = SPAUtils.getSignOutURL(config.clientID, instanceID);
 
-                    await SPAUtils.waitTillPageRedirect();
-
+                SPAUtils.waitTillPageRedirect().then(() => {
                     return Promise.resolve(true);
-                }
-            })
-            .catch((error) => {
-                return Promise.reject(error);
-            });
+                });
+            }
+        })
     };
 
     /**
