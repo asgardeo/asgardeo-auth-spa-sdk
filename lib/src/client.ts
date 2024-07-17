@@ -134,8 +134,10 @@ export class AsgardeoSPAClient {
     }
 
     /**
-     *  This method checks if the SDK is initialized and the user is authenticated.
-     *
+     * This method checks if the SDK is initialized and the user is authenticated.
+     * 
+     * @param validateAuthentication - should user's authenticated status be checked as part of validation
+     * 
      * @return {Promise<boolean>} - A Promise that resolves with `true` if the SDK is initialized and the
      * user is authenticated.
      *
@@ -917,7 +919,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async refreshAccessToken(): Promise<BasicUserInfo | undefined> {
-        await this._validateMethod();
+        await this._validateMethod(false);
 
         return this._client?.refreshAccessToken();
     }
