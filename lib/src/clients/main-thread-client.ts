@@ -188,12 +188,16 @@ export const MainThreadClient = async (
         signInConfig?: GetAuthURLConfig,
         authorizationCode?: string,
         sessionState?: string,
-        state?: string
+        state?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo> => {
 
         const basicUserInfo =  await _authenticationHelper.handleSignIn(
             shouldStopAuthn,
-            checkSession
+            checkSession,
+            undefined
         );
 
         if(basicUserInfo) {
@@ -217,7 +221,8 @@ export const MainThreadClient = async (
 
             if (resolvedAuthorizationCode && resolvedState) {
                 setSessionStatus("true");
-                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
+                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState,
+                    resolvedState, tokenRequestConfig);
             }
 
             return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -304,14 +309,18 @@ export const MainThreadClient = async (
     const requestAccessToken = async (
         resolvedAuthorizationCode: string,
         resolvedSessionState: string,
-        resolvedState: string
+        resolvedState: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }   
     ): Promise<BasicUserInfo> => {
         return await _authenticationHelper.requestAccessToken(
             resolvedAuthorizationCode,
             resolvedSessionState,
             checkSession,
             undefined,
-            resolvedState
+            resolvedState,
+            tokenRequestConfig
         );
     };
 

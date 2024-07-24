@@ -471,7 +471,10 @@ export class AuthenticationHelper<
         sessionState?: string,
         checkSession?: () => Promise<void>,
         pkce?: string,
-        state?: string
+        state?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo> {
         const config = await this._dataLayer.getConfigData();
 
@@ -490,7 +493,7 @@ export class AuthenticationHelper<
 
         if (authorizationCode) {
             return this._authenticationClient
-                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "")
+                .requestAccessToken(authorizationCode, sessionState ?? "", state ?? "", undefined, tokenRequestConfig)
                 .then(async () => {
                     // Disable this temporarily
                     /* if (config.storage === Storage.BrowserMemory) {
