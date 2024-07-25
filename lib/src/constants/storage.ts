@@ -34,3 +34,5 @@ export enum Storage {
     WebWorker = "webWorker",
     BrowserMemory = "browserMemory"
 }
+
+export const TOKEN_REQUEST_CONFIG_KEY = "token_request_config";

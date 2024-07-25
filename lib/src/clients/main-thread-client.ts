@@ -36,7 +36,8 @@ import {
 } from "@asgardeo/auth-js";
 import {
     SILENT_SIGN_IN_STATE,
-    Storage
+    Storage,
+    TOKEN_REQUEST_CONFIG_KEY
 } from "../constants";
 import { AuthenticationHelper, SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
@@ -206,6 +207,9 @@ export const MainThreadClient = async (
             let resolvedAuthorizationCode: string;
             let resolvedSessionState: string;
             let resolvedState: string;
+            let resolvedTokenRequestConfig: {
+                params: Record<string, unknown>
+            } = { params: {} };
 
             if (config?.responseMode === ResponseMode.formPost && authorizationCode) {
                 resolvedAuthorizationCode = authorizationCode;
@@ -221,8 +225,12 @@ export const MainThreadClient = async (
 
             if (resolvedAuthorizationCode && resolvedState) {
                 setSessionStatus("true");
+                const storedTokenRequestConfig = await _dataLayer.getTemporaryDataParameter(TOKEN_REQUEST_CONFIG_KEY);
+                if (storedTokenRequestConfig && typeof storedTokenRequestConfig === "string") {
+                    resolvedTokenRequestConfig = JSON.parse(storedTokenRequestConfig);
+                }
                 return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState,
-                    resolvedState, tokenRequestConfig);
+                    resolvedState, resolvedTokenRequestConfig);
             }
 
             return _authenticationClient.getAuthorizationURL(signInConfig).then(async (url: string) => {
@@ -230,6 +238,10 @@ export const MainThreadClient = async (
                     const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
 
                     SPAUtils.setPKCE(pkceKey, (await _authenticationClient.getPKCECode(resolvedState)) as string);
+                }
+
+                if (tokenRequestConfig) {
+                    _dataLayer.setTemporaryDataParameter(TOKEN_REQUEST_CONFIG_KEY, JSON.stringify(tokenRequestConfig));
                 }
 
                 location.href = url;
