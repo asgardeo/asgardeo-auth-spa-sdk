@@ -372,7 +372,10 @@ export class AsgardeoSPAClient {
         config?: SignInConfig,
         authorizationCode?: string,
         sessionState?: string,
-        state?: string
+        state?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo | undefined> {
         await this._isInitialized();
 
@@ -384,15 +387,16 @@ export class AsgardeoSPAClient {
 
         delete config?.callOnlyOnRedirect;
 
-        return this._client?.signIn(config, authorizationCode, sessionState, state).then((response: BasicUserInfo) => {
-            if (this._onSignInCallback) {
-                if (response.allowedScopes || response.displayName || response.email || response.username) {
-                    this._onSignInCallback(response);
+        return this._client?.signIn(config, authorizationCode, sessionState, state, tokenRequestConfig)
+            .then((response: BasicUserInfo) => {
+                if (this._onSignInCallback) {
+                    if (response.allowedScopes || response.displayName || response.email || response.username) {
+                        this._onSignInCallback(response);
+                    }
                 }
-            }
 
-            return response;
-        });
+                return response;
+            });
     }
 
     /**

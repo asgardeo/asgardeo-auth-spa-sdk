@@ -50,7 +50,10 @@ export interface MainThreadClientInterface {
         config?: SignInConfig,
         authorizationCode?: string,
         sessionState?: string,
-        signInRedirectURL?: string
+        signInRedirectURL?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<boolean>;
     requestCustomGrant(config: CustomGrantConfig): Promise<BasicUserInfo | FetchResponse>;
@@ -80,7 +83,10 @@ export interface WebWorkerClientInterface {
         params?: SignInConfig,
         authorizationCode?: string,
         sessionState?: string,
-        signInRedirectURL?: string
+        signInRedirectURL?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo>;
     signOut(signOutRedirectURL?: string): Promise<boolean>;
     revokeAccessToken(): Promise<boolean>;

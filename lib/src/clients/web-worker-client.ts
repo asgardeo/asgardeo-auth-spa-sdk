@@ -473,7 +473,10 @@ export const WebWorkerClient = async (
     const requestAccessToken = async (
         resolvedAuthorizationCode: string,
         resolvedSessionState: string,
-        resolvedState: string
+        resolvedState: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo> => {
         const config: AuthClientConfig<WebWorkerClientConfig> = await getConfigData();
         const pkceKey: string = AuthenticationUtils.extractPKCEKeyFromStateParam(resolvedState);
@@ -483,7 +486,8 @@ export const WebWorkerClient = async (
                 code: resolvedAuthorizationCode,
                 pkce: config.enablePKCE ? SPAUtils.getPKCE(pkceKey) : undefined,
                 sessionState: resolvedSessionState,
-                state: resolvedState
+                state: resolvedState,
+                tokenRequestConfig
             },
             type: REQUEST_ACCESS_TOKEN
         };
@@ -548,7 +552,10 @@ export const WebWorkerClient = async (
         params?: GetAuthURLConfig,
         authorizationCode?: string,
         sessionState?: string,
-        state?: string
+        state?: string,
+        tokenRequestConfig?: {
+            params: Record<string, unknown>
+        }
     ): Promise<BasicUserInfo> => {
 
         const basicUserInfo =  await _authenticationHelper.handleSignIn(
@@ -577,7 +584,8 @@ export const WebWorkerClient = async (
             }
 
             if (resolvedAuthorizationCode && resolvedState) {
-                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState, resolvedState);
+                return requestAccessToken(resolvedAuthorizationCode, resolvedSessionState,
+                    resolvedState, tokenRequestConfig);
             }
 
             return getAuthorizationURL(params)

@@ -70,6 +70,9 @@ export interface AuthorizationInfo {
     sessionState: string;
     pkce?: string;
     state: string;
+    tokenRequestConfig?: {
+        params: Record<string, unknown>
+    }
 }
 
 export type MessageType =
