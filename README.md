@@ -334,7 +334,7 @@ auth.getBasicUserInfo().then((response) => {
 ### signIn
 
 ```typescript
-signIn(config?: SignInConfig, authorizationCode?: string, sessionState?: string);
+signIn(config?: SignInConfig, authorizationCode?: string, sessionState?: string, tokenRequestConfig?: { params: Record<string, unknown> });
 ```
 
 #### Arguments
@@ -346,6 +346,15 @@ signIn(config?: SignInConfig, authorizationCode?: string, sessionState?: string)
    The `signIn` method can be passed the authorization code as an argument, which will be used to obtain the token during the token-request phase of the method. This allows developers to use different response modes such as `form_post`. To learn more about the `form_post` method refer to the [Using the `form_post` response mode](#Using-the-form_post-response-mode) section. If you're using the `query` method, then the `signIn` method automatically obtains the authorization code from the URL.
 3. sessionState?: `string` (optional)
    The `signIn` method can be passed the session state as an argument, which will be used to obtain the token during the token-request phase of the method. This allows developers to use different response modes such as `form_post`. To learn more about the `form_post` method refer to the [Using the `form_post` response mode](#Using-the-form_post-response-mode) section. If you're using the `query` method, then the `signIn` method automatically obtains the session state from the URL.
+4. tokenRequestConfig?: `object` (optional)
+    An optional configuration object that allows you to augment the token request.
+    - `params` (Mandatory): Key-value pairs to be sent as additional parameters in the token request payload.
+
+       ```TypeScript
+       tokenRequestConfig: {
+           params: Record<string, unknown>
+       }
+       ```
 
 #### Description
 
