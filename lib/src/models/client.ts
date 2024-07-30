@@ -68,7 +68,9 @@ export interface MainThreadClientInterface {
     getDataLayer(): Promise<DataLayer<MainThreadClientConfig>>;
     isAuthenticated(): Promise<boolean>;
     updateConfig(config: Partial<AuthClientConfig<MainThreadClientConfig>>): Promise<void>;
-    trySignInSilently(additionalParams?: Record<string, string | boolean>): Promise<BasicUserInfo | boolean>;
+    trySignInSilently(additionalParams?: Record<string, string | boolean>,
+        tokenRequestConfig?: { params: Record<string, unknown> }
+    ): Promise<BasicUserInfo | boolean>;
     isSessionActive(): Promise<boolean>;
 }
 
@@ -103,5 +105,6 @@ export interface WebWorkerClientInterface {
     setHttpRequestFinishCallback(callback: () => void): void;
     refreshAccessToken(): Promise<BasicUserInfo>;
     updateConfig(config: Partial<AuthClientConfig<WebWorkerClientConfig>>): Promise<void>;
-    trySignInSilently(additionalParams?: Record<string, string | boolean>): Promise<BasicUserInfo | boolean>;
+    trySignInSilently(additionalParams?: Record<string, string | boolean>,
+        tokenRequestConfig?: { params: Record<string, unknown> }): Promise<BasicUserInfo | boolean>;
 }

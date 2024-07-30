@@ -416,7 +416,8 @@ export class AsgardeoSPAClient {
      *```
      */
     public async trySignInSilently(
-        additionalParams?: Record<string, string | boolean>
+        additionalParams?: Record<string, string | boolean>,
+        tokenRequestConfig?: { params: Record<string, unknown> }
     ): Promise<BasicUserInfo | boolean | undefined> {
         await this._isInitialized();
 
@@ -425,21 +426,22 @@ export class AsgardeoSPAClient {
             return;
         }
 
-        return this._client?.trySignInSilently(additionalParams).then((response: BasicUserInfo | boolean) => {
-            if (this._onSignInCallback && response) {
-                const basicUserInfo = response as BasicUserInfo;
-                if (
-                    basicUserInfo.allowedScopes ||
-                    basicUserInfo.displayName ||
-                    basicUserInfo.email ||
-                    basicUserInfo.username
-                ) {
-                    this._onSignInCallback(basicUserInfo);
+        return this._client?.trySignInSilently(additionalParams, tokenRequestConfig)
+            .then((response: BasicUserInfo | boolean) => {
+                if (this._onSignInCallback && response) {
+                    const basicUserInfo = response as BasicUserInfo;
+                    if (
+                        basicUserInfo.allowedScopes ||
+                        basicUserInfo.displayName ||
+                        basicUserInfo.email ||
+                        basicUserInfo.username
+                    ) {
+                        this._onSignInCallback(basicUserInfo);
+                    }
                 }
-            }
 
-            return response;
-        });
+                return response;
+            });
     }
 
     /**

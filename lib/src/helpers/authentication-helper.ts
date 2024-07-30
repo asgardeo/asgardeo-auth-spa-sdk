@@ -540,9 +540,11 @@ export class AuthenticationHelper<
 
     public async trySignInSilently(
         constructSilentSignInUrl: (additionalParams?: Record<string, string | boolean>) => Promise<string>,
-        requestAccessToken: (authzCode: string, sessionState: string, state: string) => Promise<BasicUserInfo>,
+        requestAccessToken: (authzCode: string, sessionState: string, state: string, 
+            tokenRequestConfig?: { params: Record<string, unknown> }) => Promise<BasicUserInfo>,
         sessionManagementHelper: SessionManagementHelperInterface,
-        additionalParams?: Record<string, string | boolean>
+        additionalParams?: Record<string, string | boolean>,
+        tokenRequestConfig?: { params: Record<string, unknown> }
     ): Promise<BasicUserInfo | boolean> {
 
         // This block is executed by the iFrame when the server redirects with the authorization code.
@@ -590,7 +592,8 @@ export class AuthenticationHelper<
                 }
 
                 if (data?.type == CHECK_SESSION_SIGNED_IN && data?.data?.code) {
-                    requestAccessToken(data?.data?.code, data?.data?.sessionState, data?.data?.state)
+                    requestAccessToken(data?.data?.code, data?.data?.sessionState,
+                            data?.data?.state, tokenRequestConfig)
                         .then((response: BasicUserInfo) => {
                             window.removeEventListener("message", listenToPromptNoneIFrame);
                             resolve(response);
