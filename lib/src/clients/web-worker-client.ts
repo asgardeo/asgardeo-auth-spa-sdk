@@ -431,13 +431,15 @@ export const WebWorkerClient = async (
      * if the user is signed in or with `false` if there is no active user session in the server.
      */
     const trySignInSilently = async (
-        additionalParams: Record<string, string | boolean> = {}
+        additionalParams?: Record<string, string | boolean>,
+        tokenRequestConfig?: { params: Record<string, unknown> }
     ): Promise<BasicUserInfo | boolean> => {
         return await _authenticationHelper.trySignInSilently(
             constructSilentSignInUrl,
             requestAccessToken,
             _sessionManagementHelper,
-            additionalParams
+            additionalParams,
+            tokenRequestConfig
         );
     };
 
