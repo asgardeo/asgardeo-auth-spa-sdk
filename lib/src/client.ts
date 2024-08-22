@@ -510,7 +510,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async httpRequest(config: HttpRequestConfig): Promise<HttpResponse | undefined> {
-        await this._validateMethod(config.attachToken);
+        await this._validateMethod(false);
 
         return this._client?.httpRequest(config);
     }
@@ -563,7 +563,7 @@ export class AsgardeoSPAClient {
      * @preserve
      */
     public async httpRequestAll(config: HttpRequestConfig[]): Promise<HttpResponse[] | undefined> {
-        await this._validateMethod();
+        await this._validateMethod(false);
 
         return this._client?.httpRequestAll(config);
     }
