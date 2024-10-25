@@ -1,6 +1,6 @@
 {
     "name": "@asgardeo/spa-html-js-app",
-    "version": "3.1.2",
+    "version": "3.1.3",
     "description": "HTML Javascript Authentication Sample using Asgardeo OIDC JS SDK",
     "main": "index.js",
     "keywords": [
