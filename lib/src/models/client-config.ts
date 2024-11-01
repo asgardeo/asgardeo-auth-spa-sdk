@@ -32,6 +32,7 @@ export interface SPAConfig {
     resourceServerURLs?: string[];
     authParams?: Record<string, string>
     periodicTokenRefresh?: boolean;
+    autoLogoutOnTokenRefreshError?: boolean;
 }
 
 /**

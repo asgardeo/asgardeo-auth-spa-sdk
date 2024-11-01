@@ -51,6 +51,7 @@ import { SPAUtils } from "./utils";
  * Default configurations.
  */
 const DefaultConfig: Partial<AuthClientConfig<Config>> = {
+    autoLogoutOnTokenRefreshError: true,
     checkSessionInterval: 3,
     clientHost: origin,
     enableOIDCSessionManagement: false,
@@ -241,12 +242,15 @@ export class AsgardeoSPAClient {
         workerFile && this.instantiateWorker(workerFile);
 
         if (!(this._storage === Storage.WebWorker)) {
+            const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
+            const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
+            const mergedConfig: AuthClientConfig<MainThreadClientConfig> = { 
+                ...defaultConfig, ...mainThreadClientConfig };
+
             if (!this._client) {
-                const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
-                const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
                 this._client = await MainThreadClient(
                     this._instanceID,
-                    { ...defaultConfig, ...mainThreadClientConfig },
+                    mergedConfig,
                     (
                         authClient: AsgardeoAuthClient<MainThreadClientConfig>,
                         spaHelper: SPAHelper<MainThreadClientConfig>
@@ -261,7 +265,12 @@ export class AsgardeoSPAClient {
             if (this._onInitialize) {
                 this._onInitialize(true);
             }
-
+            
+            // Do not sign out the user if the autoLogoutOnTokenRefreshError is set to false.
+            if (!mergedConfig.autoLogoutOnTokenRefreshError) {                
+                return Promise.resolve(true);
+            }
+            
             window.addEventListener("message", (event) => {
                 if (event?.data?.type === REFRESH_ACCESS_TOKEN_ERR0R) {
                     this.signOut();
