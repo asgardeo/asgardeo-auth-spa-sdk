@@ -30,6 +30,7 @@
     -   [requestCustomGrant](#requestcustomgrant)
     -   [revokeAccessToken](#revokeaccesstoken)
     -   [getOIDCServiceEndpoints](#getoidcserviceendpoints)
+    -   [getConfigData](#getConfigData)
     -   [getDecodedIDToken](#getdecodedidtoken)
     -   [getIDToken](#getidtoken)
     -   [getCryptoHelper](#getcryptohelper)
@@ -622,6 +623,28 @@ auth.getOIDCServiceEndpoints().then((endpoints) => {
 }).error((error) => {
     // console.error(error);
 });
+```
+
+---
+
+### getConfigData
+
+```typescript
+getConfigData(): AuthClientConfig<Config>
+```
+
+#### Returns
+
+An object containing the SDK configurations set in the storage.
+
+##### Description
+
+This method returns the SDK configurations set in the storage of type `AuthClientConfig<Config>`.
+
+#### Example
+
+```TypeScript
+const config = auth.getConfigData();
 ```
 
 ---

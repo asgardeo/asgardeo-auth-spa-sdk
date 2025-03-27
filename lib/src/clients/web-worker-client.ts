@@ -841,6 +841,7 @@ export const WebWorkerClient = async (
         disableHttpHandler,
         enableHttpHandler,
         getBasicUserInfo,
+        getConfigData,
         getCryptoHelper,
         getDecodedIDPIDToken,
         getDecodedIDToken,

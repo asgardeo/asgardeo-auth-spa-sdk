@@ -412,6 +412,10 @@ export const MainThreadClient = async (
         return _authenticationHelper.getDataLayer();
     };
 
+    const getConfigData = async (): Promise<AuthClientConfig<MainThreadClientConfig>> => {
+        return await _dataLayer.getConfigData();
+    };
+
     const isAuthenticated = async (): Promise<boolean> => {
         return _authenticationHelper.isAuthenticated();
     };
@@ -447,6 +451,7 @@ export const MainThreadClient = async (
         enableHttpHandler,
         getAccessToken,
         getBasicUserInfo,
+        getConfigData,
         getCryptoHelper,
         getDataLayer,
         getDecodedIDToken,

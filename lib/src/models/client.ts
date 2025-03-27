@@ -62,6 +62,7 @@ export interface MainThreadClientInterface {
     getBasicUserInfo(): Promise<BasicUserInfo>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
     getCryptoHelper(): Promise<CryptoHelper>;
+    getConfigData(): Promise<AuthClientConfig<MainThreadClientConfig>>;
     getIDToken(): Promise<string>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getAccessToken(): Promise<string>;
@@ -94,6 +95,7 @@ export interface WebWorkerClientInterface {
     revokeAccessToken(): Promise<boolean>;
     getOIDCServiceEndpoints(): Promise<OIDCEndpoints>;
     getBasicUserInfo(): Promise<BasicUserInfo>;
+    getConfigData(): Promise<AuthClientConfig<WebWorkerClientConfig>>;
     getDecodedIDToken(): Promise<DecodedIDTokenPayload>;
     getDecodedIDPIDToken(): Promise<DecodedIDTokenPayload>;
     getCryptoHelper(): Promise<CryptoHelper>;
