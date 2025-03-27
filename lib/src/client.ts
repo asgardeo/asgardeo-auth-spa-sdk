@@ -241,13 +241,20 @@ export class AsgardeoSPAClient {
         authHelper && this.instantiateAuthHelper(authHelper);
         workerFile && this.instantiateWorker(workerFile);
 
+        const _config = await this._client?.getConfigData();
+
         if (!(this._storage === Storage.WebWorker)) {
             const mainThreadClientConfig = config as AuthClientConfig<MainThreadClientConfig>;
             const defaultConfig = { ...DefaultConfig } as Partial<AuthClientConfig<MainThreadClientConfig>>;
             const mergedConfig: AuthClientConfig<MainThreadClientConfig> = { 
                 ...defaultConfig, ...mainThreadClientConfig };
 
-            if (!this._client) {
+            // If the client is not initialized, initialize it as usual.
+            // NOTE: With React 19 strict mode, the initialization logic runs twice, and there's an intermittent
+            // issue where the config object is not getting stored in the storage layer with Vite scaffolding.
+            // Hence, we need to check if the client is initialized but the config object is empty, and reinitialize.
+            // Tracker: https://github.com/asgardeo/asgardeo-auth-react-sdk/issues/240
+            if (!this._client || (this._client && (!_config || Object.keys(_config)?.length === 0))) {
                 this._client = await MainThreadClient(
                     this._instanceID,
                     mergedConfig,
@@ -279,7 +286,12 @@ export class AsgardeoSPAClient {
 
             return Promise.resolve(true);
         } else {
-            if (!this._client) {
+            // If the client is not initialized, initialize it as usual.
+            // NOTE: With React 19 strict mode, the initialization logic runs twice, and there's an intermittent
+            // issue where the config object is not getting stored in the storage layer with Vite scaffolding.
+            // Hence, we need to check if the client is initialized but the config object is empty, and reinitialize.
+            // Tracker: https://github.com/asgardeo/asgardeo-auth-react-sdk/issues/240
+            if (!this._client|| (this._client && (!_config || Object.keys(_config)?.length === 0))) {
                 const webWorkerClientConfig = config as AuthClientConfig<WebWorkerClientConfig>;
                 this._client = (await WebWorkerClient(
                     this._instanceID,
@@ -910,6 +922,34 @@ export class AsgardeoSPAClient {
         const mainThreadClient = this._client as MainThreadClientInterface;
 
         return mainThreadClient.getDataLayer();
+    }
+
+    /**
+     * This method return a Promise that resolves with the config data stored in the storage.
+     *
+     * @return - A Promise that resolves with the config data.
+     *
+     * @example
+     * ```
+     * auth.getConfigData().then((configData) => {
+     *     // console.log(configData);
+     * }).catch((error) => {
+     *    // console.error(error);
+     * });
+     * ```
+     *
+     * @link https://github.com/asgardeo/asgardeo-auth-spa-sdk/tree/main#getConfigData
+     *
+     * @memberof AsgardeoSPAClient
+     *
+     * @preserve
+     */
+    public async getConfigData(): Promise<
+        | AuthClientConfig<MainThreadClientConfig>
+        | AuthClientConfig<WebWorkerClientConfig>
+        | undefined
+    > {
+        return this._client?.getConfigData();
     }
 
     /**
