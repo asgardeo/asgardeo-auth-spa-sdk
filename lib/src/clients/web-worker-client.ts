@@ -61,7 +61,6 @@ import {
     SIGN_OUT,
     SILENT_SIGN_IN_STATE,
     START_AUTO_REFRESH_TOKEN,
-    Storage,
     UPDATE_CONFIG
 } from "../constants";
 import { AuthenticationHelper, SPAHelper, SessionManagementHelper } from "../helpers";
@@ -78,6 +77,7 @@ import {
     WebWorkerClientInterface
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
+import { Storage } from "../models/storage";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
 import { SPACryptoUtils } from "../utils/crypto-utils";
@@ -115,7 +115,7 @@ export const WebWorkerClient = async (
     let _isHttpHandlerEnabled: boolean = true;
     let _getSignOutURLFromSessionStorage: boolean = false;
 
-    const _store: Store = initiateStore(config.storage);
+    const _store: Store = initiateStore(config.storage as Storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
     const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>();
     await _authenticationClient.initialize(config, _store, _cryptoUtils, instanceID);
@@ -135,7 +135,7 @@ export const WebWorkerClient = async (
                 return SPAUtils.getSignOutURL(config.clientID, instanceID);
             }
         },
-        config.storage,
+        config.storage as Storage,
         (sessionState: string) => setSessionState(sessionState)
     );
 

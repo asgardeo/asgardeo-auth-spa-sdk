@@ -27,10 +27,10 @@ import {
     SET_SESSION_STATE_FROM_IFRAME,
     SILENT_SIGN_IN_STATE,
     STATE,
-    STATE_QUERY,
-    Storage
+    STATE_QUERY
 } from "../constants";
 import { AuthorizationInfo, Message, SessionManagementHelperInterface } from "../models";
+import { Storage } from "../models/storage";
 import { SPAUtils } from "../utils";
 
 export const SessionManagementHelper = (() => {

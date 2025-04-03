@@ -16,23 +16,4 @@
  * under the License.
  */
 
-/**
- * Specifies where the session information should be stored.
- */
-export enum Storage {
-    /**
-     * Stores the session information in the local storage
-     */
-    LocalStorage = "localStorage",
-    /**
-     * Store the session information in the session storage.
-     */
-    SessionStorage = "sessionStorage",
-    /**
-     * Store the session information in the web worker.
-     */
-    WebWorker = "webWorker",
-    BrowserMemory = "browserMemory"
-}
-
 export const TOKEN_REQUEST_CONFIG_KEY = "token_request_config";
