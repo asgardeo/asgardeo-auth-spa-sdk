@@ -32,6 +32,9 @@ export enum Storage {
      * Store the session information in the web worker.
      */
     WebWorker = "webWorker",
+    /**
+     * Store the session information in the browser memory.
+     */
     BrowserMemory = "browserMemory"
 }
 

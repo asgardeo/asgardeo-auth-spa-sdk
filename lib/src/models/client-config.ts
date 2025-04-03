@@ -39,11 +39,26 @@ export interface SPAConfig {
  * SDK Client config parameters.
  */
 export interface MainThreadClientConfig extends SPAConfig {
-    storage?: Storage.SessionStorage | Storage.LocalStorage | Storage.BrowserMemory;
+    /**
+     * The storage type to be used for storing the session information.
+     */
+    storage?:
+        | Storage.SessionStorage
+        | Storage.LocalStorage
+        | Storage.BrowserMemory
+        | "sessionStorage"
+        | "localStorage"
+        | "browserMemory";
 }
 
 export interface WebWorkerClientConfig  extends SPAConfig {
-    storage: Storage.WebWorker;
+    /**
+     * The storage type to be used for storing the session information.
+     */
+    storage: Storage.WebWorker | "webWorker";
+    /**
+     * Specifies in seconds how long a request to the web worker should wait before being timed.
+     */
     requestTimeout?: number;
 }
 
