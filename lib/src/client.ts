@@ -235,7 +235,7 @@ export class AsgardeoSPAClient {
         authHelper?: typeof AuthenticationHelper,
         workerFile?: new () => Worker
     ): Promise<boolean> {
-        this._storage = config.storage ?? Storage.SessionStorage;
+        this._storage = config.storage as Storage ?? Storage.SessionStorage;
         this._initialized = false;
         this._startedInitialize = true;
 

@@ -71,7 +71,7 @@ export const MainThreadClient = async (
         spaHelper: SPAHelper<MainThreadClientConfig>
     ) => AuthenticationHelper<MainThreadClientConfig>
 ): Promise<MainThreadClientInterface> => {
-    const _store: Store = initiateStore(config.storage);
+    const _store: Store = initiateStore(config.storage as Storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
     const _authenticationClient = new AsgardeoAuthClient<MainThreadClientConfig>();
     await _authenticationClient.initialize(config, _store, _cryptoUtils, instanceID);
@@ -82,7 +82,7 @@ export const MainThreadClient = async (
         async () => {
             return _authenticationClient.getSignOutURL();
         },
-        config.storage ?? Storage.SessionStorage,
+        config.storage as Storage ?? Storage.SessionStorage,
         (sessionState: string) => _dataLayer.setSessionDataParameter(SESSION_STATE as keyof SessionData, 
             sessionState ?? "")
     );

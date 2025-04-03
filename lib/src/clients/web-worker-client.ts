@@ -115,7 +115,7 @@ export const WebWorkerClient = async (
     let _isHttpHandlerEnabled: boolean = true;
     let _getSignOutURLFromSessionStorage: boolean = false;
 
-    const _store: Store = initiateStore(config.storage);
+    const _store: Store = initiateStore(config.storage as Storage);
     const _cryptoUtils: SPACryptoUtils = new SPACryptoUtils();
     const _authenticationClient = new AsgardeoAuthClient<WebWorkerClientConfig>();
     await _authenticationClient.initialize(config, _store, _cryptoUtils, instanceID);
@@ -135,7 +135,7 @@ export const WebWorkerClient = async (
                 return SPAUtils.getSignOutURL(config.clientID, instanceID);
             }
         },
-        config.storage,
+        config.storage as Storage,
         (sessionState: string) => setSessionState(sessionState)
     );
 
