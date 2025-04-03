@@ -30,7 +30,7 @@ import {
 } from "@asgardeo/auth-js";
 import WorkerFile from "web-worker:./worker.ts";
 import { MainThreadClient, WebWorkerClient } from "./clients";
-import { Hooks, REFRESH_ACCESS_TOKEN_ERR0R, Storage } from "./constants";
+import { Hooks, REFRESH_ACCESS_TOKEN_ERR0R } from "./constants";
 import { AuthenticationHelper, SPAHelper } from "./helpers";
 import { HttpClientInstance } from "./http-client";
 import {
@@ -45,6 +45,7 @@ import {
     WebWorkerClientConfig,
     WebWorkerClientInterface
 } from "./models";
+import { Storage } from "./models/storage";
 import { SPAUtils } from "./utils";
 
 /**

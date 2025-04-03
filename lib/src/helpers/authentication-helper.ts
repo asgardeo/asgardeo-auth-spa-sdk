@@ -41,8 +41,7 @@ import {
     ERROR_DESCRIPTION,
     PROMPT_NONE_IFRAME,
     REFRESH_ACCESS_TOKEN_ERR0R,
-    RP_IFRAME,
-    Storage
+    RP_IFRAME
 } from "../constants";
 import {
     AuthorizationInfo,
@@ -57,6 +56,7 @@ import {
     WebWorkerClientConfig
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
+import { Storage } from "../models/storage";
 import { SPAUtils } from "../utils";
 
 export class AuthenticationHelper<

@@ -34,11 +34,7 @@ import {
     SessionData,
     Store
 } from "@asgardeo/auth-js";
-import {
-    SILENT_SIGN_IN_STATE,
-    Storage,
-    TOKEN_REQUEST_CONFIG_KEY
-} from "../constants";
+import { SILENT_SIGN_IN_STATE, TOKEN_REQUEST_CONFIG_KEY } from "../constants";
 import { AuthenticationHelper, SPAHelper, SessionManagementHelper } from "../helpers";
 import { HttpClient, HttpClientInstance } from "../http-client";
 import {
@@ -49,6 +45,7 @@ import {
     MainThreadClientInterface
 } from "../models";
 import { SPACustomGrantConfig } from "../models/request-custom-grant";
+import { Storage } from "../models/storage";
 import { LocalStore, MemoryStore, SessionStore } from "../stores";
 import { SPAUtils } from "../utils";
 import { SPACryptoUtils } from "../utils/crypto-utils";
