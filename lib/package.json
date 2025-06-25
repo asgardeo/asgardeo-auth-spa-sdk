@@ -27,7 +27,7 @@
     "dependencies": {
         "@asgardeo/auth-js": "^5.1.1",
         "await-semaphore": "^0.1.3",
-        "axios": "^0.26.0",
+        "axios": "^0.30.0",
         "base64url": "^3.0.1",
         "buffer": "^6.0.3",
         "fast-sha256": "^1.3.0",
