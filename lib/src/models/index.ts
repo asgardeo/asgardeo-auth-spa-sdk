@@ -24,3 +24,4 @@ export * from "./session-management-helper";
 export * from "./client-config";
 export * from "./sign-in";
 export * from "./sign-out-error";
+export * from "./storage";
