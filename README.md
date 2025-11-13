@@ -1,5 +1,13 @@
 # Asgardeo Auth SPA SDK
 
+> [!WARNING]
+> **Deprecation Notice**
+>
+> Asgardeo Auth SPA SDK has been **deprecated** and is **no longer maintained**.  
+> It is now replaced by [**@asgardeo/browser**](https://github.com/asgardeo/javascript/tree/main/packages/browser), which is part of the official [**Asgardeo JavaScript SDK Suite**](https://github.com/asgardeo/javascript).
+>
+> Please migrate your projects to the new SDK to receive the latest updates, features, and security improvements.
+
 ![Builder](https://github.com/asgardeo/asgardeo-auth-spa-sdk/workflows/Builder/badge.svg)
 [![Stackoverflow](https://img.shields.io/badge/Ask%20for%20help%20on-Stackoverflow-orange)](https://stackoverflow.com/questions/tagged/asgardeo)
 [![Discord](https://img.shields.io/badge/Join%20us%20on-Discord-%23e01563.svg)](https://discord.gg/wso2)
