@@ -6,7 +6,6 @@
 > Asgardeo Auth SPA SDK has been **deprecated** and is **no longer maintained**.  
 > It is now replaced by [**@asgardeo/browser**](https://github.com/asgardeo/javascript/tree/main/packages/browser), which is part of the official [**Asgardeo JavaScript SDK Suite**](https://github.com/asgardeo/javascript).
 >
->
 > Please migrate your projects to the new SDK to receive the latest updates, features, and security improvements.
 
 ![Builder](https://github.com/asgardeo/asgardeo-auth-spa-sdk/workflows/Builder/badge.svg)
