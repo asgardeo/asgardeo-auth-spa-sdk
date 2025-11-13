@@ -6,8 +6,6 @@
 > Asgardeo Auth SPA SDK has been **deprecated** and is **no longer maintained**.  
 > The functionality of this SDK has been replaced by the [**Browser Package**](https://github.com/asgardeo/javascript/tree/main/packages/browser), which is now part of the official [**Asgardeo JavaScript SDK Suite**](https://github.com/asgardeo/javascript).
 >
-> 👉 You can find the new implementation here:  
-> [https://github.com/asgardeo/javascript/tree/main/packages/browser](https://github.com/asgardeo/javascript/tree/main/packages/browser)
 >
 > Please migrate your projects to the new SDK to receive the latest updates, features, and security improvements.
 
