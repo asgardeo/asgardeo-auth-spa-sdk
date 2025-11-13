@@ -3,7 +3,7 @@
 > [!WARNING]
 > **Deprecation Notice**
 >
-> This repository (**asgardeo-auth-spa-sdk**) has been **deprecated** and is **no longer maintained** by WSO2.  
+> Asgardeo Auth SPA SDK has been **deprecated** and is **no longer maintained**.  
 > The functionality of this SDK has been replaced by the [**Browser Package**](https://github.com/asgardeo/javascript/tree/main/packages/browser), which is now part of the official [**Asgardeo JavaScript SDK Suite**](https://github.com/asgardeo/javascript).
 >
 > 👉 You can find the new implementation here:  
