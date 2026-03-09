@@ -36,6 +36,7 @@ import {
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
     HTTP_REQUEST_ALL,
+    HTTP_STREAM_REQUEST,
     INIT,
     IS_AUTHENTICATED,
     REFRESH_ACCESS_TOKEN,
@@ -139,6 +140,39 @@ export const workerReceiver = (
                     .httpRequest(request)
                     .then((response) => {
                         port.postMessage(MessageUtils.generateSuccessMessage(response));
+                    })
+                    .catch((error) => {
+                        port.postMessage(MessageUtils.generateFailureMessage(error));
+                    });
+
+                break;
+            }
+            case HTTP_STREAM_REQUEST: {
+                const request = data.data;
+
+                // Inject fetch adapter config for streaming
+                request.adapter = "fetch";
+                request.responseType = "stream";
+
+                webWorker
+                    .httpRequest(request)
+                    .then((response) => {
+                        const stream = (response as any)?.data;
+
+                        if (stream instanceof ReadableStream) {
+                            // Post raw message — do NOT use generateSuccessMessage here.
+                            // generateSuccessMessage calls JSON.stringify which turns a
+                            // ReadableStream into {} and the stream reference is lost.
+                            port.postMessage(
+                                {
+                                    data: stream,
+                                    success: true
+                                },
+                                [stream as any]
+                            );
+                        } else {
+                            port.postMessage(MessageUtils.generateSuccessMessage(response));
+                        }
                     })
                     .catch((error) => {
                         port.postMessage(MessageUtils.generateFailureMessage(error));
@@ -310,6 +344,8 @@ export const workerReceiver = (
     };
 
     const onRequestSuccessCallback = (response: HttpResponse): void => {
+        // Skip stringifying if response contains a ReadableStream
+        if ((response as any)?.data instanceof ReadableStream) return;
         ctx.postMessage({ data: JSON.stringify(response ?? ""), type: REQUEST_SUCCESS });
     };
 
