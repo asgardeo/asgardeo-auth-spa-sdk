@@ -48,6 +48,7 @@ import {
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
     HTTP_REQUEST_ALL,
+    HTTP_STREAM_REQUEST,
     INIT,
     IS_AUTHENTICATED,
     REFRESH_ACCESS_TOKEN,
@@ -182,6 +183,45 @@ export const WebWorkerClient = async (
     };
 
     /**
+     * Communicate with the Worker for streaming requests.
+     * Unlike `communicate`, this does NOT JSON.parse the response data,
+     * because the response contains a transferred ReadableStream.
+     */
+    const communicateStream = (message: Message<HttpRequestConfig>): Promise<ReadableStream> => {
+        const channel = new MessageChannel();
+
+        worker.postMessage(message, [channel.port2]);
+
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                reject(
+                    new AsgardeoAuthException(
+                        "SPA-WEB_WORKER_CLIENT-COMS-TO01",
+                        "Stream operation timed out.",
+                        "No response was received from the web worker for " +
+                        _requestTimeout / 1000 +
+                        " since dispatching the stream request"
+                    )
+                );
+            }, _requestTimeout);
+
+            return (channel.port1.onmessage = ({ data }: { data: any; }) => {
+                clearTimeout(timer);
+                channel.port1.close();
+                channel.port2.close();
+
+                if (data?.success) {
+                    // Raw stream message shape: { success: true, data: ReadableStream }
+                    // (posted directly from worker-receiver, NOT via generateSuccessMessage)
+                    resolve(data?.data as ReadableStream);
+                } else {
+                    reject(data.error ? JSON.parse(data.error) : null);
+                }
+            });
+        });
+    };
+
+    /**
      * Allows using custom grant types.
      *
      * @param {CustomGrantRequestParams} requestParams Request Parameters.
@@ -250,6 +290,26 @@ export const WebWorkerClient = async (
 
                 return Promise.reject(error);
             });
+    };
+
+    /**
+     * Send a streaming API request through the web worker.
+     * Uses the fetch adapter internally and transfers the ReadableStream back from the Worker.
+     *
+     * @param {HttpRequestConfig} config The Http Request Config object
+     * @returns {Promise<ReadableStream>} A promise that resolves with a ReadableStream.
+     */
+    const httpStreamRequest = (config: HttpRequestConfig): Promise<ReadableStream> => {
+        if (config?.data && config?.data instanceof FormData) {
+            config.data = { ...Object.fromEntries(config?.data.entries()), formData: true };
+        }
+
+        const message: Message<HttpRequestConfig> = {
+            data: config,
+            type: HTTP_STREAM_REQUEST
+        };
+
+        return communicateStream(message);
     };
 
     /**
@@ -849,6 +909,7 @@ export const WebWorkerClient = async (
         getOIDCServiceEndpoints,
         httpRequest,
         httpRequestAll,
+        httpStreamRequest,
         initialize,
         isAuthenticated,
         refreshAccessToken,

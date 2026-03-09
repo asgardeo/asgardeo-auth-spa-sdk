@@ -229,7 +229,7 @@ export class AsgardeoSPAClient {
      *
      * @preserve
      */
-    
+
     public async initialize(
         config: AuthSPAClientConfig, 
         authHelper?: typeof AuthenticationHelper,
@@ -275,7 +275,7 @@ export class AsgardeoSPAClient {
             }
             
             // Do not sign out the user if the autoLogoutOnTokenRefreshError is set to false.
-            if (!mergedConfig.autoLogoutOnTokenRefreshError) {                
+            if (!mergedConfig.autoLogoutOnTokenRefreshError) {               
                 return Promise.resolve(true);
             }
             
@@ -588,6 +588,51 @@ export class AsgardeoSPAClient {
         await this._validateMethod(false);
 
         return this._client?.httpRequestAll(config);
+    }
+
+    /**
+     * This method sends a streaming API request to a protected endpoint.
+     * The access token is automatically attached to the header of the request.
+     * Internally uses the fetch adapter and transfers a ReadableStream from the Web Worker.
+     *
+     * @param {HttpRequestConfig} config - The config object containing attributes necessary to send a request.
+     *
+     * @return {Promise<ReadableStream>} - Returns a Promise that resolves with a ReadableStream.
+     *
+     * @example
+     * ```
+     *  const stream = await auth.httpStreamRequest({
+     *      method: "POST",
+     *      url: "https://api.example.com/stream",
+     *      data: { question: "Hello" }
+     *  });
+     *
+     *  const reader = stream.getReader();
+     *  while (true) {
+     *      const { done, value } = await reader.read();
+     *      if (done) break;
+     *      // process chunk
+     *  }
+     * ```
+     *
+     * @memberof AsgardeoSPAClient
+     *
+     * @preserve
+     */
+    public async httpStreamRequest(config: HttpRequestConfig): Promise<ReadableStream | undefined> {
+        await this._validateMethod(false);
+
+        if (this._storage !== Storage.WebWorker) {
+            throw new AsgardeoAuthException(
+                "SPA-AUTH_CLIENT-HSR-IV01",
+                "Streaming is only supported with WebWorker storage.",
+                "The httpStreamRequest method requires storage type to be set to webWorker."
+            );
+        }
+
+        const webWorkerClient = this._client as WebWorkerClientInterface;
+
+        return webWorkerClient.httpStreamRequest(config);
     }
 
     /**

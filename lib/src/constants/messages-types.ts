@@ -22,6 +22,7 @@ export const AUTH_CODE = "auth-code";
 export const SIGN_OUT = "sign-out";
 export const HTTP_REQUEST = "http-request";
 export const HTTP_REQUEST_ALL = "http-request-all";
+export const HTTP_STREAM_REQUEST = "http-stream-request";
 export const REQUEST_CUSTOM_GRANT = "request-custom-grant";
 export const REVOKE_ACCESS_TOKEN = "revoke-access-token";
 export const END_USER_SESSION = "end-user-session";

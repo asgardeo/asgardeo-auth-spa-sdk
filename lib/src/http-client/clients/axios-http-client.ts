@@ -93,8 +93,9 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
         }
 
         // Register request interceptor
+        // Cast to `any` to bridge Axios 0.x HttpRequestConfig vs Axios 1.x InternalAxiosRequestConfig
         this.axiosInstance.interceptors.request.use(
-            async (request) => await this.clientInstance.requestHandler(request)
+            async (request) => await this.clientInstance.requestHandler(request as any) as any
         );
 
         // Register response interceptor
@@ -182,6 +183,11 @@ export class HttpClient implements HttpClientInterface<HttpRequestConfig, HttpRe
      * @return {HttpResponse}
      */
     public successHandler(response: HttpResponse): HttpResponse {
+        // Skip callbacks for streaming responses — ReadableStream must pass through untouched
+        if ((response as any)?.config?.responseType === "stream") {
+            return response;
+        }
+
         if (HttpClient.isHandlerEnabled) {
             if (this.requestSuccessCallback && typeof this.requestSuccessCallback === "function") {
                 this.requestSuccessCallback(response);

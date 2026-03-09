@@ -79,6 +79,7 @@ export interface WebWorkerClientInterface {
     requestCustomGrant(requestParams: CustomGrantConfig): Promise<FetchResponse | BasicUserInfo>;
     httpRequest<T = any>(config: HttpRequestConfig): Promise<HttpResponse<T>>;
     httpRequestAll<T = any>(configs: HttpRequestConfig[]): Promise<HttpResponse<T>[]>;
+    httpStreamRequest(config: HttpRequestConfig): Promise<ReadableStream>;
     enableHttpHandler(): Promise<boolean>;
     disableHttpHandler(): Promise<boolean>;
     initialize(): Promise<boolean>;

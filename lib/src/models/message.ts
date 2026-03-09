@@ -34,6 +34,7 @@ import {
     GET_SIGN_OUT_URL,
     HTTP_REQUEST,
     HTTP_REQUEST_ALL,
+    HTTP_STREAM_REQUEST,
     INIT,
     IS_AUTHENTICATED,
     REFRESH_ACCESS_TOKEN,
@@ -82,6 +83,7 @@ export type MessageType =
     | typeof SIGN_OUT
     | typeof HTTP_REQUEST
     | typeof HTTP_REQUEST_ALL
+    | typeof HTTP_STREAM_REQUEST
     | typeof REQUEST_CUSTOM_GRANT
     | typeof REVOKE_ACCESS_TOKEN
     | typeof END_USER_SESSION
