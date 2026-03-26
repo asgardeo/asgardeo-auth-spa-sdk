@@ -40,7 +40,14 @@ export class MessageUtils {
     }
 
     /**
-     * JSON stringifies the passed object.
+     *
+     * Explicitly constructs a serializable error shape instead of relying on
+     * JSON.stringify(error) directly. This is necessary because axios 1.x defines
+     * toJSON() on the AxiosError prototype which deliberately excludes `response`
+     * (to avoid leaking sensitive data). Since toJSON() is on the prototype and not
+     * the instance, `delete error.toJSON` is a no-op, and JSON.stringify ends up
+     * calling the prototype's toJSON — stripping response.data (and server-side
+     * error codes like BPM-60006) from the postMessage payload.
      *
      * @param {any} error The error object.
      *
@@ -48,12 +55,26 @@ export class MessageUtils {
      */
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public static generateFailureMessage(error?: any): ResponseMessage<string> {
-        if (error?.toJSON) {
-            delete error.toJSON;
-        }
+        const serializable: any = error ? {
+            code: error?.code,
+            config: error?.config,
+            isAxiosError: error?.isAxiosError,
+            message: error?.message,
+            name: error?.name,
+            request: error?.request,
+            response: error?.response ? {
+                config: error.response.config,
+                data: error.response.data,
+                headers: error.response.headers,
+                request: error.response.request,
+                status: error.response.status,
+                statusText: error.response.statusText
+            } : undefined,
+            status: error?.status ?? error?.response?.status ?? null
+        } : "";
 
         return {
-            error: JSON.stringify(error ?? ""),
+            error: JSON.stringify(serializable),
             success: false
         };
     }
