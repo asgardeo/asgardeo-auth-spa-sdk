@@ -160,16 +160,32 @@ export const workerReceiver = (
                         const stream = (response as any)?.data;
 
                         if (stream instanceof ReadableStream) {
-                            // Post raw message — do NOT use generateSuccessMessage here.
-                            // generateSuccessMessage calls JSON.stringify which turns a
-                            // ReadableStream into {} and the stream reference is lost.
-                            port.postMessage(
-                                {
-                                    data: stream,
-                                    success: true
-                                },
-                                [stream as any]
-                            );
+                            // Safari cannot transfer a ReadableStream via postMessage
+                            // (throws DataCloneError). Pipe chunks back individually so
+                            // the main thread can reconstruct the stream from messages.
+                            const reader: ReadableStreamDefaultReader<Uint8Array> = stream.getReader();
+
+                            const pump = (): void => {
+                                reader
+                                    .read()
+                                    .then(({ done, value }: { done: boolean; value?: Uint8Array }) => {
+                                        if (done) {
+                                            port.postMessage({ done: true, success: true });
+                                        } else {
+                                            // Transfer the underlying ArrayBuffer to avoid copying.
+                                            port.postMessage(
+                                                { chunk: value, success: true },
+                                                value?.buffer ? [ value.buffer ] : []
+                                            );
+                                            pump();
+                                        }
+                                    })
+                                    .catch((err: unknown) => {
+                                        port.postMessage(MessageUtils.generateFailureMessage(err));
+                                    });
+                            };
+
+                            pump();
                         } else {
                             port.postMessage(MessageUtils.generateSuccessMessage(response));
                         }

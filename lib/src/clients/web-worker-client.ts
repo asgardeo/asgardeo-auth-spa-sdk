@@ -187,13 +187,16 @@ export const WebWorkerClient = async (
      * Unlike `communicate`, this does NOT JSON.parse the response data,
      * because the response contains a transferred ReadableStream.
      */
-    const communicateStream = (message: Message<HttpRequestConfig>): Promise<ReadableStream> => {
+    const communicateStream = (message: Message<HttpRequestConfig>): Promise<ReadableStream<Uint8Array>> => {
         const channel = new MessageChannel();
 
         worker.postMessage(message, [channel.port2]);
 
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
+                channel.port1.onmessage = null;
+                channel.port1.close();
+                channel.port2.close();
                 reject(
                     new AsgardeoAuthException(
                         "SPA-WEB_WORKER_CLIENT-COMS-TO01",
@@ -205,19 +208,58 @@ export const WebWorkerClient = async (
                 );
             }, _requestTimeout);
 
-            return (channel.port1.onmessage = ({ data }: { data: any; }) => {
-                clearTimeout(timer);
+            let streamStarted: boolean = false;
+            let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
+
+            // Tears down the channel and cancels the worker-side reader when the
+            // consumer cancels the stream (e.g. request aborted mid-stream).
+            const cancelStream = (): void => {
+                channel.port1.onmessage = null;
                 channel.port1.close();
                 channel.port2.close();
+            };
 
-                if (data?.success) {
-                    // Raw stream message shape: { success: true, data: ReadableStream }
-                    // (posted directly from worker-receiver, NOT via generateSuccessMessage)
-                    resolve(data?.data as ReadableStream);
-                } else {
-                    reject(data.error ? JSON.parse(data.error) : null);
+            channel.port1.onmessage = ({ data }: { data: any }) => {
+                // Worker reported a failure.
+                if (!data?.success) {
+                    clearTimeout(timer);
+                    cancelStream();
+                    if (streamController) {
+                        streamController.error(
+                            data?.error ? JSON.parse(data.error) : new Error("Stream failed")
+                        );
+                    } else {
+                        reject(data?.error ? JSON.parse(data.error) : null);
+                    }
+
+                    return;
                 }
-            });
+
+                // First successful message — create the ReadableStream and resolve the promise.
+                // Subsequent messages will push chunks into the controller.
+                if (!streamStarted) {
+                    clearTimeout(timer);
+                    streamStarted = true;
+                    const stream: ReadableStream<Uint8Array> = new ReadableStream<Uint8Array>({
+                        cancel(): void {
+                            cancelStream();
+                        },
+                        start(controller: ReadableStreamDefaultController<Uint8Array>): void {
+                            streamController = controller;
+                        }
+                    });
+
+                    resolve(stream);
+                }
+
+                if (data?.done) {
+                    // Worker signalled end of stream.
+                    streamController?.close();
+                    cancelStream();
+                } else if (data?.chunk !== undefined) {
+                    streamController?.enqueue(data.chunk as Uint8Array);
+                }
+            };
         });
     };
 
