@@ -16,13 +16,15 @@
  * under the License.
  */
 
-import { AsgardeoAuthClient, DataLayer, REFRESH_TOKEN_TIMER } from "@asgardeo/auth-js";
+import { AsgardeoAuthClient, DataLayer, REFRESH_TOKEN_TIMER, SessionData } from "@asgardeo/auth-js";
 
 import { AuthenticationHelper, MainThreadClientConfig, WebWorkerClientConfig } from "../";
 
 export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig> {
     private _authenticationClient: AsgardeoAuthClient<T>;
     private _dataLayer: DataLayer<T>;
+    private _isTokenRefreshLoading: boolean = false;
+
     public constructor(authClient: AsgardeoAuthClient<T>) {
         this._authenticationClient = authClient;
         this._dataLayer = this._authenticationClient.getDataLayer();
@@ -42,13 +44,26 @@ export class SPAHelper<T extends MainThreadClientConfig | WebWorkerClientConfig>
 
         const sessionData = await this._dataLayer.getSessionData();
         if (sessionData.refresh_token) {
+            if (sessionData.created_at == null || sessionData.expires_in == null) {
+                return;
+            }
+
+            const TOKEN_REFRESH_BUFFER_MS = 10_000;
             // Refresh 10 seconds before the expiry time
-            const expiryTime = parseInt(sessionData.expires_in);
-            const time = expiryTime <= 10 ? expiryTime : expiryTime - 10;
+            const absoluteExpiryTime = sessionData.created_at + parseInt(sessionData.expires_in) * 1000;
+            const timeUntilRefresh = absoluteExpiryTime - Date.now() - TOKEN_REFRESH_BUFFER_MS;
 
             const timer = setTimeout(async () => {
-                await authenticationHelper.refreshAccessToken();
-            }, time * 1000);
+                if (this._isTokenRefreshLoading) return;
+
+                this._isTokenRefreshLoading = true;
+
+                try {
+                    await authenticationHelper.refreshAccessToken();
+                } finally {
+                    this._isTokenRefreshLoading = false;
+                }
+            }, timeUntilRefresh);
 
             await this._dataLayer.setTemporaryDataParameter(REFRESH_TOKEN_TIMER, JSON.stringify(timer));
         }

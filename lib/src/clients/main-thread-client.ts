@@ -443,6 +443,15 @@ export const MainThreadClient = async (
         }
     };
 
+    // On page reload, browser timers are cleared. Reschedule periodic token refresh
+    // if the user already has a valid session, since the normal sign-in flow won't
+    // run (callOnlyOnRedirect / disableAutoSignIn / disableTrySignInSilently all
+    // short-circuit before handleSignIn is reached).
+    if (await _authenticationHelper.isAuthenticated()) {
+        _spaHelper.clearRefreshTokenTimeout();
+        _spaHelper.refreshAccessTokenAutomatically(_authenticationHelper);
+    }
+
     return {
         disableHttpHandler,
         enableHttpHandler,
