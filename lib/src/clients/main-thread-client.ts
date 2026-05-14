@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020-2026, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -442,6 +442,15 @@ export const MainThreadClient = async (
             checkSession();
         }
     };
+
+    // On page reload, browser timers are cleared. Reschedule periodic token refresh
+    // if the user already has a valid session, since the normal sign-in flow won't
+    // run (callOnlyOnRedirect / disableAutoSignIn / disableTrySignInSilently all
+    // short-circuit before handleSignIn is reached).
+    if (await _authenticationHelper.isAuthenticated()) {
+        _spaHelper.clearRefreshTokenTimeout();
+        _spaHelper.refreshAccessTokenAutomatically(_authenticationHelper);
+    }
 
     return {
         disableHttpHandler,
