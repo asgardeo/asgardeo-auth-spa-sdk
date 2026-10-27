@@ -620,12 +620,12 @@ export class AuthenticationHelper<
                 request.headers = {
                     ...request.headers,
                     Authorization: `Bearer ${ await this.getIDPAccessToken() }`
-                };
+                } as HttpRequestConfig["headers"];
             } else {
                 request.headers = {
                     ...request.headers,
                     Authorization: `Bearer ${ await this.getAccessToken() }`
-                };
+                } as HttpRequestConfig["headers"];
             }
         }
     }

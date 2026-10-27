@@ -40,7 +40,10 @@ export class MessageUtils {
     }
 
     /**
-     * JSON stringifies the passed object.
+     * JSON stringifies the passed error.
+     *
+     * Axios errors are converted to the shape that axios 0.26 errors serialized to, since axios 0.27 and later
+     * define `toJSON` on the `AxiosError` prototype and leave out `response`.
      *
      * @param {any} error The error object.
      *
@@ -48,6 +51,13 @@ export class MessageUtils {
      */
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public static generateFailureMessage(error?: any): ResponseMessage<string> {
+        if (error?.isAxiosError) {
+            return {
+                error: JSON.stringify(MessageUtils.toSerializableAxiosError(error)),
+                success: false
+            };
+        }
+
         if (error?.toJSON) {
             delete error.toJSON;
         }
@@ -56,5 +66,33 @@ export class MessageUtils {
             error: JSON.stringify(error ?? ""),
             success: false
         };
+    }
+
+    /**
+     * Builds the serializable form of an axios error with the fields that axios 0.26 errors had.
+     *
+     * @param {any} error The axios error.
+     *
+     * @return {Record<string, unknown>} Serializable error.
+     */
+    private static toSerializableAxiosError(error: any): Record<string, unknown> {
+        // Cancellations were plain `Cancel` objects in axios 0.26.
+        if (error.code === "ERR_CANCELED") {
+            return { message: error.message };
+        }
+
+        const serializableError: Record<string, unknown> = {
+            config: error.config,
+            isAxiosError: true,
+            request: error.request,
+            response: error.response
+        };
+
+        // axios 0.26 only set a code for timeouts.
+        if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+            serializableError.code = error.code;
+        }
+
+        return serializableError;
     }
 }
