@@ -28,6 +28,11 @@ on:
         required: true
         default: 'patch'
 
+permissions:
+  contents: read
+  # Lets npm publish through trusted publishing (OIDC) instead of a token.
+  id-token: write
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -91,11 +96,16 @@ jobs:
             gh release create $version --latest=false
           fi
 
+      # Trusted publishing needs npm 11.5.1 or later, which ships with Node.js 24.
+      - name: Use Node.js 24 for publishing
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
       - name: Publish Asgardeo Auth SPA SDK
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           cp README.md lib
           cd lib
           npm publish --access public --tag legacy-2.1
