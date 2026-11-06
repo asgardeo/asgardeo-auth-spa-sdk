@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       Type:
-        description: 'Choose which version to bump before release (patch, minor or major), or publish-only to publish the current version without a bump'
+        description: 'Choose which version to bump before release'
         required: true
         default: 'patch'
 
@@ -80,15 +80,6 @@ jobs:
           fi
           echo "npm accepts a trusted publish of $package from this workflow."
 
-      # publish-only is for a release whose npm publish failed: it publishes from that release's tag and skips the
-      # version bump and the GitHub release, which the release already has.
-      - name: Check out the release tag
-        if: github.event.inputs.Type == 'publish-only'
-        run: |
-          tag=v$(jq -r .version lib/package.json)
-          git fetch --depth 1 origin tag $tag
-          git checkout $tag
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -100,7 +91,6 @@ jobs:
           yarn build
 
       - name: Bump Version
-        if: github.event.inputs.Type != 'publish-only'
         run: |
           git config --global user.email "version.bump@github.action.com"
           git config --global user.name "asgardeo-github-bot"
@@ -121,7 +111,6 @@ jobs:
           fi
 
       - name: Release Asgardeo Auth SPA SDK
-        if: github.event.inputs.Type != 'publish-only'
         run: |
           version=`git describe --tags --abbrev=0`
           echo ${{secrets.ASGARDIO_GITHUB_BOT_TOKEN}} | gh auth login --with-token
